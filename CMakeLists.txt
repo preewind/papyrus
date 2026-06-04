@@ -11,7 +11,9 @@ add_subdirectory(third_party/SDL_ttf)
 
 add_executable(papyrus
     src/main.cpp
-    #src/Editor.cpp
+    src/Renderer.cpp
+    src/Renderer.h
+    src/util.h
 )
 
 target_link_libraries(papyrus
