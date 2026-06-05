@@ -118,6 +118,12 @@ void Renderer::drawRect(int x, int y, int w, int h, SDL_Color color)
     CSF(SDL_RenderFillRect(mRenderer, &rect));
 }
 
+void Renderer::resetCursorBlink()
+{
+    mCursorVisible = true;
+    mLastBlink = SDL_GetTicks();
+}
+
 void Renderer::renderCursor(const Cursor &cursor, const std::string &text)
 {
     if (mCursorVisible)
@@ -157,6 +163,10 @@ void Renderer::updateCursor()
 
 void Renderer::update(Editor &editor)
 {
+    if(editor.consumeActivity()){
+        resetCursorBlink();
+    }
+
     updateCursor();
     clear();
     renderEditor(editor);

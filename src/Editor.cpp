@@ -31,6 +31,7 @@ void Editor::handleBackSpace()
         mCursor.col = mBuffer.getLineSize(mCursor.row);
         mBuffer.mergeWithNext(mCursor.row);
     }
+    markActivity();
 }
 
 void Editor::handleReturn()
@@ -38,6 +39,7 @@ void Editor::handleReturn()
     mBuffer.splitLine(mCursor.row, mCursor.col);
     mCursor.col = 0;
     mCursor.row++;
+    markActivity();
 }
 
 void Editor::handleLeft()
@@ -51,6 +53,7 @@ void Editor::handleLeft()
         mCursor.row--;
         mCursor.col = mBuffer.getLineSize(mCursor.row);
     }
+    markActivity();
 }
 
 void Editor::handleRight()
@@ -64,6 +67,7 @@ void Editor::handleRight()
         mCursor.row++;
         mCursor.col = 0;
     }
+    markActivity();
 }
 
 void Editor::handleUp()
@@ -78,6 +82,7 @@ void Editor::handleUp()
             mCursor.col = mBuffer.getLineSize(mCursor.row);
         }
     }
+    markActivity();
 }
 
 void Editor::handleDown()
@@ -92,11 +97,13 @@ void Editor::handleDown()
             mCursor.col = mBuffer.getLineSize(mCursor.row);
         }
     }
+    markActivity();
 }
 
 void Editor::handleTab()
 {
     handleTextInput("\t");
+    markActivity();
 }
 
 void Editor::loadFile(const std::filesystem::path &path)
@@ -149,6 +156,21 @@ void Editor::saveFileAs(const std::filesystem::path &path)
 void Editor::saveFile()
 {
     saveFileAs(mCurrentFilePath);
+}
+
+void Editor::markActivity()
+{
+    mActivity = true;
+}
+
+bool Editor::consumeActivity()
+{
+    if(!mActivity){
+        return false;
+    }
+
+    mActivity = false;
+    return true;
 }
 
 Cursor Editor::getCursor() const

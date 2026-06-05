@@ -31,6 +31,9 @@ public:
     void loadFile(const std::filesystem::path& path);
     void saveFileAs(const std::filesystem::path& path);
     void saveFile();
+
+    void markActivity();
+    bool consumeActivity();
     
     Cursor getCursor() const;
     const std::string& getLineString(int i) const;
@@ -40,4 +43,5 @@ private:
     Cursor mCursor;
     TextBuffer mBuffer;
     std::filesystem::path mCurrentFilePath;
+    bool mActivity;
 };
