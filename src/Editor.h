@@ -23,6 +23,9 @@ public:
     void handleReturn();
     void handleLeft();
     void handleRight();
+    void handleUp();
+    void handleDown();
+    void handleTab();
     
     Cursor getCursor() const;
     const std::string& getLineString(int i) const;

@@ -19,6 +19,7 @@ public:
     void clear();
     int measureTextWidth(const std::string& text);
     int getLineHeight() const;
+    std::string expandTabs(const std::string& text);
     void drawText(const std::string& text, int x, int y);
     void drawRect(int x, int y, int w, int h, SDL_Color color);
     void renderCursor(const Cursor &cursor, const std::string &text);  

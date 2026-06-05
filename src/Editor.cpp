@@ -12,23 +12,22 @@ Editor::~Editor()
 void Editor::handleTextInput(const std::string &text)
 {
     mBuffer.insert(mCursor.row, mCursor.col, text);
-    mCursor.col+= text.size();
+    mCursor.col += text.size();
 }
 
 void Editor::handleBackSpace()
 {
     if (mCursor.col > 0)
     {
-        mBuffer.erase(mCursor.row, mCursor.col-1);
+        mBuffer.erase(mCursor.row, mCursor.col - 1);
         mCursor.col--;
     }
-    else if(mCursor.col == 0 && mCursor.row > 0)
+    else if (mCursor.col == 0 && mCursor.row > 0)
     {
         mCursor.row--;
-        mCursor.col = mBuffer.getLine(mCursor.row).size();
+        mCursor.col = mBuffer.getLineSize(mCursor.row);
         mBuffer.mergeWithNext(mCursor.row);
     }
-    
 }
 
 void Editor::handleReturn()
@@ -47,21 +46,54 @@ void Editor::handleLeft()
     else if (mCursor.col == 0 && mCursor.row > 0)
     {
         mCursor.row--;
-        mCursor.col = mBuffer.getLine(mCursor.row).size();
+        mCursor.col = mBuffer.getLineSize(mCursor.row);
     }
 }
 
 void Editor::handleRight()
 {
-    if (mCursor.col < mBuffer.getLine(mCursor.row).size())
+    if (mCursor.col < mBuffer.getLineSize(mCursor.row))
     {
         mCursor.col++;
     }
-    else if (mCursor.col == mBuffer.getLine(mCursor.row).size() && mCursor.row < mBuffer.getLineCount() - 1)
+    else if (mCursor.col == mBuffer.getLineSize(mCursor.row) && mCursor.row < mBuffer.getLineCount() - 1)
     {
         mCursor.row++;
         mCursor.col = 0;
     }
+}
+
+void Editor::handleUp()
+{
+    if (mCursor.row > 0)
+    {
+        mCursor.row--;
+        bool isUpperShorter = mBuffer.getLineSize(mCursor.row) < mBuffer.getLineSize(mCursor.row+1);
+        bool colGreaterThanLineAbove = mCursor.col >=  mBuffer.getLineSize(mCursor.row);
+        if (isUpperShorter && colGreaterThanLineAbove)
+        {
+            mCursor.col = mBuffer.getLineSize(mCursor.row);
+        }
+    }
+}
+
+void Editor::handleDown()
+{
+    if (mCursor.row < mBuffer.getLineCount()-1)
+    {
+        mCursor.row++;
+        bool isUpperLonger = mBuffer.getLineSize(mCursor.row-1) > mBuffer.getLineSize(mCursor.row);
+        bool colGreaterThanLineBelow = mCursor.col >=  mBuffer.getLineSize(mCursor.row);
+        if (isUpperLonger && colGreaterThanLineBelow)
+        {
+            mCursor.col = mBuffer.getLineSize(mCursor.row);
+        }
+    }
+}
+
+void Editor::handleTab()
+{
+    handleTextInput("\t");
 }
 
 Cursor Editor::getCursor() const

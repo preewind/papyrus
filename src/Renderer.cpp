@@ -57,6 +57,23 @@ int Renderer::getLineHeight() const
     return TTF_GetFontHeight(mFont);
 }
 
+std::string Renderer::expandTabs(const std::string &text)
+{
+    std::string result = "";
+
+    for (char c : text)
+    {
+        if (c == '\t')
+        {
+            result+= "    ";
+        }
+        else{
+            result += c;
+        }
+    }
+    return result;
+}
+
 void Renderer::drawText(const std::string &text, int x, int y)
 {
     if (text.empty())
@@ -105,7 +122,7 @@ void Renderer::renderCursor(const Cursor &cursor, const std::string &text)
 {
     if (mCursorVisible)
     {
-        int x = 20 + measureTextWidth(text.substr(0, cursor.col));
+        int x = 20 + measureTextWidth(expandTabs(text.substr(0, cursor.col)));
         int y = 20 + cursor.row * getLineHeight();
 
         drawRect(x, y, 2, getLineHeight(), SDL_Color{255, 255, 255, 255});
@@ -116,7 +133,7 @@ void Renderer::renderText(const std::vector<std::string> &text)
 {
     for (size_t i = 0; i < text.size(); ++i)
     {
-        drawText(text[i], 20, 20 + getLineHeight() * i);
+        drawText(expandTabs(text[i]), 20, 20 + getLineHeight() * i);
     }
 }
 

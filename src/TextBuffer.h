@@ -14,6 +14,7 @@ public:
     void splitLine(size_t row, size_t col);
     void mergeWithNext(size_t row);
     const std::string& getLine(size_t row) const;
+    size_t getLineSize(size_t row) const;
     size_t getLineCount() const;
     const std::vector<std::string>& getText() const;
 

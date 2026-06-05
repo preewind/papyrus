@@ -49,6 +49,11 @@ const std::string &TextBuffer::getLine(size_t row) const
     throw std::runtime_error("Line doesn't exist!");
 }
 
+size_t TextBuffer::getLineSize(size_t row) const
+{
+    return mLines[row].size();
+}
+
 size_t TextBuffer::getLineCount() const
 {
     return mLines.size();
