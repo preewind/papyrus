@@ -11,35 +11,31 @@ Editor::~Editor()
 
 void Editor::handleTextInput(const std::string &text)
 {
-    if (mText.size() < mCursor.row + 1)
-        mText.push_back("");
-    mText[mCursor.row].insert(mCursor.col, text);
-    mCursor.col++;
+    mBuffer.insert(mCursor.row, mCursor.col, text);
+    mCursor.col+= text.size();
 }
 
 void Editor::handleBackSpace()
 {
-    bool move = mCursor.col == 0;
-    if (!mText[mCursor.row].empty() && mCursor.col > 0)
+    if (mCursor.col > 0)
     {
-        mText[mCursor.row].erase(mCursor.col - 1, 1);
+        mBuffer.erase(mCursor.row, mCursor.col-1);
         mCursor.col--;
     }
-    if (move && mCursor.row > 0)
+    else if(mCursor.col == 0 && mCursor.row > 0)
     {
         mCursor.row--;
-        mCursor.col = mText[mCursor.row].size();
+        mCursor.col = mBuffer.getLine(mCursor.row).size();
+        mBuffer.mergeWithNext(mCursor.row);
     }
+    
 }
 
 void Editor::handleReturn()
 {
-    mCursor.row++;
+    mBuffer.splitLine(mCursor.row, mCursor.col);
     mCursor.col = 0;
-    if (mText.size() < mCursor.row + 1)
-    {
-        mText.push_back("");
-    }
+    mCursor.row++;
 }
 
 void Editor::handleLeft()
@@ -51,17 +47,17 @@ void Editor::handleLeft()
     else if (mCursor.col == 0 && mCursor.row > 0)
     {
         mCursor.row--;
-        mCursor.col = mText[mCursor.row].size();
+        mCursor.col = mBuffer.getLine(mCursor.row).size();
     }
 }
 
 void Editor::handleRight()
 {
-    if (mCursor.col < mText[mCursor.row].size())
+    if (mCursor.col < mBuffer.getLine(mCursor.row).size())
     {
         mCursor.col++;
     }
-    else if (mCursor.col == mText[mCursor.row].size() && mCursor.row < mText.size()-1)
+    else if (mCursor.col == mBuffer.getLine(mCursor.row).size() && mCursor.row < mBuffer.getLineCount() - 1)
     {
         mCursor.row++;
         mCursor.col = 0;
@@ -73,12 +69,12 @@ Cursor Editor::getCursor() const
     return mCursor;
 }
 
-const std::string& Editor::getLineString(int i) const
+const std::string &Editor::getLineString(int i) const
 {
-    return mText[i];
+    return mBuffer.getLine(i);
 }
 
-const std::vector<std::string>& Editor::getText() const
+const std::vector<std::string> &Editor::getText() const
 {
-    return mText;
+    return mBuffer.getText();
 }

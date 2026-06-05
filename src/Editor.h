@@ -6,9 +6,10 @@
 #include <SDL3/SDL_stdinc.h>
 
 #include "Renderer.h"
+#include "TextBuffer.h"
 
 struct Cursor {
-    int row, col;
+    size_t row, col;
 };
 
 class Editor{
@@ -29,5 +30,5 @@ public:
 
 private:
     Cursor mCursor;
-    std::vector<std::string> mText{""};
+    TextBuffer mBuffer;
 };
