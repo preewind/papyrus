@@ -81,9 +81,6 @@ int main(int argc, char* argv[])
                 case SDLK_TAB:
                     editor.handleTab();
                     break;
-                case SDLK_LSHIFT:
-                    editor.handleShift(event.type);
-                    break;
 
                 // IO
                 case SDLK_F1:
@@ -95,18 +92,6 @@ int main(int argc, char* argv[])
                     break;
 
                 default:
-                    break;
-                }
-            }
-            else if (event.type == SDL_EVENT_KEY_UP)
-            {
-                SDL_Keycode key = event.key.key;
-                SDL_Keymod mod = event.key.mod;
-
-                switch (key)
-                {
-                case SDLK_LSHIFT:
-                    editor.handleShift(event.type);
                     break;
                 }
             }

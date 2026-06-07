@@ -9,11 +9,6 @@
 #include "Renderer.h"
 #include "TextBuffer.h"
 
-struct Cursor
-{
-    size_t row, col;
-};
-
 struct Position
 {
     size_t row, col;
@@ -40,6 +35,8 @@ struct Position
         return other < *this;
     }
 };
+
+struct Cursor:Position{};
 
 struct Selection
 {
@@ -74,11 +71,12 @@ public:
     void handleBackSpace();
     void handleReturn();
     void handleLeft(SDL_Keymod mod);
+    void moveCursorLeft();
     void handleRight(SDL_Keymod mod);
+    void moveCursorRight();
     void handleUp();
     void handleDown();
     void handleTab();
-    void handleShift(Uint32 type);
 
     void loadFile(const std::filesystem::path &path);
     void saveFileAs(const std::filesystem::path &path);
@@ -86,13 +84,14 @@ public:
 
     void markActivity();
     bool consumeActivity();
-    void markSelectionVisible();
-    bool consumeSelectionVisible();
-    bool getSelectionVisible() const;
 
     const Selection &getSelection() const;
     void setSelectionActive(bool b);
     bool getSelectionActive() const;
+    void clearSelection();
+    void beginSelection();
+    void updateSelection();
+
 
     Cursor getCursor() const;
     const std::string &getLineString(int i) const;
@@ -105,5 +104,4 @@ private:
     std::filesystem::path mCurrentFilePath;
     bool mActivity;
     bool mSelectionActive = false;
-    bool mSelectionVisible = false;
 };

@@ -190,7 +190,7 @@ void Renderer::renderSelection(const Editor &editor)
 
 void Renderer::renderEditor(const Editor &editor)
 {
-    if (editor.getSelectionVisible())
+    if (editor.getSelectionActive())
     {
         renderSelection(editor);
     }

@@ -18,7 +18,7 @@ void Editor::handleTextInput(const std::string &text)
     mBuffer.insert(mCursor.row, mCursor.col, text);
     mCursor.col += text.size();
     markActivity();
-    consumeSelectionVisible();
+    clearSelection();
 }
 
 void Editor::handleBackSpace()
@@ -35,7 +35,7 @@ void Editor::handleBackSpace()
         mBuffer.mergeWithNext(mCursor.row);
     }
     markActivity();
-    consumeSelectionVisible();
+    clearSelection();
 }
 void Editor::handleReturn()
 {
@@ -43,27 +43,32 @@ void Editor::handleReturn()
     mCursor.col = 0;
     mCursor.row++;
     markActivity();
-    consumeSelectionVisible();
+    clearSelection();
 }
 
 void Editor::handleLeft(SDL_Keymod mod)
 {
-    if (mod & SDL_KMOD_SHIFT)
+    bool shiftHeld = mod & SDL_KMOD_SHIFT;
+    if (shiftHeld && !mSelectionActive)
     {
-        if (mSelection.end.col > 0)
-        {
-            mSelection.end.col--;
-        }
-        else if (mSelection.end.col == 0 && mSelection.end.row > 0)
-        {
-            mSelection.end.row--;
-            mSelection.end.col = mBuffer.getLineSize(mSelection.end.row);
-        }
+        beginSelection();
     }
-    else{
-        consumeSelectionVisible();
+    moveCursorLeft();
+
+    if (shiftHeld)
+    {
+        updateSelection();
+    }
+    else
+    {
+        clearSelection();
     }
 
+    markActivity();
+}
+
+void Editor::moveCursorLeft()
+{
     if (mCursor.col > 0)
     {
         mCursor.col--;
@@ -73,27 +78,31 @@ void Editor::handleLeft(SDL_Keymod mod)
         mCursor.row--;
         mCursor.col = mBuffer.getLineSize(mCursor.row);
     }
-    markActivity();
 }
 
 void Editor::handleRight(SDL_Keymod mod)
 {
-    if (mod & SDL_KMOD_SHIFT)
+    bool shiftHeld = mod & SDL_KMOD_SHIFT;
+    if (shiftHeld && !mSelectionActive)
     {
-        if (mSelection.end.col < mBuffer.getLineSize(mCursor.row))
-        {
-            mSelection.end.col++;
-        }
-        else if (mSelection.end.col == mBuffer.getLineSize(mCursor.row) && mSelection.end.row < mBuffer.getLineCount() - 1)
-        {
-            mSelection.end.row++;
-            mSelection.end.col = 0;
-        }
+        beginSelection();
     }
-    else{
-        consumeSelectionVisible();
+    moveCursorRight();
+
+    if (shiftHeld)
+    {
+        updateSelection();
+    }
+    else
+    {
+        clearSelection();
     }
 
+    markActivity();
+}
+
+void Editor::moveCursorRight()
+{
     if (mCursor.col < mBuffer.getLineSize(mCursor.row))
     {
         mCursor.col++;
@@ -103,7 +112,6 @@ void Editor::handleRight(SDL_Keymod mod)
         mCursor.row++;
         mCursor.col = 0;
     }
-    markActivity();
 }
 
 void Editor::handleUp()
@@ -119,7 +127,7 @@ void Editor::handleUp()
         }
     }
     markActivity();
-    consumeSelectionVisible();
+    clearSelection();
 }
 
 void Editor::handleDown()
@@ -135,33 +143,12 @@ void Editor::handleDown()
         }
     }
     markActivity();
-    consumeSelectionVisible();
+    clearSelection();
 }
 
 void Editor::handleTab()
 {
     handleTextInput("\t");
-    markActivity();
-    consumeSelectionVisible();
-}
-
-void Editor::handleShift(Uint32 type)
-{
-    if (type == SDL_EVENT_KEY_DOWN)
-    {
-        mSelection.begin.row = mCursor.row;
-        mSelection.begin.col = mCursor.col;
-        mSelection.end.row = mCursor.row;
-        mSelection.end.col = mCursor.col;
-        setSelectionActive(true);
-        markSelectionVisible();
-    }
-    else if (type == SDL_EVENT_KEY_UP)
-    {
-        mSelection.end.row = mCursor.row;
-        mSelection.end.col = mCursor.col;
-        setSelectionActive(false);
-    }
 }
 
 void Editor::loadFile(const std::filesystem::path &path)
@@ -182,8 +169,8 @@ void Editor::loadFile(const std::filesystem::path &path)
 
     mCurrentFilePath = path;
     mBuffer.setLines(std::move(lines));
-    mCursor.row = mBuffer.getLineCount() - 1;
-    mCursor.col = mBuffer.getLineSize(mCursor.row);
+    mCursor.row = 0;
+    mCursor.col = 0;
     LOG_INFO() << path << " was loaded!";
 }
 
@@ -197,7 +184,7 @@ void Editor::saveFileAs(const std::filesystem::path &path)
         return;
     }
 
-    std::vector<std::string> lines = mBuffer.getText();
+    const std::vector<std::string> &lines = mBuffer.getText();
 
     for (size_t i = 0; i < lines.size(); ++i)
     {
@@ -232,24 +219,6 @@ bool Editor::consumeActivity()
     return true;
 }
 
-void Editor::markSelectionVisible()
-{
-    mSelectionVisible = true;
-}
-
-bool Editor::consumeSelectionVisible()
-{
-    if(!mSelectionVisible) return false;
-
-    mSelectionVisible = false;
-    return true;
-}
-
-bool Editor::getSelectionVisible() const
-{
-    return mSelectionVisible;
-}
-
 const Selection &Editor::getSelection() const
 {
     return mSelection;
@@ -263,6 +232,23 @@ void Editor::setSelectionActive(bool b)
 bool Editor::getSelectionActive() const
 {
     return mSelectionActive;
+}
+
+void Editor::clearSelection()
+{
+    mSelectionActive = false;
+}
+
+void Editor::beginSelection()
+{
+    mSelection.begin = mCursor;
+    mSelection.end = mCursor;
+    mSelectionActive = true;
+}
+
+void Editor::updateSelection()
+{
+    mSelection.end = mCursor;
 }
 
 Cursor Editor::getCursor() const
