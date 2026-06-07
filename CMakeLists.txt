@@ -17,6 +17,7 @@ add_executable(papyrus
     src/Editor.h
     src/TextBuffer.cpp
     src/TextBuffer.h
+    src/Argparser.h
     src/logger.h
     src/util.h
 )

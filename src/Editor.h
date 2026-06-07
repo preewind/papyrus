@@ -57,5 +57,5 @@ private:
     TextBuffer mBuffer;
     std::filesystem::path mCurrentFilePath;
     bool mActivity;
-    bool mSelectionActive;
+    bool mSelectionActive = false;
 };
