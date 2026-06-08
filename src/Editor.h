@@ -95,6 +95,7 @@ public:
 
     Cursor getCursor() const;
     const std::string &getLineString(int i) const;
+    const uint32_t getLineCount() const;
     const std::vector<std::string> &getText() const;
 
 private:

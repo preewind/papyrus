@@ -10,6 +10,14 @@ class Cursor;
 class Editor;
 class Selection;
 
+struct EditorLayout {
+    uint16_t marginTop = 20;
+    uint16_t marginLeft = 40;
+    uint16_t lineNumberAreaWidth = 40;
+    uint16_t lineHeight = 0;
+};
+
+
 class Renderer{
 
 public:
@@ -21,9 +29,10 @@ public:
     int measureTextWidth(const std::string& text);
     int getLineHeight() const;
     std::string expandTabs(const std::string& text);
-    void drawText(const std::string& text, int x, int y);
+    void drawText(const std::string& text, int x, int y, SDL_Color color);
     void drawRect(int x, int y, int w, int h, SDL_Color color);
     void resetCursorBlink();
+    void renderLineNumbers(int numLines);
     void renderCursor(const Cursor &cursor, const std::string &text);  
     void renderText(const std::vector<std::string> &text); 
     void renderSelection(const Editor &editor);
@@ -37,4 +46,5 @@ private:
     bool mCursorVisible;
     SDL_Renderer *mRenderer;
     TTF_Font *mFont;
+    EditorLayout mLayout;
 };

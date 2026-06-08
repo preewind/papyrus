@@ -261,6 +261,11 @@ const std::string &Editor::getLineString(int i) const
     return mBuffer.getLine(i);
 }
 
+const uint32_t Editor::getLineCount() const
+{
+    return mBuffer.getLineCount();
+}
+
 const std::vector<std::string> &Editor::getText() const
 {
     return mBuffer.getText();
