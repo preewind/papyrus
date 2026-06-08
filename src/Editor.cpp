@@ -118,7 +118,28 @@ void Editor::moveCursorRight()
     }
 }
 
-void Editor::handleUp()
+void Editor::handleUp(SDL_Keymod mod)
+{
+    bool shiftHeld = mod & SDL_KMOD_SHIFT;
+    if (shiftHeld && !mSelectionActive)
+    {
+        beginSelection();
+    }
+    moveCursorUp();
+
+    if (shiftHeld)
+    {
+        updateSelection();
+    }
+    else
+    {
+        clearSelection();
+    }
+    ensureCursorVisibleVertically();
+    markActivity();
+}
+
+void Editor::moveCursorUp()
 {
     if (mCursor.row > 0)
     {
@@ -130,12 +151,31 @@ void Editor::handleUp()
             mCursor.col = mBuffer.getLineSize(mCursor.row);
         }
     }
-    ensureCursorVisibleVertically();
-    markActivity();
-    clearSelection();
 }
 
-void Editor::handleDown()
+void Editor::handleDown(SDL_Keymod mod)
+{
+    bool shiftHeld = mod & SDL_KMOD_SHIFT;
+    if (shiftHeld && !mSelectionActive)
+    {
+        beginSelection();
+    }
+    moveCursorDown();
+
+    if (shiftHeld)
+    {
+        updateSelection();
+    }
+    else
+    {
+        clearSelection();
+    }
+
+    ensureCursorVisibleVertically();
+    markActivity();
+}
+
+void Editor::moveCursorDown()
 {
     if (mCursor.row < mBuffer.getLineCount() - 1)
     {
@@ -147,9 +187,6 @@ void Editor::handleDown()
             mCursor.col = mBuffer.getLineSize(mCursor.row);
         }
     }
-    ensureCursorVisibleVertically();
-    markActivity();
-    clearSelection();
 }
 
 void Editor::handleTab()
@@ -168,7 +205,7 @@ void Editor::ensureCursorVisibleVertically()
         mScrollOffsetY = mCursor.row - mVisibleRows + 1;
     }
 
-    //LOG_DEBUG() << "offset: " << mScrollOffsetY;
+    // LOG_DEBUG() << "offset: " << mScrollOffsetY;
 }
 
 void Editor::loadFile(const std::filesystem::path &path)

@@ -74,8 +74,10 @@ public:
     void moveCursorLeft();
     void handleRight(SDL_Keymod mod);
     void moveCursorRight();
-    void handleUp();
-    void handleDown();
+    void handleUp(SDL_Keymod mod);
+    void moveCursorUp();
+    void handleDown(SDL_Keymod mod);
+    void moveCursorDown();
     void handleTab();
     void ensureCursorVisibleVertically();
 

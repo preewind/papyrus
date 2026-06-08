@@ -247,7 +247,7 @@ void Renderer::renderEditor(const Editor &editor)
     std::string currentLineText = editor.getLineString(cursor.row);
     renderCursor(cursor, currentLineText, editor.getScrollOffsetY());
     renderText(editor);
-    SDL_SetRenderClipRect(mRenderer, nullptr);
+    CSF(SDL_SetRenderClipRect(mRenderer, nullptr));
 }
 
 void Renderer::updateCursor()

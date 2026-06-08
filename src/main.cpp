@@ -74,10 +74,10 @@ int main(int argc, char *argv[])
                     editor.handleRight(mod);
                     break;
                 case SDLK_UP:
-                    editor.handleUp();
+                    editor.handleUp(mod);
                     break;
                 case SDLK_DOWN:
-                    editor.handleDown();
+                    editor.handleDown(mod);
                     break;
                 case SDLK_TAB:
                     editor.handleTab();
