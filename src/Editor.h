@@ -71,6 +71,7 @@ public:
     void handleBackSpace();
     void handleReturn();
     void handleTab();
+    void handleDelete(SDL_Keymod mod);
     void handleLeft(SDL_Keymod mod);
     void handleRight(SDL_Keymod mod);
     void handleUp(SDL_Keymod mod);

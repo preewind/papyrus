@@ -49,6 +49,34 @@ void Editor::handleReturn()
     ensureCursorVisibleVertically();
 }
 
+void Editor::handleDelete(SDL_Keymod mod)
+{
+    bool shiftHeld = mod & SDL_KMOD_SHIFT;
+
+    // shift + del deletes entire line
+    if (shiftHeld)
+    {
+        mBuffer.eraseRange(mCursor.row, 0, mBuffer.getLineSize(mCursor.row));
+        mBuffer.mergeWithNext(mCursor.row);
+        moveCursorToBeginCol();
+    }
+    else
+    {
+        if (mCursor.col < mBuffer.getLineSize(mCursor.row))
+        {
+            mBuffer.erase(mCursor.row, mCursor.col);
+        }
+        else if (mCursor.col == mBuffer.getLineSize(mCursor.row) && mCursor.row < mBuffer.getLineCount() - 1)
+        {
+            mBuffer.mergeWithNext(mCursor.row);
+        }
+    }
+
+    markActivity();
+    clearSelection();
+    ensureCursorVisibleVertically();
+}
+
 void Editor::handleLeft(SDL_Keymod mod)
 {
     bool shiftHeld = mod & SDL_KMOD_SHIFT;
@@ -68,19 +96,6 @@ void Editor::handleLeft(SDL_Keymod mod)
     }
     ensureCursorVisibleVertically();
     markActivity();
-}
-
-void Editor::moveCursorLeft()
-{
-    if (mCursor.col > 0)
-    {
-        mCursor.col--;
-    }
-    else if (mCursor.col == 0 && mCursor.row > 0)
-    {
-        mCursor.row--;
-        moveCursorToEndCol();
-    }
 }
 
 void Editor::handleRight(SDL_Keymod mod)
@@ -105,19 +120,6 @@ void Editor::handleRight(SDL_Keymod mod)
     markActivity();
 }
 
-void Editor::moveCursorRight()
-{
-    if (mCursor.col < mBuffer.getLineSize(mCursor.row))
-    {
-        mCursor.col++;
-    }
-    else if (mCursor.col == mBuffer.getLineSize(mCursor.row) && mCursor.row < mBuffer.getLineCount() - 1)
-    {
-        mCursor.row++;
-        moveCursorToBeginCol();
-    }
-}
-
 void Editor::handleUp(SDL_Keymod mod)
 {
     bool shiftHeld = mod & SDL_KMOD_SHIFT;
@@ -137,20 +139,6 @@ void Editor::handleUp(SDL_Keymod mod)
     }
     ensureCursorVisibleVertically();
     markActivity();
-}
-
-void Editor::moveCursorUp()
-{
-    if (mCursor.row > 0)
-    {
-        mCursor.row--;
-        bool isUpperShorter = mBuffer.getLineSize(mCursor.row) < mBuffer.getLineSize(mCursor.row + 1);
-        bool colGreaterThanLineAbove = mCursor.col >= mBuffer.getLineSize(mCursor.row);
-        if (isUpperShorter && colGreaterThanLineAbove)
-        {
-            moveCursorToEndCol();
-        }
-    }
 }
 
 void Editor::handleDown(SDL_Keymod mod)
@@ -188,7 +176,7 @@ void Editor::handleHome(SDL_Keymod mod)
     {
         moveCursorToFirstRow();
     }
-    
+
     moveCursorToBeginCol();
 
     if (shiftHeld)
@@ -233,6 +221,51 @@ void Editor::handleEnd(SDL_Keymod mod)
     markActivity();
 }
 
+void Editor::handleTab()
+{
+    handleTextInput("\t");
+}
+
+void Editor::moveCursorLeft()
+{
+    if (mCursor.col > 0)
+    {
+        mCursor.col--;
+    }
+    else if (mCursor.col == 0 && mCursor.row > 0)
+    {
+        mCursor.row--;
+        moveCursorToEndCol();
+    }
+}
+
+void Editor::moveCursorRight()
+{
+    if (mCursor.col < mBuffer.getLineSize(mCursor.row))
+    {
+        mCursor.col++;
+    }
+    else if (mCursor.col == mBuffer.getLineSize(mCursor.row) && mCursor.row < mBuffer.getLineCount() - 1)
+    {
+        mCursor.row++;
+        moveCursorToBeginCol();
+    }
+}
+
+void Editor::moveCursorUp()
+{
+    if (mCursor.row > 0)
+    {
+        mCursor.row--;
+        bool isUpperShorter = mBuffer.getLineSize(mCursor.row) < mBuffer.getLineSize(mCursor.row + 1);
+        bool colGreaterThanLineAbove = mCursor.col >= mBuffer.getLineSize(mCursor.row);
+        if (isUpperShorter && colGreaterThanLineAbove)
+        {
+            moveCursorToEndCol();
+        }
+    }
+}
+
 void Editor::moveCursorDown()
 {
     if (mCursor.row < mBuffer.getLineCount() - 1)
@@ -265,11 +298,6 @@ void Editor::moveCursorToFirstRow()
 void Editor::moveCursorToLastRow()
 {
     mCursor.row = mBuffer.getLineCount() - 1;
-}
-
-void Editor::handleTab()
-{
-    handleTextInput("\t");
 }
 
 void Editor::ensureCursorVisibleVertically()
