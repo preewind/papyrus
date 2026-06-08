@@ -46,6 +46,8 @@ public:
 
     void onResize(uint32_t w, uint32_t h);
 
+    void ensureCursorVisibleHorizontally(const Cursor& cursor,const std::string& line);
+
     int textX(const std::string &line, uint32_t col);
     int screenY(uint32_t row, uint32_t scrollOffset) const;
 
@@ -55,4 +57,5 @@ private:
     SDL_Renderer *mRenderer;
     TTF_Font *mFont;
     EditorLayout mLayout;
+    int mScrollOffsetX = 0;
 };

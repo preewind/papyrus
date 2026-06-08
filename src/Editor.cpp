@@ -19,7 +19,7 @@ void Editor::handleTextInput(const std::string &text)
     mCursor.col += text.size();
     markActivity();
     clearSelection();
-    ensureCursorVisible();
+    ensureCursorVisibleVertically();
 }
 
 void Editor::handleBackSpace()
@@ -37,7 +37,7 @@ void Editor::handleBackSpace()
     }
     markActivity();
     clearSelection();
-    ensureCursorVisible();
+    ensureCursorVisibleVertically();
 }
 void Editor::handleReturn()
 {
@@ -46,7 +46,7 @@ void Editor::handleReturn()
     mCursor.row++;
     markActivity();
     clearSelection();
-    ensureCursorVisible();
+    ensureCursorVisibleVertically();
 }
 
 void Editor::handleLeft(SDL_Keymod mod)
@@ -66,7 +66,7 @@ void Editor::handleLeft(SDL_Keymod mod)
     {
         clearSelection();
     }
-    ensureCursorVisible();
+    ensureCursorVisibleVertically();
     markActivity();
 }
 
@@ -101,7 +101,7 @@ void Editor::handleRight(SDL_Keymod mod)
         clearSelection();
     }
 
-    ensureCursorVisible();
+    ensureCursorVisibleVertically();
     markActivity();
 }
 
@@ -130,7 +130,7 @@ void Editor::handleUp()
             mCursor.col = mBuffer.getLineSize(mCursor.row);
         }
     }
-    ensureCursorVisible();
+    ensureCursorVisibleVertically();
     markActivity();
     clearSelection();
 }
@@ -147,7 +147,7 @@ void Editor::handleDown()
             mCursor.col = mBuffer.getLineSize(mCursor.row);
         }
     }
-    ensureCursorVisible();
+    ensureCursorVisibleVertically();
     markActivity();
     clearSelection();
 }
@@ -157,15 +157,18 @@ void Editor::handleTab()
     handleTextInput("\t");
 }
 
-void Editor::ensureCursorVisible()
+void Editor::ensureCursorVisibleVertically()
 {
-    if(mCursor.row < mScrollOffsetY){
+    if (mCursor.row < mScrollOffsetY)
+    {
         mScrollOffsetY = mCursor.row;
     }
-    else if(mCursor.row >= mScrollOffsetY + mVisibleRows){
-        mScrollOffsetY = mCursor.row - mVisibleRows +1;
+    else if (mCursor.row >= mScrollOffsetY + mVisibleRows)
+    {
+        mScrollOffsetY = mCursor.row - mVisibleRows + 1;
     }
-    LOG_DEBUG() << "offset: " << mScrollOffsetY;
+
+    //LOG_DEBUG() << "offset: " << mScrollOffsetY;
 }
 
 void Editor::loadFile(const std::filesystem::path &path)
@@ -298,7 +301,7 @@ const uint32_t &Editor::getVisibleRows() const
     return mVisibleRows;
 }
 
-const uint32_t &Editor::getScrollOffset() const
+const uint32_t &Editor::getScrollOffsetY() const
 {
     return mScrollOffsetY;
 }

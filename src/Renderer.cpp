@@ -142,7 +142,7 @@ void Renderer::renderLineNumbers(uint32_t numLines, uint32_t scrollOffsetY, uint
     for (uint32_t i = first; i < last; ++i)
     {
 
-        drawText(std::to_string(i+1), mLayout.lineNumberAreaWidth / 2 - measureTextWidth(std::to_string(i+1)) / 2, screenY(i, scrollOffsetY), SDL_Color{66, 67, 68, 255});
+        drawText(std::to_string(i + 1), mLayout.lineNumberAreaWidth / 2 - measureTextWidth(std::to_string(i + 1)) / 2, screenY(i, scrollOffsetY), SDL_Color{66, 67, 68, 255});
     }
 }
 
@@ -161,14 +161,14 @@ void Renderer::renderText(const Editor &editor)
 {
     auto &text = editor.getText();
     int visRows = editor.getVisibleRows();
-    int first = editor.getScrollOffset();
+    int first = editor.getScrollOffsetY();
     int last = std::min(
         first + visRows,
         (int)text.size());
 
     for (size_t i = first; i < last; ++i)
     {
-        drawText(expandTabs(text[i]), mLayout.marginLeft, screenY(i, first));
+        drawText(expandTabs(text[i]), mLayout.marginLeft - mScrollOffsetX, screenY(i, first));
     }
 }
 
@@ -184,8 +184,10 @@ void Renderer::renderSelection(const Editor &editor)
 
     for (size_t row = start.row; row <= end.row; ++row)
     {
-        if(row < editor.getScrollOffset()) continue;
-        if(row >= editor.getScrollOffset() + editor.getVisibleRows())break;
+        if (row < editor.getScrollOffsetY())
+            continue;
+        if (row >= editor.getScrollOffsetY() + editor.getVisibleRows())
+            break;
 
         int beginCol, endCol;
         if (row == start.row)
@@ -216,7 +218,7 @@ void Renderer::renderSelection(const Editor &editor)
         const std::string &line = editor.getLineString(row);
         std::string selectedText = expandTabs(line.substr(beginCol, endCol - beginCol));
         int x = textX(line, beginCol);
-        int y = screenY(row, editor.getScrollOffset());
+        int y = screenY(row, editor.getScrollOffsetY());
         int w = measureTextWidth(selectedText);
         int h = mLayout.lineHeight;
         LOG_DEBUG() << selectedText;
@@ -226,15 +228,26 @@ void Renderer::renderSelection(const Editor &editor)
 
 void Renderer::renderEditor(const Editor &editor)
 {
+    renderLineNumbers(editor.getLineCount(), editor.getScrollOffsetY(), editor.getVisibleRows());
+    // ensure 
+    SDL_Rect clipRect{
+        mLayout.marginLeft,
+        0,
+        mLayout.windowWidth - mLayout.marginLeft,
+        mLayout.windowHeight};
+
+    CSF(SDL_SetRenderClipRect(mRenderer, &clipRect));
+
     if (editor.getSelectionActive())
     {
         renderSelection(editor);
     }
-    renderLineNumbers(editor.getLineCount(), editor.getScrollOffset(), editor.getVisibleRows());
+
     Cursor cursor = editor.getCursor();
     std::string currentLineText = editor.getLineString(cursor.row);
-    renderCursor(cursor, currentLineText, editor.getScrollOffset());
+    renderCursor(cursor, currentLineText, editor.getScrollOffsetY());
     renderText(editor);
+    SDL_SetRenderClipRect(mRenderer, nullptr);
 }
 
 void Renderer::updateCursor()
@@ -253,10 +266,12 @@ void Renderer::update(Editor &editor)
     {
         resetCursorBlink();
     }
-    editor.setVisibleRows((mLayout.windowHeight - mLayout.marginTop) / mLayout.lineHeight);
     updateCursor();
     clear();
     renderEditor(editor);
+    editor.setVisibleRows((mLayout.windowHeight - mLayout.marginTop) / mLayout.lineHeight);
+    Cursor cursor = editor.getCursor();
+    ensureCursorVisibleHorizontally(cursor, editor.getLineString(cursor.row));
     present();
 }
 
@@ -271,9 +286,26 @@ void Renderer::onResize(uint32_t w, uint32_t h)
     mLayout.windowHeight = h;
 }
 
+void Renderer::ensureCursorVisibleHorizontally(const Cursor &cursor, const std::string &line)
+{
+    int cursorPixelX = measureTextWidth(expandTabs(line.substr(0, cursor.col)));
+
+    int visibleWidth =
+        mLayout.windowWidth - mLayout.marginLeft - mLayout.lineNumberAreaWidth;
+
+    if (cursorPixelX < mScrollOffsetX)
+    {
+        mScrollOffsetX = cursorPixelX;
+    }
+    else if (cursorPixelX > mScrollOffsetX + visibleWidth)
+    {
+        mScrollOffsetX = cursorPixelX - visibleWidth + 20;
+    }
+}
+
 int Renderer::textX(const std::string &line, uint32_t col)
 {
-    return mLayout.marginLeft + measureTextWidth(expandTabs(line.substr(0, col)));
+    return mLayout.marginLeft + measureTextWidth(expandTabs(line.substr(0, col))) - mScrollOffsetX;
 }
 
 int Renderer::screenY(uint32_t row, uint32_t scrollOffset) const
