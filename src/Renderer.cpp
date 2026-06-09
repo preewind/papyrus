@@ -11,6 +11,7 @@
 Renderer::Renderer(SDL_Window *window)
 {
     mRenderer = SDL_CreateRenderer(window, nullptr);
+    CSF(SDL_SetRenderVSync(mRenderer, 1)); // TODO maybe make this an option to set manually
 
     if (!mRenderer)
     {

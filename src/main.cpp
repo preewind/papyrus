@@ -46,8 +46,19 @@ int main(int argc, char *argv[])
 
     bool running = true;
 
+    Uint64 lastTime = SDL_GetTicksNS();
+    float fps = 0.0f;
+
     while (running)
     {
+        Uint64 currentTime = SDL_GetTicksNS();
+        Uint64 deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+        if(deltaTime > 0){
+            fps = 1000000000.0f / static_cast<float>(deltaTime);
+        }
+        SDL_SetWindowTitle(window, std::format("papyrus [{}] [{}fps]", filename, (int)fps).c_str());
+
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -101,7 +112,6 @@ int main(int argc, char *argv[])
                 // IO
                 case SDLK_F1:
                     editor.loadFile(filename);
-                    SDL_SetWindowTitle(window, std::format("papyrus [{}]", filename).c_str());
                     break;
                 case SDLK_F2:
                     editor.saveFileAs("./test2.txt");
