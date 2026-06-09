@@ -1,6 +1,8 @@
 #include <fstream>
 #include <iostream>
 
+#include <SDL3/SDL_clipboard.h>
+
 #include "Editor.h"
 #include "logger.h"
 
@@ -221,6 +223,29 @@ void Editor::handleEnd(SDL_Keymod mod)
     markActivity();
 }
 
+void Editor::handleC(SDL_Keymod mod)
+{
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+
+    if(ctrlHeld){
+        const std::string& text = getSelectedText();
+        LOG_DEBUG() << text;
+        SDL_SetClipboardText(text.c_str());
+    }
+}
+
+void Editor::handleV(SDL_Keymod mod)
+{
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+
+    if(ctrlHeld){
+        const std::string& text = SDL_GetClipboardText();
+        LOG_DEBUG() << text;
+        // TODO multiline text, split at \n, update cursor to last position
+        mCursor = mBuffer.insertFormatted(mCursor.row, mCursor.col, text);
+    }
+}
+
 void Editor::handleTab()
 {
     handleTextInput("\t");
@@ -412,6 +437,19 @@ void Editor::beginSelection()
 void Editor::updateSelection()
 {
     mSelection.end = mCursor;
+}
+
+const std::string Editor::getSelectedText() const
+{
+    Selection selection = mSelection.normalized();
+    std::string test = "";
+    if(mSelectionActive){
+        
+        LOG_DEBUG() << selection.begin << " -> " << selection.end;
+        test = mBuffer.getTextSlice(selection.begin.row, selection.begin.col, selection.end.row, selection.end.col);
+        LOG_DEBUG() << test;
+    }
+    return test;
 }
 
 Cursor Editor::getCursor() const

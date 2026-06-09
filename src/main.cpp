@@ -91,6 +91,12 @@ int main(int argc, char *argv[])
                 case SDLK_DELETE:
                     editor.handleDelete(mod);
                     break;
+                case SDLK_C:
+                    editor.handleC(mod);
+                    break;
+                case SDLK_V:
+                    editor.handleV(mod);
+                    break;
 
                 // IO
                 case SDLK_F1:

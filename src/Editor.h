@@ -5,60 +5,10 @@
 #include <filesystem>
 
 #include <SDL3/SDL_stdinc.h>
+#include <SDL3/SDL_keycode.h>
 
-#include "Renderer.h"
 #include "TextBuffer.h"
-
-struct Position
-{
-    size_t row, col;
-
-    bool operator==(const Position &other) const
-    {
-        return row == other.row && col == other.col;
-    }
-    bool operator!=(const Position &other) const
-    {
-        return !(*this == other);
-    }
-    bool operator<(const Position &other) const
-    {
-        if (row != other.row)
-        {
-            return row < other.row;
-        }
-
-        return col < other.col;
-    }
-    bool operator>(const Position &other) const
-    {
-        return other < *this;
-    }
-};
-
-struct Cursor:Position{};
-
-struct Selection
-{
-    Position begin;
-    Position end;
-
-    bool empty() const
-    {
-        return begin == end;
-    }
-
-    Selection normalized() const
-    {
-        if (begin < end)
-        {
-            return *this;
-        }
-        return Selection{
-            .begin = end,
-            .end = begin};
-    }
-};
+#include "types.h"
 
 class Editor
 {
@@ -78,6 +28,8 @@ public:
     void handleDown(SDL_Keymod mod);
     void handleHome(SDL_Keymod mod);
     void handleEnd(SDL_Keymod mod);
+    void handleC(SDL_Keymod mod);
+    void handleV(SDL_Keymod mod);
 
     void moveCursorLeft();
     void moveCursorRight();
@@ -87,7 +39,7 @@ public:
     void moveCursorToEndCol();
     void moveCursorToFirstRow();
     void moveCursorToLastRow();
-    
+
     void ensureCursorVisibleVertically();
 
     void loadFile(const std::filesystem::path &path);
@@ -103,15 +55,15 @@ public:
     void clearSelection();
     void beginSelection();
     void updateSelection();
-
+    const std::string getSelectedText() const;
 
     Cursor getCursor() const;
     const std::string &getLineString(int i) const;
     const uint32_t getLineCount() const;
     const std::vector<std::string> &getText() const;
     void setVisibleRows(uint32_t rows);
-    const uint32_t& getVisibleRows() const;
-    const uint32_t& getScrollOffsetY() const;
+    const uint32_t &getVisibleRows() const;
+    const uint32_t &getScrollOffsetY() const;
 
 private:
     Selection mSelection{0};
@@ -120,7 +72,7 @@ private:
     std::filesystem::path mCurrentFilePath;
     bool mActivity;
     bool mSelectionActive = false;
-    uint32_t mScrollOffsetY=0;
+    uint32_t mScrollOffsetY = 0;
     uint32_t mVisibleRows = 0;
     uint32_t mVisibleTextWidth = 0;
 };

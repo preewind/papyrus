@@ -221,7 +221,7 @@ void Renderer::renderSelection(const Editor &editor)
         int y = screenY(row, editor.getScrollOffsetY());
         int w = measureTextWidth(selectedText);
         int h = mLayout.lineHeight;
-        LOG_DEBUG() << selectedText;
+        //LOG_DEBUG() << selectedText;
         drawRect(x, y, w, h, SDL_Color{46, 47, 48, 255});
     }
 }
