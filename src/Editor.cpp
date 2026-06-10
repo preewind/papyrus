@@ -63,6 +63,9 @@ void Editor::handleKey(const SDL_Event &event)
         case SDLK_C:
             handleC(mod);
             break;
+        case SDLK_S:
+            handleS(mod);
+            break;
         case SDLK_V:
             handleV(mod);
             break;
@@ -313,6 +316,16 @@ void Editor::handleC(SDL_Keymod mod)
     }
 }
 
+void Editor::handleS(SDL_Keymod mod)
+{
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+
+    if (ctrlHeld)
+    {
+        saveFile();
+    }
+}
+
 void Editor::handleV(SDL_Keymod mod)
 {
     bool ctrlHeld = mod & SDL_KMOD_CTRL;
@@ -462,7 +475,7 @@ void Editor::saveFileAs(const std::filesystem::path &path)
             file << "\n";
         }
     }
-    LOG_INFO() << path << " was saved! \n";
+    LOG_INFO() << path << " was saved!";
 }
 
 void Editor::saveFile()

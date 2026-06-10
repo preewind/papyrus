@@ -114,6 +114,7 @@ void Application::update()
         if (auto file = mFileBrowser.consumeOpenRequest())
         {
             mEditor.loadFile(*file);
+            SDL_SetWindowTitle(mWindow, std::format("papyrus [{}]", file->filename().string()).c_str());
             mCurrentScreen = Screen::Editor;
         }
         break;

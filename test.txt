@@ -1,6 +1,2 @@
-HelloWorld
-Existing Line
-Another Line
-
-A
-B
+Hello World from inside Editor!
+This time without pasting lol

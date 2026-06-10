@@ -32,6 +32,7 @@ public:
     void handleEnd(SDL_Keymod mod);
     void handleA(SDL_Keymod mod);
     void handleC(SDL_Keymod mod);
+    void handleS(SDL_Keymod mod);
     void handleV(SDL_Keymod mod);
 
     void moveCursorLeft();
