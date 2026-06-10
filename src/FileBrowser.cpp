@@ -119,11 +119,46 @@ void FileBrowser::handleReturn()
 void FileBrowser::handleUp()
 {
     mSelectedIndex = (mSelectedIndex + mCurrentDirFiles.size() - 1) % mCurrentDirFiles.size();
+    ensureSelectionVisible();
     LOG_DEBUG() << "Index: " << mSelectedIndex;
 }
 
 void FileBrowser::handleDown()
 {
     mSelectedIndex = (mSelectedIndex + 1) % mCurrentDirFiles.size();
+    ensureSelectionVisible();
     LOG_DEBUG() << "Index: " << mSelectedIndex;
+}
+
+void FileBrowser::ensureSelectionVisible()
+{
+    if (mSelectedIndex < mScrollOffset)
+    {
+        mScrollOffset = mSelectedIndex;
+    }
+    else if (mSelectedIndex >= mScrollOffset + mVisibleFiles)
+    {
+        mScrollOffset = mSelectedIndex - mVisibleFiles + 1;
+    }
+    LOG_DEBUG() << "offset: " << mScrollOffset;
+}
+
+void FileBrowser::setVisibleFiles(uint32_t numFiles)
+{
+    mVisibleFiles = numFiles;
+}
+
+const uint32_t &FileBrowser::getVisibleFiles() const
+{
+    return mVisibleFiles;
+}
+
+const uint32_t &FileBrowser::getScrollOffset() const
+{
+    return mScrollOffset;
+}
+
+const std::string FileBrowser::getFileExtension(std::filesystem::path path) const
+{
+    return path.extension();
 }

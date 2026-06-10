@@ -24,9 +24,18 @@ public:
     void handleUp();
     void handleDown();
 
+    void ensureSelectionVisible();
+    void setVisibleFiles(uint32_t numFiles);
+    const uint32_t &getVisibleFiles() const;
+    const uint32_t &getScrollOffset() const;
+
+    const std::string getFileExtension(std::filesystem::path path) const; 
+
 private:
     std::vector<std::filesystem::path> mCurrentDirFiles;
     std::filesystem::path mCurrentDir = std::filesystem::current_path();
     uint32_t mSelectedIndex = 0;
     std::optional<std::filesystem::path> mOpenRequest;
+    uint32_t mScrollOffset = 0;
+    uint32_t mVisibleFiles = 0;
 };

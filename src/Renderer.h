@@ -46,6 +46,7 @@ public:
     void updateEditor(Editor &editor);
     void updateFileBrowser(FileBrowser &browser);
     void renderFileBrowserSelection(FileBrowser &browser);
+    const std::string fitTextToWidth(const std::string &text, std::string &extension);
     void present();
 
     void onResize(uint32_t w, uint32_t h);

@@ -280,11 +280,20 @@ void Renderer::updateFileBrowser(FileBrowser &browser)
 {
     clear();
     renderFileBrowserSelection(browser);
-    auto FilesToRender = browser.getCurrentDirFilesToRender();
-    for (size_t i = 0; i < FilesToRender.size(); ++i)
+    uint32_t visibleFiles = (mLayout.windowHeight - mLayout.marginTop) / mLayout.lineHeight;
+    browser.setVisibleFiles(visibleFiles);
+    std::vector<std::string> filesToRender = browser.getCurrentDirFilesToRender();
+
+    
+    uint32_t first = browser.getScrollOffset();
+    uint32_t last = std::min(static_cast<int>(first + visibleFiles), static_cast<int>(filesToRender.size()));
+    for (size_t i = first; i < last; ++i)
     {
-        std::string file = FilesToRender[i];
-        drawText(file, mLayout.marginLeft - mScrollOffsetX, screenY(i, 0));
+        std::string file = filesToRender[i];
+        std::string extension = browser.getFileExtension(file);
+        uint32_t first = browser.getScrollOffset();
+        file = fitTextToWidth(file, extension);
+        drawText(file, mLayout.marginLeft, screenY(i, first));
     }
     present();
 }
@@ -292,10 +301,43 @@ void Renderer::updateFileBrowser(FileBrowser &browser)
 void Renderer::renderFileBrowserSelection(FileBrowser &browser)
 {
     int x = mLayout.marginLeft;
-    int y = screenY(browser.getSelectedIndex(), 0);
+    int y = screenY(browser.getSelectedIndex(), browser.getScrollOffset());
     int w = measureTextWidth(browser.getSelectedIndexPath());
     int h = mLayout.lineHeight;
     drawRect(x, y, w, h, SDL_Color{46, 47, 108, 255});
+}
+
+/*
+    Could probably be optimized, but will change when renderer changes anyways, so good lock future me :)
+*/
+const std::string Renderer::fitTextToWidth(const std::string &text, std::string &extension)
+{
+    uint32_t visibleWidth = mLayout.windowWidth - mLayout.marginLeft - measureTextWidth("...") - measureTextWidth(extension);
+
+    if (measureTextWidth(text)-measureTextWidth(extension) <= visibleWidth){
+        return text;
+    }
+        
+    uint32_t low = 0;
+    uint32_t high = text.length()-extension.size();
+    uint32_t bestLength = 0;
+
+    while (low <= high)
+    {
+        uint32_t mid = low + (high - low) / 2;
+
+        const std::string subs = text.substr(0, mid);
+
+        if(measureTextWidth(subs) <= visibleWidth){
+            bestLength = mid;
+            low = mid+1;
+        }
+        else{
+            high = mid-1;
+        }
+    }
+
+    return (text.substr(0, bestLength)+ "..." + extension);
 }
 
 void Renderer::present()
