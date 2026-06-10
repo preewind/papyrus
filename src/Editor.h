@@ -30,6 +30,7 @@ public:
     void handleDown(SDL_Keymod mod);
     void handleHome(SDL_Keymod mod);
     void handleEnd(SDL_Keymod mod);
+    void handleComma(SDL_Keymod mod);
     void handleA(SDL_Keymod mod);
     void handleC(SDL_Keymod mod);
     void handleS(SDL_Keymod mod);

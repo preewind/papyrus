@@ -57,6 +57,9 @@ void Editor::handleKey(const SDL_Event &event)
         case SDLK_DELETE:
             handleDelete(mod);
             break;
+        case SDLK_COMMA:
+            handleComma(mod);
+            break;
         case SDLK_A:
             handleA(mod);
             break;
@@ -289,6 +292,18 @@ void Editor::handleEnd(SDL_Keymod mod)
 
     ensureCursorVisibleVertically();
     markActivity();
+}
+/*
+    Using Comma here, because on German keyboard it is interpreted as a comma always, even when pressing shift it is just shift+comma, so now ctrl + comma inserts ; at the end of the line
+*/
+void Editor::handleComma(SDL_Keymod mod)
+{
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+    if (ctrlHeld)
+    {
+        mBuffer.insert(mCursor.row, mBuffer.getLine(mCursor.row).size(), ";");
+        moveCursorToEndCol();
+    }
 }
 
 void Editor::handleA(SDL_Keymod mod)

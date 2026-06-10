@@ -308,7 +308,7 @@ void Renderer::renderFileBrowserSelection(FileBrowser &browser)
 }
 
 /*
-    Could probably be optimized, but will change when renderer changes anyways, so good lock future me :)
+    Could probably be optimized, but will change when renderer changes anyways, so good luck future me :)
 */
 const std::string Renderer::fitTextToWidth(const std::string &text, std::string &extension)
 {
