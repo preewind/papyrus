@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <filesystem>
+#include <optional>
 
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_keycode.h>
@@ -10,6 +11,7 @@
 
 #include "TextBuffer.h"
 #include "types.h"
+#include "SearchSession.h"
 
 class Editor
 {
@@ -18,7 +20,7 @@ public:
     Editor();
     ~Editor();
 
-    void handleKey(const SDL_Event& event);
+    void handleKey(const SDL_Event &event);
     void handleTextInput(const std::string &text);
     void handleBackSpace();
     void handleReturn();
@@ -33,6 +35,7 @@ public:
     void handleComma(SDL_Keymod mod);
     void handleA(SDL_Keymod mod);
     void handleC(SDL_Keymod mod);
+    void handleF(SDL_Keymod mod);
     void handleS(SDL_Keymod mod);
     void handleV(SDL_Keymod mod);
 
@@ -51,6 +54,10 @@ public:
     void saveFileAs(const std::filesystem::path &path);
     void saveFile();
 
+    bool isSearchActive() const;
+    const SearchSession &getSearch() const;
+    void updateSearchMatches();
+
     void markActivity();
     bool consumeActivity();
 
@@ -64,16 +71,18 @@ public:
 
     Cursor getCursor() const;
     const std::string &getLineString(int i) const;
-    const uint32_t getLineCount() const;
+    uint32_t getLineCount() const;
     const std::vector<std::string> &getText() const;
     void setVisibleRows(uint32_t rows);
     const uint32_t &getVisibleRows() const;
     const uint32_t &getScrollOffsetY() const;
 
 private:
-    Selection mSelection{0};
+    Selection mSelection;
     Cursor mCursor;
     TextBuffer mBuffer;
+    std::optional<SearchSession> mSearch;
+    SearchEngine mSearchEngine;
     std::filesystem::path mCurrentFilePath;
     bool mActivity;
     bool mSelectionActive = false;

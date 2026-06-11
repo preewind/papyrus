@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <optional>
 
 #include <SDL3/SDL_clipboard.h>
 
@@ -66,6 +67,9 @@ void Editor::handleKey(const SDL_Event &event)
         case SDLK_C:
             handleC(mod);
             break;
+        case SDLK_F:
+            handleF(mod);
+            break;
         case SDLK_S:
             handleS(mod);
             break;
@@ -88,11 +92,20 @@ void Editor::handleKey(const SDL_Event &event)
 
 void Editor::handleTextInput(const std::string &text)
 {
-    mBuffer.insert(mCursor.row, mCursor.col, text);
-    mCursor.col += text.size();
-    markActivity();
-    clearSelection();
-    ensureCursorVisibleVertically();
+    if (isSearchActive())
+    {
+        mSearch->addToQuery(text);
+        updateSearchMatches();
+        LOG_DEBUG() << "Search: " << mSearch->getQuery();
+    }
+    else
+    {
+        mBuffer.insert(mCursor.row, mCursor.col, text);
+        mCursor.col += text.size();
+        markActivity();
+        clearSelection();
+        ensureCursorVisibleVertically();
+    }
 }
 
 void Editor::handleBackSpace()
@@ -195,20 +208,30 @@ void Editor::handleRight(SDL_Keymod mod)
 
 void Editor::handleUp(SDL_Keymod mod)
 {
-    bool shiftHeld = mod & SDL_KMOD_SHIFT;
-    if (shiftHeld && !mSelectionActive)
+    if (isSearchActive())
     {
-        beginSelection();
-    }
-    moveCursorUp();
-
-    if (shiftHeld)
-    {
-        updateSelection();
+        mSearch->mCurrentMatch = (mSearch->mCurrentMatch + mSearch->getMatches().size() - 1) % mSearch->getMatches().size();
+        SearchMatch match = mSearch->getMatches()[mSearch->mCurrentMatch];
+        mCursor.row = match.row;
+        mCursor.col = match.col;
     }
     else
     {
-        clearSelection();
+        bool shiftHeld = mod & SDL_KMOD_SHIFT;
+        if (shiftHeld && !mSelectionActive)
+        {
+            beginSelection();
+        }
+        moveCursorUp();
+
+        if (shiftHeld)
+        {
+            updateSelection();
+        }
+        else
+        {
+            clearSelection();
+        }
     }
     ensureCursorVisibleVertically();
     markActivity();
@@ -216,20 +239,30 @@ void Editor::handleUp(SDL_Keymod mod)
 
 void Editor::handleDown(SDL_Keymod mod)
 {
-    bool shiftHeld = mod & SDL_KMOD_SHIFT;
-    if (shiftHeld && !mSelectionActive)
+    if (isSearchActive())
     {
-        beginSelection();
-    }
-    moveCursorDown();
-
-    if (shiftHeld)
-    {
-        updateSelection();
+        mSearch->mCurrentMatch = (mSearch->mCurrentMatch + 1) % mSearch->getMatches().size();
+        SearchMatch match = mSearch->getMatches()[mSearch->mCurrentMatch];
+        mCursor.row = match.row;
+        mCursor.col = match.col;
     }
     else
     {
-        clearSelection();
+        bool shiftHeld = mod & SDL_KMOD_SHIFT;
+        if (shiftHeld && !mSelectionActive)
+        {
+            beginSelection();
+        }
+        moveCursorDown();
+
+        if (shiftHeld)
+        {
+            updateSelection();
+        }
+        else
+        {
+            clearSelection();
+        }
     }
 
     ensureCursorVisibleVertically();
@@ -328,6 +361,25 @@ void Editor::handleC(SDL_Keymod mod)
         const std::string &text = getSelectedText();
         LOG_DEBUG() << text;
         SDL_SetClipboardText(text.c_str());
+    }
+}
+
+void Editor::handleF(SDL_Keymod mod)
+{
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+
+    if (ctrlHeld)
+    {
+        if (!isSearchActive())
+        {
+            mSearch.emplace();
+            LOG_DEBUG() << "Search activated!";
+        }
+        else
+        {
+            mSearch.reset();
+            LOG_DEBUG() << "Search deactivated!";
+        }
     }
 }
 
@@ -498,6 +550,30 @@ void Editor::saveFile()
     saveFileAs(mCurrentFilePath);
 }
 
+bool Editor::isSearchActive() const
+{
+    return mSearch.has_value();
+}
+
+const SearchSession &Editor::getSearch() const
+{
+    return *mSearch;
+}
+
+void Editor::updateSearchMatches()
+{
+    if (!mSearch)
+        return;
+    mSearch->setMatches(mSearchEngine.find(mBuffer, mSearch->getQuery()));
+
+    if (mSearch->getMatches().size() > 0)
+    {
+        SearchMatch match = mSearch->getMatches()[0];
+        mCursor.row = (size_t)match.row;
+        mCursor.col = (size_t)match.col;
+    }
+}
+
 void Editor::markActivity()
 {
     mActivity = true;
@@ -570,7 +646,7 @@ const std::string &Editor::getLineString(int i) const
     return mBuffer.getLine(i);
 }
 
-const uint32_t Editor::getLineCount() const
+uint32_t Editor::getLineCount() const
 {
     return mBuffer.getLineCount();
 }

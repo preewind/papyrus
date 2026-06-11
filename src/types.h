@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 #include <iostream>
 
 enum class Screen {
@@ -8,6 +9,12 @@ enum class Screen {
     FileBrowser,
     Settings,
     Terminal
+};
+
+struct SearchMatch {
+    uint32_t row;
+    uint32_t col;
+    uint32_t length;
 };
 
 struct Position

@@ -79,7 +79,7 @@ const std::filesystem::path FileBrowser::getCurrentDir() const
     return mCurrentDir;
 }
 
-const uint32_t FileBrowser::getSelectedIndex() const
+uint32_t FileBrowser::getSelectedIndex() const
 {
     return mSelectedIndex;
 }

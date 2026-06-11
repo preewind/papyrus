@@ -6,6 +6,7 @@
 #include "Renderer.h"
 #include "Editor.h"
 #include "FileBrowser.h"
+#include "SearchSession.h"
 #include "logger.h"
 #include "util.h"
 
@@ -218,13 +219,7 @@ void Renderer::renderSelection(const Editor &editor)
             endCol = end.col;
         }
         const std::string &line = editor.getLineString(row);
-        std::string selectedText = expandTabs(line.substr(beginCol, endCol - beginCol));
-        int x = textX(line, beginCol);
-        int y = screenY(row, editor.getScrollOffsetY());
-        int w = measureTextWidth(selectedText);
-        int h = mLayout.lineHeight;
-        // LOG_DEBUG() << selectedText;
-        drawRect(x, y, w, h, SDL_Color{46, 47, 48, 255});
+        renderHighlightedRange(line, row, beginCol, endCol - beginCol, editor.getScrollOffsetY());
     }
 }
 
@@ -243,12 +238,55 @@ void Renderer::renderEditor(const Editor &editor)
     {
         renderSelection(editor);
     }
-
+    if (editor.isSearchActive())
+    {
+        renderSearchMatches(editor.getSearch(), editor);
+    }
     Cursor cursor = editor.getCursor();
     std::string currentLineText = editor.getLineString(cursor.row);
     renderCursor(cursor, currentLineText, editor.getScrollOffsetY());
     renderText(editor);
+    if (editor.isSearchActive())
+    {
+        renderSearchOverlay(editor.getSearch());
+    }
     CSF(SDL_SetRenderClipRect(mRenderer, nullptr));
+}
+
+void Renderer::renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY)
+{
+
+    std::string selectedText = expandTabs(text.substr(col, length));
+    int x = textX(text, col);
+    int y = screenY(row, scrollOffsetY);
+    int w = measureTextWidth(selectedText);
+    int h = mLayout.lineHeight;
+    drawRect(x, y, w, h, SDL_Color{46, 47, 48, 255});
+}
+
+void Renderer::renderSearchOverlay(const SearchSession &session)
+{
+    uint32_t x = mLayout.marginLeft + mLayout.windowWidth / 2;
+    uint32_t y = mLayout.marginTop + mLayout.lineHeight;
+    uint32_t w = mLayout.windowWidth - x - 50;
+    uint32_t h = 1.5 * mLayout.lineHeight;
+
+    drawRect(x, y, w, h, SDL_Color{34, 35, 36, 255});
+    drawText(session.getQuery(), x + 5, y + (h / 2) - mLayout.lineHeight / 2, SDL_Color{255, 255, 255, 255});
+    // LOG_DEBUG() << "Render search: " << session.getQuery();
+}
+
+void Renderer::renderSearchMatches(const SearchSession &session, const Editor &editor)
+{
+    if (session.getMatches().size() == 0)
+    {
+        return;
+    }
+    for (SearchMatch &match : session.getMatches())
+    {
+        const std::string &line = editor.getLineString(match.row);
+        renderHighlightedRange(line, match.row, match.col, match.length, editor.getScrollOffsetY());
+    }
 }
 
 void Renderer::updateCursor()
@@ -296,7 +334,8 @@ void Renderer::updateFileBrowser(FileBrowser &browser)
     {
         std::string file = filesToRender[i];
         color = {255, 255, 255, 255};
-        if(std::filesystem::is_directory(currentPathStr/std::filesystem::path{file})){
+        if (std::filesystem::is_directory(currentPathStr / std::filesystem::path{file}))
+        {
             color = {255, 255, 0, 255};
         }
         std::string extension = browser.getFileExtension(file);
@@ -324,12 +363,13 @@ const std::string Renderer::fitTextToWidth(const std::string &text, std::string 
 {
     uint32_t visibleWidth = mLayout.windowWidth - mLayout.marginLeft - measureTextWidth("...") - measureTextWidth(extension);
 
-    if (measureTextWidth(text)-measureTextWidth(extension) <= visibleWidth){
+    if (measureTextWidth(text) - measureTextWidth(extension) <= visibleWidth)
+    {
         return text;
     }
-        
+
     uint32_t low = 0;
-    uint32_t high = text.length()-extension.size();
+    uint32_t high = text.length() - extension.size();
     uint32_t bestLength = 0;
 
     while (low <= high)
@@ -338,16 +378,18 @@ const std::string Renderer::fitTextToWidth(const std::string &text, std::string 
 
         const std::string subs = text.substr(0, mid);
 
-        if(measureTextWidth(subs) <= visibleWidth){
+        if (measureTextWidth(subs) <= visibleWidth)
+        {
             bestLength = mid;
-            low = mid+1;
+            low = mid + 1;
         }
-        else{
-            high = mid-1;
+        else
+        {
+            high = mid - 1;
         }
     }
 
-    return (text.substr(0, bestLength)+ "..." + extension);
+    return (text.substr(0, bestLength) + "..." + extension);
 }
 
 void Renderer::present()

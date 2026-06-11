@@ -23,7 +23,7 @@ Application::Application(int argc, char *argv[])
 
     SDL_Init(SDL_INIT_VIDEO);
 
-    mWindow = SDL_CreateWindow("papyrus", 800, 600, SDL_WINDOW_RESIZABLE);
+    mWindow = SDL_CreateWindow("papyrus", 1280, 720, SDL_WINDOW_RESIZABLE);
     CSF(SDL_StartTextInput(mWindow));
 
     mRenderer = std::make_unique<Renderer>(mWindow);
@@ -46,19 +46,8 @@ void Application::run()
 {
     bool running = true;
 
-    Uint64 lastTime = SDL_GetTicksNS();
-    float fps = 0.0f;
-
     while (running)
     {
-        Uint64 currentTime = SDL_GetTicksNS();
-        Uint64 deltaTime = currentTime - lastTime;
-        lastTime = currentTime;
-        if (deltaTime > 0)
-        {
-            fps = 1000000000.0f / static_cast<float>(deltaTime);
-        }
-
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -75,7 +64,6 @@ void Application::run()
             if (event.type == SDL_EVENT_KEY_DOWN)
             {
                 SDL_Keycode key = event.key.key;
-                SDL_Keymod mod = event.key.mod;
                 switch (key)
                 {
                 case SDLK_F3:

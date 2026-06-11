@@ -8,6 +8,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_subdirectory(third_party/SDL)
 add_subdirectory(third_party/SDL_ttf)
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+endif()
 
 add_executable(papyrus
     src/main.cpp
@@ -21,6 +24,10 @@ add_executable(papyrus
     src/TextBuffer.h
     src/FileBrowser.h
     src/FileBrowser.cpp
+    src/SearchSession.h
+    src/SearchSession.cpp
+    src/SearchEngine.h
+    src/SearchEngine.cpp
     src/Argparser.h
     src/logger.h
     src/types.h
