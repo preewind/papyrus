@@ -21,7 +21,6 @@ void FileBrowser::updateCurrentDirFiles()
     for (auto const &dir_entry : std::filesystem::directory_iterator{currentDir})
     {
         files.push_back(dir_entry.path());
-        LOG_DEBUG() << "file: " << dir_entry.path();
     }
     // sort alphabetically, maybe add more sorting options in the future
     std::sort(files.begin() + 1, files.end(), [](const std::filesystem::path &a, const std::filesystem::path &b)
@@ -62,6 +61,10 @@ std::vector<std::string> FileBrowser::getCurrentDirFilesToRender()
         // parent directory -> .. in rendering, except root path, TODO: test on Windows
         if (i == 0 && std::filesystem::is_directory(mCurrentDirFiles[i]) && mCurrentDirFiles[i] != mCurrentDir.root_directory())
         {
+            fileStrings.push_back("..");
+            continue;
+        }
+        else if(i==0 && mCurrentDirFiles[i].parent_path() == mCurrentDir.root_directory() /*&& mCurrentDir != mCurrentDir.root_directory()*/){
             fileStrings.push_back("..");
             continue;
         }

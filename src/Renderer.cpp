@@ -288,25 +288,31 @@ void Renderer::updateFileBrowser(FileBrowser &browser)
 
     uint32_t visibleFiles = (mLayout.windowHeight - fileListTopMargin) / mLayout.lineHeight;
     browser.setVisibleFiles(visibleFiles);
+    SDL_Color color = {255, 255, 255, 255};
     std::vector<std::string> filesToRender = browser.getCurrentDirFilesToRender();
     uint32_t first = browser.getScrollOffset();
     uint32_t last = std::min(static_cast<int>(first + visibleFiles), static_cast<int>(filesToRender.size()));
     for (size_t i = first; i < last; ++i)
     {
         std::string file = filesToRender[i];
+        color = {255, 255, 255, 255};
+        if(std::filesystem::is_directory(currentPathStr/std::filesystem::path{file})){
+            color = {255, 255, 0, 255};
+        }
         std::string extension = browser.getFileExtension(file);
         uint32_t first = browser.getScrollOffset();
         file = fitTextToWidth(file, extension);
-        drawText(file, mLayout.marginLeft, screenYBrowser(i, first, fileListTopMargin));
+        drawText(file, mLayout.marginLeft, screenYBrowser(i, first, fileListTopMargin), color);
     }
     present();
 }
 
 void Renderer::renderFileBrowserSelection(FileBrowser &browser)
 {
+    std::vector<std::string> filesToRender = browser.getCurrentDirFilesToRender();
     int x = mLayout.marginLeft;
     int y = screenYBrowser(browser.getSelectedIndex(), browser.getScrollOffset(), mLayout.marginTop + (mLayout.lineHeight * 2));
-    int w = measureTextWidth(browser.getSelectedIndexPath());
+    int w = measureTextWidth(filesToRender[browser.getSelectedIndex()]);
     int h = mLayout.lineHeight;
     drawRect(x, y, w, h, SDL_Color{46, 47, 108, 255});
 }
