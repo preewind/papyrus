@@ -280,12 +280,8 @@ void Renderer::renderSearchOverlay(const SearchSession &session)
     uint32_t currMatch = session.hasMatches() ? session.getCurrentMatchIndex() + 1 : 0;
     const std::string &matchStr = std::to_string(currMatch) + "/" + std::to_string(session.getMatches().size());
     mSearchLayout.matchBoxWidth = measureTextWidth(matchStr) + mSearchLayout.matchBoxPadding;
-    uint32_t x = mSearchLayout.queryX;
-    uint32_t y = mSearchLayout.queryY;
-    uint32_t w = mSearchLayout.queryWidth;
-    uint32_t h = mSearchLayout.queryHeight;
 
-    drawRect(x, y, w, h, mSearchLayout.rectColor);
+    drawRect(mSearchLayout.queryX, mSearchLayout.queryY, mSearchLayout.queryWidth, mSearchLayout.queryHeight, mSearchLayout.rectColor);
     drawRect(mSearchLayout.matchBoxX, mSearchLayout.queryY, mSearchLayout.matchBoxWidth, mSearchLayout.queryHeight, mSearchLayout.rectColor);
     drawText(session.getQuery(), mSearchLayout.textX, mSearchLayout.textY);
 
@@ -296,11 +292,8 @@ void Renderer::renderSearchCursor(const SearchSession &session)
 {
     if (mCursorVisible)
     {
-        uint32_t x = mLayout.marginLeft + mLayout.windowWidth / 2;
-        uint32_t y = mLayout.marginTop + mLayout.lineHeight;
-        uint32_t h = 1.5 * mLayout.lineHeight;
-
-        drawRect(x + 5 + measureTextWidth(session.getQuery().substr(0, session.getCursor())), y + (h / 2) - mLayout.lineHeight / 2, 2, mLayout.lineHeight, SDL_Color{255, 255, 255, 255});
+        uint32_t cursorTextWidth = measureTextWidth(session.getQuery().substr(0, session.getCursor()));
+        drawRect(mSearchLayout.queryX + mSearchLayout.textPadding + cursorTextWidth, mSearchLayout.textY, 2, mLayout.lineHeight, SDL_Color{255, 255, 255, 255});
     }
 }
 
@@ -354,7 +347,7 @@ void Renderer::updateFileBrowser(FileBrowser &browser)
 
     uint32_t visibleFiles = (mLayout.windowHeight - fileListTopMargin) / mLayout.lineHeight;
     browser.setVisibleFiles(visibleFiles);
-    SDL_Color color = {255, 255, 255, 255};
+    SDL_Color color;
     std::vector<std::string> filesToRender = browser.getCurrentDirFilesToRender();
     uint32_t first = browser.getScrollOffset();
     uint32_t last = std::min(static_cast<int>(first + visibleFiles), static_cast<int>(filesToRender.size()));
