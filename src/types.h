@@ -91,8 +91,8 @@ enum class TokenType {
     Number,
     Comment,
     Preprocessor,
-    IncludeLib
-
+    IncludeLib,
+    Unknown
 };
 
 inline std::ostream &operator<<(std::ostream &os, const TokenType &type) {
@@ -108,6 +108,7 @@ inline std::ostream &operator<<(std::ostream &os, const TokenType &type) {
         case TokenType::Comment: os << "Comment"; break;
         case TokenType::Preprocessor: os << "Preprocessor"; break;
         case TokenType::IncludeLib: os << "IncludeLib"; break;
+        case TokenType::Unknown: os << "Unknown"; break;
         default: throw(std::runtime_error("Dont forget!!!")); break;
     }
     return os;

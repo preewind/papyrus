@@ -59,3 +59,33 @@ inline std::vector<std::string> splitByNewline(const std::string &input)
 
     return result;
 }
+
+#include <SDL3/SDL_pixels.h>
+
+inline SDL_Color hexToSDLColor(std::string hex) {
+    if (!hex.empty() && hex[0] == '#') {
+        hex = hex.substr(1);
+    }
+
+    if (hex.length() != 6 && hex.length() != 8) {
+        // Fallback to white if the string format is invalid
+        return SDL_Color{255, 255, 255, 255}; 
+    }
+
+    uint32_t colorValue = std::stoul(hex, nullptr, 16);
+
+    SDL_Color color;
+    if (hex.length() == 6) {
+        color.r = (colorValue >> 16) & 0xFF;
+        color.g = (colorValue >> 8)  & 0xFF;
+        color.b = colorValue         & 0xFF;
+        color.a = 255; 
+    } else {
+        color.r = (colorValue >> 24) & 0xFF;
+        color.g = (colorValue >> 16) & 0xFF;
+        color.b = (colorValue >> 8)  & 0xFF;
+        color.a = colorValue         & 0xFF;
+    }
+
+    return color;
+}

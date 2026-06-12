@@ -126,6 +126,8 @@ std::vector<std::vector<Token>> CppLexer::tokenize(const TextBuffer &buffer)
                 tokens.push_back(Token{.col = start, .length = i - start, .type = TokenType::IncludeLib});
                 continue;
             }
+            // for now just unknown the rest
+            tokens.push_back(Token{.col = start, .length=1, .type=TokenType::Unknown});
             ++i;
         }
         std::stringstream lineTokens;
@@ -135,7 +137,7 @@ std::vector<std::vector<Token>> CppLexer::tokenize(const TextBuffer &buffer)
             // LOG_DEBUG() << "Token: " << token.type << " at col " << token.col << " with length " << token.length;
         }
         LOG_DEBUG() << "TokenLine: " << lineTokens.str();
-        allTokens.push_back(tokens);
+        allTokens.push_back(std::move(tokens));
     }
 
     return allTokens;

@@ -618,6 +618,11 @@ void Editor::updateSearchMatches()
     }
 }
 
+std::vector<std::vector<Token>> Editor::getTokens() const
+{
+    return mTokens;
+}
+
 void Editor::markActivity()
 {
     mActivity = true;

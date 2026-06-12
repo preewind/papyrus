@@ -59,6 +59,8 @@ public:
     const SearchSession &getSearch() const;
     void updateSearchMatches();
 
+    std::vector<std::vector<Token>> getTokens() const;
+
     void markActivity();
     bool consumeActivity();
 

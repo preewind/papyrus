@@ -40,7 +40,7 @@ Renderer::Renderer(SDL_Window *window)
     mSearchLayout.queryHeight = 1.5 * mLayout.lineHeight;
     mSearchLayout.matchBoxX = mSearchLayout.queryX + mSearchLayout.queryWidth + mSearchLayout.boxSpacing;
     mSearchLayout.textX = mSearchLayout.queryX + mSearchLayout.textPadding;
-    mSearchLayout.textY = mSearchLayout.queryY + (mSearchLayout.queryHeight-mLayout.lineHeight)/2; // gives you a vertically centered text
+    mSearchLayout.textY = mSearchLayout.queryY + (mSearchLayout.queryHeight - mLayout.lineHeight) / 2; // gives you a vertically centered text
     mSearchLayout.matchBoxTextX = mSearchLayout.matchBoxX + mSearchLayout.textPadding;
 }
 
@@ -100,6 +100,31 @@ std::string Renderer::expandTabs(const std::string &text)
     return result;
 }
 
+SDL_Color Renderer::getColorFromTokenType(const Token &token)
+{
+    switch (token.type)
+    {
+    case TokenType::OpenCurly:
+    case TokenType::CloseCurly:
+    case TokenType::OpenParen:
+    case TokenType::CloseParen:
+        return {255, 255, 0, 255};
+        break;//
+    case TokenType::Comment:
+        return hexToSDLColor("#8B949E"); break;
+    case TokenType::String: 
+        return hexToSDLColor("#A5D6FF"); break;
+    case TokenType::Keyword: 
+        return hexToSDLColor("#FF7B72"); break;
+    case TokenType::Preprocessor:
+        return hexToSDLColor("#C586C0"); break;
+    case TokenType::IncludeLib:
+        return hexToSDLColor("#A5D6FF"); break;
+    default:
+        return {255, 255, 255, 255};
+    }
+}
+
 void Renderer::drawText(const std::string &text, int x, int y, SDL_Color color = {255, 255, 255, 255})
 {
     if (text.empty())
@@ -127,6 +152,15 @@ void Renderer::drawText(const std::string &text, int x, int y, SDL_Color color =
 
     SDL_DestroyTexture(texture);
     SDL_DestroySurface(surface);
+}
+
+void Renderer::drawTextTokenized(const std::string &text, uint32_t y, const std::vector<Token> &tokens)
+{
+    for (const Token &token : tokens)
+    {
+        const std::string &subs = text.substr(token.col, token.length);
+        drawText(subs, mLayout.marginLeft - mScrollOffsetX + measureTextWidth(text.substr(0, token.col)), y, getColorFromTokenType(token));
+    }
 }
 
 void Renderer::drawRect(int x, int y, int w, int h, SDL_Color color)
@@ -178,10 +212,17 @@ void Renderer::renderText(const Editor &editor)
     int last = std::min(
         first + visRows,
         (int)text.size());
-
+    const auto &tokens = editor.getTokens();
     for (int i = first; i < last; ++i)
     {
-        drawText(expandTabs(text[i]), mLayout.marginLeft - mScrollOffsetX, screenY(i, first));
+        if (tokens.size() > 0)
+        {
+            drawTextTokenized(text[i], screenY(i, first), tokens[i]);
+        }
+        else
+        {
+            drawText(expandTabs(text[i]), mLayout.marginLeft - mScrollOffsetX, screenY(i, first));
+        }
     }
 }
 

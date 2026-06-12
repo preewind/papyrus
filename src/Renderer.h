@@ -6,6 +6,8 @@
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
+#include "types.h"
+
 class Cursor;
 class Editor;
 class Selection;
@@ -52,7 +54,9 @@ public:
     int getLineHeight() const;
     const EditorLayout &getEditorLayout() const;
     std::string expandTabs(const std::string& text);
+    SDL_Color getColorFromTokenType(const Token &token);
     void drawText(const std::string& text, int x, int y, SDL_Color color);
+    void drawTextTokenized(const std::string& text, uint32_t y, const std::vector<Token> &tokens);
     void drawRect(int x, int y, int w, int h, SDL_Color color);
     void resetCursorBlink();
     void renderLineNumbers(uint32_t numLines, uint32_t offsetY, uint32_t visibleRows);
