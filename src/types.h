@@ -79,3 +79,47 @@ struct Selection
             .end = begin};
     }
 };
+
+enum class TokenType {
+    Normal,
+    OpenParen,
+    CloseParen,
+    OpenCurly,
+    CloseCurly,
+    Keyword,
+    String,
+    Number,
+    Comment,
+    Preprocessor,
+    IncludeLib
+
+};
+
+inline std::ostream &operator<<(std::ostream &os, const TokenType &type) {
+    switch (type) {
+        case TokenType::Normal: os << "Normal"; break;
+        case TokenType::OpenParen: os << "OpenParen"; break;
+        case TokenType::CloseParen: os << "CloseParen"; break;
+        case TokenType::OpenCurly: os << "OpenCurly"; break;
+        case TokenType::CloseCurly: os << "CloseCurly"; break;
+        case TokenType::Keyword: os << "Keyword"; break;
+        case TokenType::String: os << "String"; break;
+        case TokenType::Number: os << "Number"; break;
+        case TokenType::Comment: os << "Comment"; break;
+        case TokenType::Preprocessor: os << "Preprocessor"; break;
+        case TokenType::IncludeLib: os << "IncludeLib"; break;
+        default: throw(std::runtime_error("Dont forget!!!")); break;
+    }
+    return os;
+}
+
+struct Token {
+    uint32_t col;
+    uint32_t length;
+    TokenType type;
+};
+
+enum class Language {
+    PlainText,
+    Cpp
+};

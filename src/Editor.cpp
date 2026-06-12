@@ -82,7 +82,7 @@ void Editor::handleKey(const SDL_Event &event)
             loadFile("test.txt");
             break;
         case SDLK_F2:
-            saveFileAs("./test2.txt");
+            mTokens = highlighter.tokenize(mBuffer, mLanguage);
             break;
         default:
             break;

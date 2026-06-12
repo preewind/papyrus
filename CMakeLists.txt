@@ -28,6 +28,10 @@ add_executable(papyrus
     src/SearchSession.cpp
     src/SearchEngine.h
     src/SearchEngine.cpp
+    src/SyntaxHighlighter.h
+    src/SyntaxHighlighter.cpp
+    src/CppLexer.h
+    src/CppLexer.cpp
     src/Argparser.h
     src/logger.h
     src/types.h

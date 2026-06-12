@@ -12,6 +12,7 @@
 #include "TextBuffer.h"
 #include "types.h"
 #include "SearchSession.h"
+#include "SyntaxHighlighter.h"
 
 class Editor
 {
@@ -89,4 +90,8 @@ private:
     uint32_t mScrollOffsetY = 0;
     uint32_t mVisibleRows = 0;
     uint32_t mVisibleTextWidth = 0;
+
+    Language mLanguage = Language::Cpp;
+    std::vector<std::vector<Token>> mTokens;
+    SyntaxHighlighter highlighter;
 };

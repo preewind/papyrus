@@ -1,1 +1,11 @@
-123test456
+#include <iostream>
+
+int main()
+{
+    std::string text = "Hello";
+    char c = 'G'; // The GGGGG
+
+    // greeting
+
+    return 69;
+}
