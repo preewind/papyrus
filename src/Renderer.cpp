@@ -31,7 +31,12 @@ Renderer::Renderer(SDL_Window *window)
     }
     // editor layout
     mLayout.lineHeight = getLineHeight();
-    SDL_GetWindowSize(window, (int *)&mLayout.windowWidth, (int *)&mLayout.windowHeight);
+    SDL_GetWindowSize(window, (int *)&mLayout.windowWidth, (int *)&mLayout.totalWindowHeight);
+    mLayout.windowHeight = mLayout.totalWindowHeight;
+
+    mTerminalLayout.windowHeight = 0.2 * mLayout.totalWindowHeight;
+    mTerminalLayout.windowX = 0;
+    mTerminalLayout.windowY = mLayout.totalWindowHeight - mTerminalLayout.windowHeight;
 
     // search layout
     mSearchLayout.queryX = mLayout.marginLeft + mLayout.windowWidth / 2;
@@ -312,6 +317,26 @@ void Renderer::renderEditor(const Editor &editor)
         renderSearchCursor(editor.getSearch());
     }
     CSF(SDL_SetRenderClipRect(mRenderer, nullptr));
+    if (editor.isTerminalVisible())
+    {
+        renderTerminal(editor);
+        renderTerminalCursor(editor.getTerminal());
+    }
+}
+
+void Renderer::renderTerminal(const Editor &editor)
+{
+    drawRect(mTerminalLayout.windowX, mTerminalLayout.windowY, mLayout.windowWidth, mTerminalLayout.windowHeight, SDL_Color{31, 32, 33, 255});
+    Terminal terminal = editor.getTerminal();
+    const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();
+    drawText(text, mTerminalLayout.windowX + mTerminalLayout.marginLeft, mLayout.totalWindowHeight - mTerminalLayout.marginTop - mLayout.lineHeight);
+}
+
+void Renderer::renderTerminalCursor(const Terminal &terminal)
+{
+    const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();
+    uint32_t cursorTextWidth = measureTextWidth(text.substr(0,text.size()+ terminal.getCursor()-terminal.getInput().size()));
+    drawRect(mTerminalLayout.windowX + mTerminalLayout.marginLeft + cursorTextWidth, mLayout.totalWindowHeight - mTerminalLayout.marginTop - mLayout.lineHeight, 12, mLayout.lineHeight, SDL_Color{255, 255, 255, 255});
 }
 
 void Renderer::renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY, SDL_Color color)
@@ -375,6 +400,14 @@ void Renderer::updateEditor(Editor &editor)
     if (editor.consumeActivity())
     {
         resetCursorBlink();
+    }
+    if (editor.isTerminalVisible())
+    {
+        mLayout.windowHeight = mLayout.totalWindowHeight * 0.8;
+    }
+    else
+    {
+        mLayout.windowHeight = mLayout.totalWindowHeight;
     }
     updateCursor();
     clear();

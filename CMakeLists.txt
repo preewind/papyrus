@@ -32,6 +32,8 @@ add_executable(papyrus
     src/SyntaxHighlighter.cpp
     src/CppLexer.h
     src/CppLexer.cpp
+    src/Terminal.h
+    src/Terminal.cpp
     src/Argparser.h
     src/logger.h
     src/types.h

@@ -16,6 +16,18 @@ Editor::~Editor()
 {
 }
 
+void Editor::handlePaneKeyHandler(const SDL_Event &event)
+{
+    if (mFocus == Focus::Editor)
+    {
+        handleKey(event);
+    }
+    else if (mFocus == Focus::Terminal)
+    {
+        mTerminal.handleKey(event);
+    }
+}
+
 void Editor::handleKey(const SDL_Event &event)
 {
     if (event.type == SDL_EVENT_TEXT_INPUT)
@@ -72,6 +84,9 @@ void Editor::handleKey(const SDL_Event &event)
             break;
         case SDLK_S:
             handleS(mod);
+            break;
+        case SDLK_T:
+            handleT(mod);
             break;
         case SDLK_V:
             handleV(mod);
@@ -442,6 +457,18 @@ void Editor::handleS(SDL_Keymod mod)
     }
 }
 
+void Editor::handleT(SDL_Keymod mod)
+{
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+
+    if (ctrlHeld)
+    {
+        mTerminalVisible = !mTerminalVisible;
+        mFocus = Focus::Terminal;
+        ensureCursorVisibleVertically();
+    }
+}
+
 void Editor::handleV(SDL_Keymod mod)
 {
     bool ctrlHeld = mod & SDL_KMOD_CTRL;
@@ -544,8 +571,6 @@ void Editor::ensureCursorVisibleVertically()
     {
         mScrollOffsetY = mCursor.row - mVisibleRows + 1;
     }
-
-    // LOG_DEBUG() << "offset: " << mScrollOffsetY;
 }
 
 void Editor::loadFile(const std::filesystem::path &path)
@@ -557,13 +582,15 @@ void Editor::loadFile(const std::filesystem::path &path)
         std::cerr << "ERROR: Could not open file " << path << "\n";
         return;
     }
-    if(path.extension() == ".cpp" || path.extension() == ".h"){
+    if (path.extension() == ".cpp" || path.extension() == ".h")
+    {
         mLanguage = Language::Cpp;
     }
-    else{
+    else
+    {
         mLanguage = Language::PlainText;
     }
-    
+
     std::vector<std::string> lines;
     std::string currentLine;
     while (std::getline(file, currentLine))
@@ -657,6 +684,26 @@ bool Editor::consumeActivity()
 
     mActivity = false;
     return true;
+}
+
+bool Editor::isTerminalVisible() const
+{
+    return mTerminalVisible;
+}
+
+void Editor::switchFocus()
+{
+    if(mFocus == Focus::Editor){
+        mFocus = Focus::Terminal;
+    }
+    else{
+        mFocus = Focus::Editor;
+    }
+}
+
+Terminal Editor::getTerminal() const
+{
+    return mTerminal;
 }
 
 const Selection &Editor::getSelection() const

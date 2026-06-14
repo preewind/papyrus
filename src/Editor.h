@@ -13,6 +13,12 @@
 #include "types.h"
 #include "SearchSession.h"
 #include "SyntaxHighlighter.h"
+#include "Terminal.h"
+
+enum class Focus {
+    Editor,
+    Terminal
+};
 
 class Editor
 {
@@ -21,6 +27,7 @@ public:
     Editor();
     ~Editor();
 
+    void handlePaneKeyHandler(const SDL_Event &event);
     void handleKey(const SDL_Event &event);
     void handleTextInput(const std::string &text);
     void handleBackSpace();
@@ -38,6 +45,7 @@ public:
     void handleC(SDL_Keymod mod);
     void handleF(SDL_Keymod mod);
     void handleS(SDL_Keymod mod);
+    void handleT(SDL_Keymod mod);
     void handleV(SDL_Keymod mod);
 
     void moveCursorLeft();
@@ -65,6 +73,10 @@ public:
     void markActivity();
     bool consumeActivity();
 
+    bool isTerminalVisible() const;
+    void switchFocus();
+    Terminal getTerminal() const;
+
     const Selection &getSelection() const;
     void setSelectionActive(bool b);
     bool getSelectionActive() const;
@@ -85,6 +97,9 @@ private:
     Selection mSelection;
     Cursor mCursor;
     TextBuffer mBuffer;
+    Focus mFocus = Focus::Editor;
+    bool mTerminalVisible = false;
+    Terminal mTerminal;
     std::optional<SearchSession> mSearch;
     SearchEngine mSearchEngine;
     std::filesystem::path mCurrentFilePath;

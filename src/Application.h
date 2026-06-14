@@ -19,6 +19,7 @@ public:
     ~Application();
     void run();
     void update();
+    void handleHash(SDL_Keymod mod);
 
 private:
     SDL_Window *mWindow;

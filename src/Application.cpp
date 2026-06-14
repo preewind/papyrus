@@ -53,7 +53,7 @@ void Application::run()
         {
             if (mCurrentScreen == Screen::Editor)
             {
-                mEditor.handleKey(event);
+                mEditor.handlePaneKeyHandler(event);
             }
             else if (mCurrentScreen == Screen::FileBrowser)
             {
@@ -71,6 +71,9 @@ void Application::run()
                     break;
                 case SDLK_F4:
                     mCurrentScreen = Screen::Editor;
+                    break;
+                case SDLK_HASH:
+                    handleHash(event.key.mod);
                     break;
                 }
             }
@@ -109,5 +112,15 @@ void Application::update()
     default:
         LOG_ERROR() << "Unknown Screen!";
         break;
+    }
+}
+
+void Application::handleHash(SDL_Keymod mod)
+{
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+    bool shiftHeld = mod & SDL_KMOD_SHIFT;
+
+    if(ctrlHeld && shiftHeld){
+        mEditor.switchFocus();
     }
 }

@@ -13,6 +13,7 @@ class Editor;
 class Selection;
 class FileBrowser;
 class SearchSession;
+class Terminal;
 
 struct EditorLayout {
     uint16_t marginTop = 20;
@@ -22,6 +23,16 @@ struct EditorLayout {
     uint16_t lineHeight = 0;
     uint16_t windowWidth = 0;
     uint16_t windowHeight = 0;
+    uint16_t totalWindowHeight = 0;
+};
+
+struct TerminalLayout {
+    uint32_t windowHeight = 0;
+    uint32_t windowX = 0;
+    uint32_t windowY = 0;
+    uint32_t marginLeft = 10;
+    uint32_t marginTop = 10;
+
 };
 
 struct SearchOverlayLayout{
@@ -64,6 +75,8 @@ public:
     void renderText(const Editor &editor); 
     void renderSelection(const Editor &editor);
     void renderEditor(const Editor &editor);
+    void renderTerminal(const Editor &editor);
+    void renderTerminalCursor(const Terminal& terminal);
     void renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length,  uint32_t scrollOffsetY, SDL_Color color = {46, 47, 48, 255});
     void renderSearchOverlay(const SearchSession &session);
     void renderSearchCursor(const SearchSession &session);
@@ -90,5 +103,6 @@ private:
     TTF_Font *mFont;
     EditorLayout mLayout;
     SearchOverlayLayout mSearchLayout;
+    TerminalLayout mTerminalLayout;
     int mScrollOffsetX = 0;
 };

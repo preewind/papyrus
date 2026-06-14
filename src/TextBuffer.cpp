@@ -8,7 +8,10 @@
 
 void TextBuffer::insert(size_t row, size_t col, const std::string &text)
 {
-    if (mLines.size() <= row)
+    if(row == 0 && mLines.size() == 0){
+        mLines.resize(1);
+    }
+    else if (mLines.size() <= row)
     {
         mLines.resize(row + 1);
     }
@@ -96,6 +99,11 @@ void TextBuffer::eraseRange(size_t row, size_t begin_col, size_t end_col)
     }
 }
 
+void TextBuffer::clear()
+{
+    mLines.clear();
+}
+
 void TextBuffer::splitLine(size_t row, size_t col)
 {
     if (col > mLines[row].size())
@@ -131,7 +139,11 @@ const std::string &TextBuffer::getLine(size_t row) const
 
 size_t TextBuffer::getLineSize(size_t row) const
 {
-    return mLines[row].size();
+    if(mLines.size() > 0){
+        return mLines[row].size();
+    }
+    return 0;
+    
 }
 
 size_t TextBuffer::getLineCount() const
