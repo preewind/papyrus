@@ -27,7 +27,10 @@ Terminal::Terminal(uint32_t rows)
 
 CommandResult Terminal::executeCommand(const std::string &name, const std::vector<std::string> &args)
 {
-    LOG_DEBUG() << "Hello from Terminal!";
+    if(name.starts_with("!")){
+        return executeShell(name.substr(1));
+    }
+
     auto it = mCommands.find(name);
     if (it == mCommands.end())
     {
@@ -59,7 +62,6 @@ CommandResult Terminal::executeShell(const std::string &commandLine)
                         }
                         {
                             std::lock_guard<std::mutex> lock(mOutputMutex);
-                            LOG_DEBUG() << "line: " << line;
                             mOutput.addLine(line);
                         }
                     }
