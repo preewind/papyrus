@@ -7,9 +7,10 @@
 #include "Editor.h"
 #include "logger.h"
 
-Editor::Editor(){ 
+Editor::Editor()
+{
     mCursor = Cursor{0, 0};
-    mTerminal = std::make_unique<Terminal>(); 
+    mTerminal = std::make_unique<Terminal>();
 }
 
 Editor::~Editor()
@@ -693,15 +694,17 @@ bool Editor::isTerminalVisible() const
 
 void Editor::switchFocus()
 {
-    if(mFocus == Focus::Editor){
+    if (mFocus == Focus::Editor)
+    {
         mFocus = Focus::Terminal;
     }
-    else{
+    else
+    {
         mFocus = Focus::Editor;
     }
 }
 
-const Terminal& Editor::getTerminalConst() const
+const Terminal &Editor::getTerminalConst() const
 {
     return *mTerminal;
 }
@@ -790,4 +793,46 @@ const uint32_t &Editor::getVisibleRows() const
 const uint32_t &Editor::getScrollOffsetY() const
 {
     return mScrollOffsetY;
+}
+
+void Editor::update()
+{
+    if (std::optional<CommandRequest> request = mTerminal->consumeRequest())
+    {
+        handleRequest(*request);
+    }
+}
+
+void Editor::handleRequest(const CommandRequest &request)
+{
+    switch (request.type)
+    {
+    case CommandRequestType::Quit:
+        mPendingRequest = {CommandRequestType::Quit, ""};
+        break;
+    case CommandRequestType::SaveFile:
+        saveFile();
+        break;
+    case CommandRequestType::ChangeLanguage:
+        if (request.request == "cpp")
+        {
+            mLanguage = Language::Cpp;
+        }
+        updateTokens();
+        break;
+
+    case CommandRequestType::OpenFile:
+        loadFile(request.request);
+        break;
+
+    default:
+        break;
+    }
+}
+
+std::optional<CommandRequest> Editor::consumeRequest()
+{
+    auto res = mPendingRequest;
+    mPendingRequest.reset();
+    return res;
 }

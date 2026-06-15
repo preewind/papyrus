@@ -44,9 +44,9 @@ Application::~Application()
 
 void Application::run()
 {
-    bool running = true;
+    
 
-    while (running)
+    while (mRunning)
     {
         SDL_Event event;
         while (SDL_PollEvent(&event))
@@ -85,7 +85,7 @@ void Application::run()
             }
             if (event.type == SDL_EVENT_QUIT)
             {
-                running = false;
+                mRunning = false;
             }
         }
         update();
@@ -97,6 +97,19 @@ void Application::update()
     switch (mCurrentScreen)
     {
     case Screen::Editor:
+        if(auto request = mEditor.consumeRequest()){
+            CommandRequest req = *request;
+            switch (req.type)
+            {
+            case CommandRequestType::Quit:
+                mRunning = false;
+                break;
+            
+            default:
+                break;
+            }
+        }
+        mEditor.update();
         mRenderer->updateEditor(mEditor);
         break;
     case Screen::FileBrowser:

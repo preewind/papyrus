@@ -94,6 +94,10 @@ public:
     const uint32_t &getVisibleRows() const;
     const uint32_t &getScrollOffsetY() const;
 
+    void update();
+    void handleRequest(const CommandRequest &request);
+    std::optional<CommandRequest> consumeRequest();
+
 private:
     Selection mSelection;
     Cursor mCursor;
@@ -113,4 +117,6 @@ private:
     Language mLanguage = Language::Cpp;
     std::vector<std::vector<Token>> mTokens;
     SyntaxHighlighter mHighlighter;
+
+    std::optional<CommandRequest> mPendingRequest;
 };

@@ -27,4 +27,5 @@ private:
     std::unique_ptr<Renderer> mRenderer;
     FileBrowser mFileBrowser;
     Screen mCurrentScreen = Screen::Editor;
+    bool mRunning = true;
 };

@@ -124,3 +124,15 @@ enum class Language {
     PlainText,
     Cpp
 };
+
+enum class CommandRequestType {
+    OpenFile,
+    SaveFile,
+    Quit,
+    ChangeLanguage
+};
+
+struct CommandRequest{
+    CommandRequestType type;
+    std::string request;
+};

@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <optional>
 
 #include <SDL3/SDL_events.h>
 
@@ -30,6 +31,7 @@ public:
     uint32_t getScrollOffset() const;
     uint32_t getVisibleRows() const;
     void setVisibleRows(uint32_t rows);
+    std::optional<CommandRequest> consumeRequest();
 
 private:
     TextBuffer mInput;

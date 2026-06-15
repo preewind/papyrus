@@ -11,11 +11,28 @@ CommandProcessor::CommandProcessor()
     {
         return flexCommand(args);
     };
+    mCommands["quit"] = [this](const auto &args)
+    {
+        return quitCommand(args);
+    };
+    mCommands["open"] = [this](const auto &args)
+    {
+        return openFileCommand(args);
+    };
+    mCommands["save"] = [this](const auto &args)
+    {
+        return saveCommand(args);
+    };
+    mCommands["cL"] = [this](const auto &args)
+    {
+        return changeLanguageCommand(args);
+    };
 }
 
 CommandResult CommandProcessor::executeCommand(const std::string &name, const std::vector<std::string> &args)
 {
-    if(name.starts_with("!")){
+    if (name.starts_with("!"))
+    {
         return executeShell(name.substr(1));
     }
 
@@ -70,6 +87,40 @@ CommandResult CommandProcessor::flexCommand(const std::vector<std::string> &args
 {
     (void)args;
     return executeShell("wc -l src/*cpp");
+}
+
+CommandResult CommandProcessor::quitCommand(const std::vector<std::string> &args)
+{
+    (void)args;
+    mPendingRequest = {CommandRequestType::Quit, ""};
+    return {true, {"Quit!"}};
+}
+
+CommandResult CommandProcessor::openFileCommand(const std::vector<std::string> &args)
+{
+    mPendingRequest = {CommandRequestType::OpenFile, args[0]};
+    return {true, {"Opened file"}};
+}
+
+CommandResult CommandProcessor::saveCommand(const std::vector<std::string> &args)
+{
+    (void)args;
+    mPendingRequest = {CommandRequestType::SaveFile, ""};
+    return {true, {"Saved current file!"}};
+}
+
+CommandResult CommandProcessor::changeLanguageCommand(const std::vector<std::string> &args)
+{
+    (void)args;
+    mPendingRequest = {CommandRequestType::ChangeLanguage, args[0]};
+    return {true, {"Changed language!"}};
+}
+
+std::optional<CommandRequest> CommandProcessor::consumeRequest()
+{
+    std::optional<CommandRequest> result = mPendingRequest;
+    mPendingRequest.reset();
+    return result;
 }
 
 TextBuffer CommandProcessor::getOutput() const

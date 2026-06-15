@@ -1,5 +1,8 @@
+#include <sstream>
+
 #include "Terminal.h"
 #include "logger.h"
+#include "util.h"
 
 
 void Terminal::handleKey(const SDL_Event &event)
@@ -71,7 +74,19 @@ void Terminal::handleDelete()
 
 void Terminal::handleReturn()
 {
-    const auto &result = mProcessor.executeCommand(mInput.getLine(0), {}).output;
+    std::string trimmedInput = trim(mInput.getLine(0));
+    
+    std::string command;
+    std::vector<std::string> options;
+    if(!trimmedInput.empty()){
+        std::stringstream ss(trimmedInput);
+        ss >> command;
+        std::string option;
+        while(ss >> option){
+            options.push_back(option);
+        }
+    }
+    const auto &result = mProcessor.executeCommand(command, options).output;
     for (auto &line : result.getText())
     {
         LOG_DEBUG() << line;
@@ -164,4 +179,9 @@ uint32_t Terminal::getVisibleRows() const
 void Terminal::setVisibleRows(uint32_t rows)
 {
     mVisibleRows = rows;
+}
+
+std::optional<CommandRequest> Terminal::consumeRequest()
+{
+    return mProcessor.consumeRequest();
 }
