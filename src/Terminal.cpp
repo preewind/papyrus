@@ -4,7 +4,6 @@
 #include "logger.h"
 #include "util.h"
 
-
 void Terminal::handleKey(const SDL_Event &event)
 {
     if (event.type == SDL_EVENT_TEXT_INPUT)
@@ -75,16 +74,19 @@ void Terminal::handleDelete()
 void Terminal::handleReturn()
 {
     std::string trimmedInput = trim(mInput.getLine(0));
-    
+
     std::string command;
     std::vector<std::string> options;
-    if(!trimmedInput.empty()){
+    if (!trimmedInput.empty())
+    {
         std::stringstream ss(trimmedInput);
         ss >> command;
         std::string option;
-        while(ss >> option){
+        while (ss >> option)
+        {
             options.push_back(option);
         }
+        mCmdHistory.push_back(trimmedInput);
     }
     const auto &result = mProcessor.executeCommand(command, options).output;
     for (auto &line : result.getText())
@@ -93,6 +95,7 @@ void Terminal::handleReturn()
     }
     mInput.clear();
     mCursor = 0;
+    mHistoryIndex = 0;
 }
 
 void Terminal::handleUp(SDL_Keymod mod)
@@ -106,6 +109,20 @@ void Terminal::handleUp(SDL_Keymod mod)
             mScrollOffset++;
         }
     }
+    else
+    {
+        if (mCmdHistory.size() > 0 && mHistoryIndex < mCmdHistory.size())
+        {
+            if (mHistoryIndex == 0 && mInput.getLineSize(0) > 0)
+                mSaveInput = mInput.getLine(0);
+            mHistoryIndex++;
+            mInput.clear();
+            mCursor = 0;
+            uint32_t targetIndex = mCmdHistory.size() - mHistoryIndex;
+            handleTextInput(mCmdHistory[targetIndex]);
+            
+        }
+    }
 }
 
 void Terminal::handleDown(SDL_Keymod mod)
@@ -117,6 +134,24 @@ void Terminal::handleDown(SDL_Keymod mod)
         if (mScrollOffset > 0)
         {
             mScrollOffset--;
+        }
+    }
+    else
+    {
+        if (mCmdHistory.size() > 0 && mHistoryIndex > 0)
+        {
+            mInput.clear();
+            mCursor = 0;
+            mHistoryIndex--;
+            if (mHistoryIndex == 0)
+            {
+                handleTextInput(mSaveInput);
+            }
+            else
+            {
+                uint32_t targetIndex = mCmdHistory.size() - mHistoryIndex;
+                handleTextInput(mCmdHistory[targetIndex]);
+            }
         }
     }
 }

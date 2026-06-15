@@ -35,6 +35,9 @@ public:
 
 private:
     TextBuffer mInput;
+    std::vector<std::string> mCmdHistory;
+    std::string mSaveInput = "";
+    uint32_t mHistoryIndex = 0;
     uint32_t mCursor = 0;
     uint32_t mScrollOffset = 0;
     uint32_t mVisibleRows = 0;
