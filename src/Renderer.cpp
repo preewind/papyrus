@@ -320,7 +320,6 @@ void Renderer::renderEditor(const Editor &editor)
     if (editor.isTerminalVisible())
     {
         renderTerminal(editor);
-        renderTerminalCursor(editor.getTerminal());
     }
 }
 
@@ -328,25 +327,28 @@ void Renderer::renderTerminal(const Editor &editor)
 {
     drawRect(mTerminalLayout.windowX, mTerminalLayout.windowY, mLayout.windowWidth, mTerminalLayout.windowHeight, SDL_Color{31, 32, 33, 255});
     const Terminal &terminal = editor.getTerminal();
-    const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();
+    renderTerminalCursor(terminal);
+        const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();
     std::vector<std::string> output = terminal.getOutput().getText();
     std::reverse(output.begin(), output.end());
-    if(output.size() == 0) return; 
+    if (output.size() == 0)
+        return;
     uint32_t visRows = terminal.getVisibleRows();
     uint32_t first = terminal.getScrollOffset();
     uint32_t last = std::min(visRows, (uint32_t)output.size());
-    for(uint32_t i = 0; i< last;  ++i){
-        drawText(output[first+i], mTerminalLayout.windowX + mTerminalLayout.marginLeft, mLayout.totalWindowHeight - mTerminalLayout.marginTop - (i+2)*mLayout.lineHeight);
+    for (uint32_t i = 0; i < last; ++i)
+    {
+        drawText(output[first + i], mTerminalLayout.windowX + mTerminalLayout.marginLeft, mLayout.totalWindowHeight - mTerminalLayout.marginTop - (i + 2) * mLayout.lineHeight);
     }
-    
+
     drawText(text, mTerminalLayout.windowX + mTerminalLayout.marginLeft, mLayout.totalWindowHeight - mTerminalLayout.marginTop - mLayout.lineHeight);
 }
 
 void Renderer::renderTerminalCursor(const Terminal &terminal)
 {
     const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();
-    uint32_t cursorTextWidth = measureTextWidth(text.substr(0,text.size()+ terminal.getCursor()-terminal.getInput().size()));
-    drawRect(mTerminalLayout.windowX + mTerminalLayout.marginLeft + cursorTextWidth, mLayout.totalWindowHeight - mTerminalLayout.marginTop - mLayout.lineHeight, 12, mLayout.lineHeight, SDL_Color{255, 255, 255, 255});
+    uint32_t cursorTextWidth = measureTextWidth(text.substr(0, text.size() + terminal.getCursor() - terminal.getInput().size()));
+    drawRect(mTerminalLayout.windowX + mTerminalLayout.marginLeft + cursorTextWidth, mLayout.totalWindowHeight - mTerminalLayout.marginTop - mLayout.lineHeight, 12, mLayout.lineHeight, SDL_Color{101, 102, 103, 200});
 }
 
 void Renderer::renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY, SDL_Color color)

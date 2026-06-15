@@ -93,6 +93,21 @@ void Terminal::handleKey(const SDL_Event &event)
         case SDLK_DOWN:
             handleDown(mod);
             break;
+        case SDLK_DELETE:
+            handleDelete();
+            break;
+        case SDLK_LEFT:
+            handleLeft();
+            break;
+        case SDLK_RIGHT:
+            handleRight();
+            break;
+        case SDLK_HOME:
+            handleHome();
+            break;
+        case SDLK_END:
+            handleEnd();
+            break;
         }
     }
 }
@@ -113,6 +128,14 @@ void Terminal::handleBackSpace()
     }
 }
 
+void Terminal::handleDelete()
+{
+    if (mCursor < mInput.getLineSize(0))
+    {
+        mInput.erase(0, mCursor);
+    }
+}
+
 void Terminal::handleReturn()
 {
     mOutput = executeCommand(mInput.getLine(0), {}).output;
@@ -130,7 +153,7 @@ void Terminal::handleUp(SDL_Keymod mod)
 
     if (ctrlHeld)
     {
-        if (mScrollOffset < mOutput.getText().size()- 1 - mVisibleRows)
+        if (mScrollOffset < mOutput.getText().size() - 1 - mVisibleRows)
         {
             mScrollOffset++;
         }
@@ -148,6 +171,32 @@ void Terminal::handleDown(SDL_Keymod mod)
             mScrollOffset--;
         }
     }
+}
+
+void Terminal::handleRight()
+{
+    if (mCursor < mInput.getLineSize(0))
+    {
+        mCursor++;
+    }
+}
+
+void Terminal::handleLeft()
+{
+    if (mCursor > 0)
+    {
+        mCursor--;
+    }
+}
+
+void Terminal::handleHome()
+{
+    mCursor = 0;
+}
+
+void Terminal::handleEnd()
+{
+    mCursor = mInput.getLineSize(0);
 }
 
 std::string Terminal::getInput() const
