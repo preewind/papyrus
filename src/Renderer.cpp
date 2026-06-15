@@ -34,7 +34,7 @@ Renderer::Renderer(SDL_Window *window)
     SDL_GetWindowSize(window, (int *)&mLayout.windowWidth, (int *)&mLayout.totalWindowHeight);
     mLayout.windowHeight = mLayout.totalWindowHeight;
 
-    mTerminalLayout.windowHeight = 0.2 * mLayout.totalWindowHeight;
+    mTerminalLayout.windowHeight = 0.25 * mLayout.totalWindowHeight;
     mTerminalLayout.windowX = 0;
     mTerminalLayout.windowY = mLayout.totalWindowHeight - mTerminalLayout.windowHeight;
 
@@ -327,8 +327,18 @@ void Renderer::renderEditor(const Editor &editor)
 void Renderer::renderTerminal(const Editor &editor)
 {
     drawRect(mTerminalLayout.windowX, mTerminalLayout.windowY, mLayout.windowWidth, mTerminalLayout.windowHeight, SDL_Color{31, 32, 33, 255});
-    Terminal terminal = editor.getTerminal();
+    const Terminal &terminal = editor.getTerminal();
     const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();
+    std::vector<std::string> output = terminal.getOutput().getText();
+    std::reverse(output.begin(), output.end());
+    if(output.size() == 0) return; 
+    uint32_t visRows = terminal.getVisibleRows();
+    uint32_t first = terminal.getScrollOffset();
+    uint32_t last = std::min(visRows, (uint32_t)output.size());
+    for(uint32_t i = 0; i< last;  ++i){
+        drawText(output[first+i], mTerminalLayout.windowX + mTerminalLayout.marginLeft, mLayout.totalWindowHeight - mTerminalLayout.marginTop - (i+2)*mLayout.lineHeight);
+    }
+    
     drawText(text, mTerminalLayout.windowX + mTerminalLayout.marginLeft, mLayout.totalWindowHeight - mTerminalLayout.marginTop - mLayout.lineHeight);
 }
 

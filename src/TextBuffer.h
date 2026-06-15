@@ -8,12 +8,15 @@ class TextBuffer
 {
 
 public:
-    // TextBuffer();
+    TextBuffer() = default;
+    TextBuffer(const std::string& text);
+    TextBuffer(const std::vector<std::string> &buffer);
     //~TextBuffer();
 
     void insert(size_t row, size_t col, const std::string &text);
     Position insertFormatted(size_t row, size_t col, const std::string &text);
     void insertLine(size_t row, const std::string &text);
+    void addLine(const std::string& text);
     void erase(size_t row, size_t col);
     void eraseRange(size_t row, size_t begin_col, size_t end_col);
     void clear();

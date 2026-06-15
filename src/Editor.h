@@ -75,7 +75,7 @@ public:
 
     bool isTerminalVisible() const;
     void switchFocus();
-    Terminal getTerminal() const;
+    const Terminal& getTerminal() const;
 
     const Selection &getSelection() const;
     void setSelectionActive(bool b);

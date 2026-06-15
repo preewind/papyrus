@@ -7,9 +7,9 @@
 #include "Editor.h"
 #include "logger.h"
 
-Editor::Editor()
-{
+Editor::Editor(): mTerminal(Terminal(5)){ // TODO get the hell rid of it
     mCursor = Cursor{0, 0};
+    
 }
 
 Editor::~Editor()
@@ -701,7 +701,7 @@ void Editor::switchFocus()
     }
 }
 
-Terminal Editor::getTerminal() const
+const Terminal& Editor::getTerminal() const
 {
     return mTerminal;
 }

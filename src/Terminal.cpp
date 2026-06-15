@@ -1,14 +1,31 @@
 #include "Terminal.h"
 #include "logger.h"
 
-Terminal::Terminal() {
+Terminal::Terminal()
+{
     mCommands["build"] = [this](const auto &args)
     {
         return buildCommand(args);
     };
+    mCommands["flex"] = [this](const auto &args)
+    {
+        return flexCommand(args);
+    };
+}
+Terminal::Terminal(uint32_t rows)
+{
+    mCommands["build"] = [this](const auto &args)
+    {
+        return buildCommand(args);
+    };
+    mCommands["flex"] = [this](const auto &args)
+    {
+        return flexCommand(args);
+    };
+    mVisibleRows = rows;
 };
 
-CommandResult Terminal::executeCommand(const std::string& name, const std::vector<std::string>& args)
+CommandResult Terminal::executeCommand(const std::string &name, const std::vector<std::string> &args)
 {
     LOG_DEBUG() << "Hello from Terminal!";
     auto it = mCommands.find(name);
@@ -23,20 +40,33 @@ CommandResult Terminal::executeCommand(const std::string& name, const std::vecto
 
 CommandResult Terminal::executeShell(const std::string &commandLine)
 {
-    FILE *pipe = popen(commandLine.c_str(), "r");
-    if (!pipe)
-    {
-        return {false, {"Failed to execute command"}};
-    }
-    std::vector<std::string> output;
-    char buffer[256];
+    std::thread([this, commandLine]()
+                {
+                    FILE *pipe = popen(commandLine.c_str(), "r");
+                    if (!pipe)
+                    {
+                        return;
+                    }
+                    char buffer[256];
 
-    while (fgets(buffer, sizeof(buffer), pipe))
-    {
-        output.push_back(buffer);
-    }
-    pclose(pipe);
-    return {true, output};
+                    while (fgets(buffer, sizeof(buffer), pipe))
+                    {
+                        std::string line(buffer);
+                        LOG_DEBUG() << "line: " << line;
+                        while (!line.empty() && (line.back() == '\n' || line.back() == '\r'))
+                        {
+                            line.pop_back();
+                        }
+                        {
+                            std::lock_guard<std::mutex> lock(mOutputMutex);
+                            LOG_DEBUG() << "line: " << line;
+                            mOutput.addLine(line);
+                        }
+                    }
+                    pclose(pipe); })
+        .detach();
+
+    return {true, mOutput};
 }
 
 void Terminal::handleKey(const SDL_Event &event)
@@ -48,6 +78,7 @@ void Terminal::handleKey(const SDL_Event &event)
     if (event.type == SDL_EVENT_KEY_DOWN)
     {
         SDL_Keycode key = event.key.key;
+        SDL_Keymod mod = event.key.mod;
         switch (key)
         {
         case SDLK_RETURN:
@@ -57,10 +88,10 @@ void Terminal::handleKey(const SDL_Event &event)
             handleBackSpace();
             break;
         case SDLK_UP:
-            handleUp();
+            handleUp(mod);
             break;
         case SDLK_DOWN:
-            handleDown();
+            handleDown(mod);
             break;
         }
     }
@@ -84,20 +115,39 @@ void Terminal::handleBackSpace()
 
 void Terminal::handleReturn()
 {
-    auto result = executeCommand(mInput.getLine(0), {});
-    for(auto &line: result.output){
+    mOutput = executeCommand(mInput.getLine(0), {}).output;
+    for (auto &line : mOutput.getText())
+    {
         LOG_DEBUG() << line;
     }
     mInput.clear();
     mCursor = 0;
 }
 
-void Terminal::handleUp()
+void Terminal::handleUp(SDL_Keymod mod)
 {
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+
+    if (ctrlHeld)
+    {
+        if (mScrollOffset < mOutput.getText().size()- 1 - mVisibleRows)
+        {
+            mScrollOffset++;
+        }
+    }
 }
 
-void Terminal::handleDown()
+void Terminal::handleDown(SDL_Keymod mod)
 {
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+
+    if (ctrlHeld)
+    {
+        if (mScrollOffset > 0)
+        {
+            mScrollOffset--;
+        }
+    }
 }
 
 std::string Terminal::getInput() const
@@ -111,6 +161,7 @@ std::string Terminal::getInput() const
 
 TextBuffer Terminal::getOutput() const
 {
+    std::lock_guard<std::mutex> lock(mOutputMutex);
     return mOutput;
 }
 
@@ -119,8 +170,24 @@ uint32_t Terminal::getCursor() const
     return mCursor;
 }
 
+uint32_t Terminal::getScrollOffset() const
+{
+    return mScrollOffset;
+}
+
+uint32_t Terminal::getVisibleRows() const
+{
+    return mVisibleRows;
+}
+
 CommandResult Terminal::buildCommand(const std::vector<std::string> &args)
 {
-    (void) args;
-    return executeShell("./run.sh -r -run");
+    (void)args;
+    return executeShell("./run.sh -r");
+}
+
+CommandResult Terminal::flexCommand(const std::vector<std::string> &args)
+{
+    (void)args;
+    return executeShell("wc -l src/*cpp");
 }

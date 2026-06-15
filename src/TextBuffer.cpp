@@ -6,6 +6,16 @@
 #include "logger.h"
 #include "util.h"
 
+TextBuffer::TextBuffer(const std::string &text)
+{
+    mLines.push_back(text);
+}
+
+TextBuffer::TextBuffer(const std::vector<std::string> &buffer)
+{
+    mLines = buffer;
+}
+
 void TextBuffer::insert(size_t row, size_t col, const std::string &text)
 {
     if(row == 0 && mLines.size() == 0){
@@ -66,6 +76,11 @@ Position TextBuffer::insertFormatted(size_t row, size_t col, const std::string &
 void TextBuffer::insertLine(size_t row, const std::string &text)
 {
     mLines.insert(mLines.begin() + row, text);
+}
+
+void TextBuffer::addLine(const std::string &text)
+{
+    mLines.push_back(text);
 }
 
 void TextBuffer::erase(size_t row, size_t col)
