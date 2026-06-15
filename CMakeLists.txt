@@ -34,6 +34,8 @@ add_executable(papyrus
     src/CppLexer.cpp
     src/Terminal.h
     src/Terminal.cpp
+    src/CommandProcessor.h
+    src/CommandProcessor.cpp
     src/Argparser.h
     src/logger.h
     src/types.h

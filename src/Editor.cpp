@@ -7,9 +7,9 @@
 #include "Editor.h"
 #include "logger.h"
 
-Editor::Editor(): mTerminal(Terminal(5)){ // TODO get the hell rid of it
+Editor::Editor(){ 
     mCursor = Cursor{0, 0};
-    
+    mTerminal = std::make_unique<Terminal>(); 
 }
 
 Editor::~Editor()
@@ -24,7 +24,7 @@ void Editor::handlePaneKeyHandler(const SDL_Event &event)
     }
     else if (mFocus == Focus::Terminal)
     {
-        mTerminal.handleKey(event);
+        mTerminal->handleKey(event);
     }
 }
 
@@ -701,9 +701,14 @@ void Editor::switchFocus()
     }
 }
 
-const Terminal& Editor::getTerminal() const
+const Terminal& Editor::getTerminalConst() const
 {
-    return mTerminal;
+    return *mTerminal;
+}
+
+Terminal &Editor::getTerminal()
+{
+    return *mTerminal;
 }
 
 const Selection &Editor::getSelection() const

@@ -326,7 +326,7 @@ void Renderer::renderEditor(const Editor &editor)
 void Renderer::renderTerminal(const Editor &editor)
 {
     drawRect(mTerminalLayout.windowX, mTerminalLayout.windowY, mLayout.windowWidth, mTerminalLayout.windowHeight, SDL_Color{31, 32, 33, 255});
-    const Terminal &terminal = editor.getTerminal();
+    const Terminal &terminal = editor.getTerminalConst();
     renderTerminalCursor(terminal);
         const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();
     std::vector<std::string> output = terminal.getOutput().getText();
@@ -416,6 +416,7 @@ void Renderer::updateEditor(Editor &editor)
     if (editor.isTerminalVisible())
     {
         mLayout.windowHeight = mLayout.totalWindowHeight * 0.8;
+        editor.getTerminal().setVisibleRows(((mTerminalLayout.windowHeight - mTerminalLayout.marginTop) / mLayout.lineHeight)-1);
     }
     else
     {

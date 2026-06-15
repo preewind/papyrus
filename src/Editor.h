@@ -75,7 +75,8 @@ public:
 
     bool isTerminalVisible() const;
     void switchFocus();
-    const Terminal& getTerminal() const;
+    const Terminal& getTerminalConst() const;
+    Terminal& getTerminal();
 
     const Selection &getSelection() const;
     void setSelectionActive(bool b);
@@ -99,7 +100,7 @@ private:
     TextBuffer mBuffer;
     Focus mFocus = Focus::Editor;
     bool mTerminalVisible = false;
-    Terminal mTerminal;
+    std::unique_ptr<Terminal> mTerminal;
     std::optional<SearchSession> mSearch;
     SearchEngine mSearchEngine;
     std::filesystem::path mCurrentFilePath;
