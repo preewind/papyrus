@@ -30,7 +30,7 @@ public:
     void handlePaneKeyHandler(const SDL_Event &event);
     void handleKey(const SDL_Event &event);
     void handleTextInput(const std::string &text);
-    void handleBackSpace();
+    void handleBackSpace(SDL_Keymod mod);
     void handleReturn();
     void handleTab();
     void handleDelete(SDL_Keymod mod);
@@ -48,8 +48,8 @@ public:
     void handleT(SDL_Keymod mod);
     void handleV(SDL_Keymod mod);
 
-    void moveCursorLeft();
-    void moveCursorRight();
+    void moveCursorLeft(SDL_Keymod mod);
+    void moveCursorRight(SDL_Keymod mod);
     void moveCursorUp();
     void moveCursorDown();
     void moveCursorToBeginCol();

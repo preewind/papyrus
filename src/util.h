@@ -62,29 +62,35 @@ inline std::vector<std::string> splitByNewline(const std::string &input)
 
 #include <SDL3/SDL_pixels.h>
 
-inline SDL_Color hexToSDLColor(std::string hex) {
-    if (!hex.empty() && hex[0] == '#') {
+inline SDL_Color hexToSDLColor(std::string hex)
+{
+    if (!hex.empty() && hex[0] == '#')
+    {
         hex = hex.substr(1);
     }
 
-    if (hex.length() != 6 && hex.length() != 8) {
+    if (hex.length() != 6 && hex.length() != 8)
+    {
         // Fallback to white if the string format is invalid
-        return SDL_Color{255, 255, 255, 255}; 
+        return SDL_Color{255, 255, 255, 255};
     }
 
     uint32_t colorValue = std::stoul(hex, nullptr, 16);
 
     SDL_Color color;
-    if (hex.length() == 6) {
+    if (hex.length() == 6)
+    {
         color.r = (colorValue >> 16) & 0xFF;
-        color.g = (colorValue >> 8)  & 0xFF;
-        color.b = colorValue         & 0xFF;
-        color.a = 255; 
-    } else {
+        color.g = (colorValue >> 8) & 0xFF;
+        color.b = colorValue & 0xFF;
+        color.a = 255;
+    }
+    else
+    {
         color.r = (colorValue >> 24) & 0xFF;
         color.g = (colorValue >> 16) & 0xFF;
-        color.b = (colorValue >> 8)  & 0xFF;
-        color.a = colorValue         & 0xFF;
+        color.b = (colorValue >> 8) & 0xFF;
+        color.a = colorValue & 0xFF;
     }
 
     return color;
@@ -92,13 +98,55 @@ inline SDL_Color hexToSDLColor(std::string hex) {
 
 #include <algorithm>
 #include <cctype>
-inline std::string trim(const std::string& str) {
-    auto start = std::find_if_not(str.begin(), str.end(), [](unsigned char ch) {
-        return std::isspace(ch);
-    });
-    auto end = std::find_if_not(str.rbegin(), str.rend(), [](unsigned char ch) {
-        return std::isspace(ch);
-    }).base();
-    
+inline std::string trim(const std::string &str)
+{
+    auto start = std::find_if_not(str.begin(), str.end(), [](unsigned char ch)
+                                  { return std::isspace(ch); });
+    auto end = std::find_if_not(str.rbegin(), str.rend(), [](unsigned char ch)
+                                { return std::isspace(ch); })
+                   .base();
+
     return (start < end) ? std::string(start, end) : "";
+}
+
+inline Range findWordLeftOfIndex(const std::string_view &str)
+{
+    if (str.empty())
+        return {0, 0};
+
+    size_t end = str.find_last_not_of(" \t\n\v\f\r");
+    if (end == std::string::npos)
+    {
+        return {0, 0};
+    }
+    size_t start = str.find_last_of(" \t\n\v\f\r", end);
+
+    if (start == std::string::npos)
+    {
+        start = 0;
+    }
+    else
+    {
+        start += 1;
+    }
+
+    return {start, end + 1};
+}
+
+inline Range findWordRightOfIndex(const std::string_view &str)
+{
+    if (str.empty())
+        return {0, 0};
+    size_t start = str.find_first_not_of(" \t\n\v\f\r");
+    
+    if (start == std::string::npos)
+    {
+        return {0, 0};
+    }
+    size_t end = str.find_first_of(" \t\n\v\f\r", start);
+    if (end == std::string::npos)
+    {
+        end = str.length();
+    }
+    return {start, end};
 }

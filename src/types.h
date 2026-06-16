@@ -17,6 +17,11 @@ struct SearchMatch {
     uint32_t length;
 };
 
+struct Range{
+    size_t start;
+    size_t end;
+};
+
 struct Position
 {
     size_t row, col;

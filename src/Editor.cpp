@@ -6,6 +6,7 @@
 
 #include "Editor.h"
 #include "logger.h"
+#include "util.h"
 
 Editor::Editor()
 {
@@ -42,7 +43,7 @@ void Editor::handleKey(const SDL_Event &event)
         switch (key)
         {
         case SDLK_BACKSPACE:
-            handleBackSpace();
+            handleBackSpace(mod);
             break;
         case SDLK_RETURN:
             handleReturn();
@@ -122,7 +123,7 @@ void Editor::handleTextInput(const std::string &text)
     markActivity();
 }
 
-void Editor::handleBackSpace()
+void Editor::handleBackSpace(SDL_Keymod mod)
 {
     if (isSearchActive())
     {
@@ -131,16 +132,27 @@ void Editor::handleBackSpace()
     }
     else
     {
-        if (mCursor.col > 0)
+        bool ctrlHeld = mod & SDL_KMOD_CTRL;
+        if (ctrlHeld)
         {
-            mBuffer.erase(mCursor.row, mCursor.col - 1);
-            mCursor.col--;
+            // delete word left to cursor
+            Range leftWord = findWordLeftOfIndex(mBuffer.getLine(mCursor.row).substr(0, mCursor.col));
+            mBuffer.eraseRange(mCursor.row, leftWord.start, leftWord.end);
+            mCursor.col = leftWord.start;
         }
-        else if (mCursor.col == 0 && mCursor.row > 0)
+        else
         {
-            mCursor.row--;
-            moveCursorToEndCol();
-            mBuffer.mergeWithNext(mCursor.row);
+            if (mCursor.col > 0)
+            {
+                mBuffer.erase(mCursor.row, mCursor.col - 1);
+                mCursor.col--;
+            }
+            else if (mCursor.col == 0 && mCursor.row > 0)
+            {
+                mCursor.row--;
+                moveCursorToEndCol();
+                mBuffer.mergeWithNext(mCursor.row);
+            }
         }
         clearSelection();
         ensureCursorVisibleVertically();
@@ -172,6 +184,7 @@ void Editor::handleDelete(SDL_Keymod mod)
     else
     {
         bool shiftHeld = mod & SDL_KMOD_SHIFT;
+        bool ctrlHeld = mod & SDL_KMOD_CTRL;
 
         // shift + del deletes entire line
         if (shiftHeld)
@@ -179,6 +192,12 @@ void Editor::handleDelete(SDL_Keymod mod)
             mBuffer.eraseRange(mCursor.row, 0, mBuffer.getLineSize(mCursor.row));
             mBuffer.mergeWithNext(mCursor.row);
             moveCursorToBeginCol();
+        }
+        else if (ctrlHeld)
+        {
+            // delete word right to cursor
+            Range rightWord = findWordRightOfIndex(mBuffer.getLine(mCursor.row).substr(mCursor.col, mBuffer.getLineSize(mCursor.row)));
+            mBuffer.eraseRange(mCursor.row, mCursor.col + rightWord.start, mCursor.col + rightWord.end);
         }
         else
         {
@@ -212,7 +231,7 @@ void Editor::handleLeft(SDL_Keymod mod)
         {
             beginSelection();
         }
-        moveCursorLeft();
+        moveCursorLeft(mod);
 
         if (shiftHeld)
         {
@@ -240,7 +259,7 @@ void Editor::handleRight(SDL_Keymod mod)
         {
             beginSelection();
         }
-        moveCursorRight();
+        moveCursorRight(mod);
 
         if (shiftHeld)
         {
@@ -484,29 +503,47 @@ void Editor::handleTab()
     handleTextInput("\t");
 }
 
-void Editor::moveCursorLeft()
+void Editor::moveCursorLeft(SDL_Keymod mod)
 {
-    if (mCursor.col > 0)
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+    if (ctrlHeld)
     {
-        mCursor.col--;
+        Range wordLeft = findWordLeftOfIndex(mBuffer.getLine(mCursor.row).substr(0, mCursor.col));
+        mCursor.col = wordLeft.start;
     }
-    else if (mCursor.col == 0 && mCursor.row > 0)
+    else
     {
-        mCursor.row--;
-        moveCursorToEndCol();
+        if (mCursor.col > 0)
+        {
+            mCursor.col--;
+        }
+        else if (mCursor.col == 0 && mCursor.row > 0)
+        {
+            mCursor.row--;
+            moveCursorToEndCol();
+        }
     }
 }
 
-void Editor::moveCursorRight()
+void Editor::moveCursorRight(SDL_Keymod mod)
 {
-    if (mCursor.col < mBuffer.getLineSize(mCursor.row))
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+    if (ctrlHeld)
     {
-        mCursor.col++;
+        Range wordRight = findWordRightOfIndex(mBuffer.getLine(mCursor.row).substr(mCursor.col, mBuffer.getLineSize(mCursor.row)));
+        mCursor.col = mCursor.col + wordRight.end;
     }
-    else if (mCursor.col == mBuffer.getLineSize(mCursor.row) && mCursor.row < mBuffer.getLineCount() - 1)
+    else
     {
-        mCursor.row++;
-        moveCursorToBeginCol();
+        if (mCursor.col < mBuffer.getLineSize(mCursor.row))
+        {
+            mCursor.col++;
+        }
+        else if (mCursor.col == mBuffer.getLineSize(mCursor.row) && mCursor.row < mBuffer.getLineCount() - 1)
+        {
+            mCursor.row++;
+            moveCursorToBeginCol();
+        }
     }
 }
 
