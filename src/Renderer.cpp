@@ -313,6 +313,7 @@ void Renderer::renderEditor(const Editor &editor)
     renderText(editor);
     if (editor.isSearchActive())
     {
+        ensureCursorVisibleHorizontallySearch(editor.getSearch().getCursor(), editor.getSearch().getQuery());
         renderSearchOverlay(editor.getSearch());
         renderSearchCursor(editor.getSearch());
     }
@@ -328,7 +329,7 @@ void Renderer::renderTerminal(const Editor &editor)
     drawRect(mTerminalLayout.windowX, mTerminalLayout.windowY, mLayout.windowWidth, mTerminalLayout.windowHeight, SDL_Color{31, 32, 33, 255});
     const Terminal &terminal = editor.getTerminalConst();
     renderTerminalCursor(terminal);
-        const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();
+    const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();
     std::vector<std::string> output = terminal.getOutput().getText();
     std::reverse(output.begin(), output.end());
     if (output.size() == 0)
@@ -370,8 +371,17 @@ void Renderer::renderSearchOverlay(const SearchSession &session)
 
     drawRect(mSearchLayout.queryX, mSearchLayout.queryY, mSearchLayout.queryWidth, mSearchLayout.queryHeight, mSearchLayout.rectColor);
     drawRect(mSearchLayout.matchBoxX, mSearchLayout.queryY, mSearchLayout.matchBoxWidth, mSearchLayout.queryHeight, mSearchLayout.rectColor);
-    drawText(session.getQuery(), mSearchLayout.textX, mSearchLayout.textY);
 
+    SDL_Rect searchClipRect{
+        static_cast<int>(mSearchLayout.queryX + mSearchLayout.textPadding),
+        static_cast<int>(mSearchLayout.queryY),
+        static_cast<int>(mSearchLayout.queryWidth - (mSearchLayout.textPadding * 2)),
+        static_cast<int>(mSearchLayout.queryHeight)};
+    CSF(SDL_SetRenderClipRect(mRenderer, &searchClipRect));
+
+    const std::string &query = session.getQuery();
+    drawText(query, mSearchLayout.textX - mScrollOffsetXSearch, mSearchLayout.textY);
+    CSF(SDL_SetRenderClipRect(mRenderer, nullptr));
     drawText(matchStr, mSearchLayout.matchBoxTextX, mSearchLayout.textY);
 }
 
@@ -380,7 +390,15 @@ void Renderer::renderSearchCursor(const SearchSession &session)
     if (mCursorVisible)
     {
         uint32_t cursorTextWidth = measureTextWidth(session.getQuery().substr(0, session.getCursor()));
-        drawRect(mSearchLayout.queryX + mSearchLayout.textPadding + cursorTextWidth, mSearchLayout.textY, 2, mLayout.lineHeight, SDL_Color{255, 255, 255, 255});
+        int cursorX = mSearchLayout.queryX + mSearchLayout.textPadding + cursorTextWidth - mScrollOffsetXSearch;
+        SDL_Rect searchClipRect{
+            static_cast<int>(mSearchLayout.queryX + mSearchLayout.textPadding),
+            static_cast<int>(mSearchLayout.queryY),
+            static_cast<int>(mSearchLayout.queryWidth - (mSearchLayout.textPadding * 2)),
+            static_cast<int>(mSearchLayout.queryHeight)};
+        CSF(SDL_SetRenderClipRect(mRenderer, &searchClipRect));
+        drawRect(cursorX, mSearchLayout.textY, 2, mLayout.lineHeight, SDL_Color{255, 255, 255, 255});
+        CSF(SDL_SetRenderClipRect(mRenderer, nullptr));
     }
 }
 
@@ -416,7 +434,7 @@ void Renderer::updateEditor(Editor &editor)
     if (editor.isTerminalVisible())
     {
         mLayout.windowHeight = mLayout.totalWindowHeight * 0.75;
-        editor.getTerminal().setVisibleRows(((mTerminalLayout.windowHeight - mTerminalLayout.marginTop) / mLayout.lineHeight)-1);
+        editor.getTerminal().setVisibleRows(((mTerminalLayout.windowHeight - mTerminalLayout.marginTop) / mLayout.lineHeight) - 1);
         editor.adjustCursor((mLayout.windowHeight - mLayout.marginTop) / mLayout.lineHeight);
     }
     else
@@ -458,7 +476,7 @@ void Renderer::updateFileBrowser(FileBrowser &browser)
         }
         std::string extension = browser.getFileExtension(file);
         uint32_t first = browser.getScrollOffset();
-        file = fitTextToWidth(file, extension);
+        file = fitTextToWidthFile(file, extension);
         drawText(file, mLayout.marginLeft, screenYBrowser(i, first, fileListTopMargin), color);
     }
     present();
@@ -477,7 +495,7 @@ void Renderer::renderFileBrowserSelection(FileBrowser &browser)
 /*
     Could probably be optimized, but will change when renderer changes anyways, so good luck future me :)
 */
-const std::string Renderer::fitTextToWidth(const std::string &text, std::string &extension)
+const std::string Renderer::fitTextToWidthFile(const std::string &text, std::string &extension)
 {
     uint32_t visibleWidth = mLayout.windowWidth - mLayout.marginLeft - measureTextWidth("...") - measureTextWidth(extension);
 
@@ -552,6 +570,23 @@ void Renderer::ensureCursorVisibleHorizontally(const Cursor &cursor, const std::
     else if (cursorPixelX > mScrollOffsetX + visibleWidth)
     {
         mScrollOffsetX = cursorPixelX - visibleWidth + 20;
+    }
+}
+
+void Renderer::ensureCursorVisibleHorizontallySearch(uint32_t cursor, const std::string &line)
+{
+    int cursorPixelX = measureTextWidth(expandTabs(line.substr(0, cursor)));
+
+    int visibleWidth =
+        mSearchLayout.queryWidth - mSearchLayout.textPadding*2;
+
+    if (cursorPixelX < mScrollOffsetXSearch)
+    {
+        mScrollOffsetXSearch = cursorPixelX;
+    }
+    else if (cursorPixelX > mScrollOffsetXSearch + visibleWidth)
+    {
+        mScrollOffsetXSearch = cursorPixelX - visibleWidth;
     }
 }
 

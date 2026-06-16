@@ -85,13 +85,14 @@ public:
     void updateEditor(Editor &editor);
     void updateFileBrowser(FileBrowser &browser);
     void renderFileBrowserSelection(FileBrowser &browser);
-    const std::string fitTextToWidth(const std::string &text, std::string &extension);
+    const std::string fitTextToWidthFile(const std::string &text, std::string &extension);
     uint32_t getVirtualCol(const std::string &text, uint32_t rawCol);
     void present();
 
     void onResize(uint32_t w, uint32_t h);
 
     void ensureCursorVisibleHorizontally(const Cursor& cursor,const std::string& line);
+    void ensureCursorVisibleHorizontallySearch(uint32_t cursor,const std::string& line);
 
     int textX(const std::string &line, uint32_t col);
     int screenY(uint32_t row, uint32_t scrollOffset) const;
@@ -105,4 +106,5 @@ private:
     SearchOverlayLayout mSearchLayout;
     TerminalLayout mTerminalLayout;
     int mScrollOffsetX = 0;
+    int mScrollOffsetXSearch = 0;
 };
