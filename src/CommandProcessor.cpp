@@ -44,7 +44,9 @@ CommandResult CommandProcessor::executeCommand(const std::string &name, const st
             false,
             {"Unknown command"}};
     }
-    return it->second(args);
+    CommandResult result = it->second(args);
+    mOutput.addLine(result.message);
+    return result;
 }
 
 CommandResult CommandProcessor::executeShell(const std::string &commandLine)
@@ -61,7 +63,6 @@ CommandResult CommandProcessor::executeShell(const std::string &commandLine)
                     while (fgets(buffer, sizeof(buffer), pipe))
                     {
                         std::string line(buffer);
-                        LOG_DEBUG() << "line: " << line;
                         while (!line.empty() && (line.back() == '\n' || line.back() == '\r'))
                         {
                             line.pop_back();
@@ -74,7 +75,7 @@ CommandResult CommandProcessor::executeShell(const std::string &commandLine)
                     pclose(pipe); })
         .detach();
 
-    return {true, mOutput};
+    return {true, std::string("Executed Command: " + commandLine)};
 }
 
 CommandResult CommandProcessor::buildCommand(const std::vector<std::string> &args)
@@ -111,9 +112,17 @@ CommandResult CommandProcessor::saveCommand(const std::vector<std::string> &args
 
 CommandResult CommandProcessor::changeLanguageCommand(const std::vector<std::string> &args)
 {
-    (void)args;
-    mPendingRequest = {CommandRequestType::ChangeLanguage, args[0]};
-    return {true, {"Changed language!"}};
+    CommandRequest result;
+    if(!args.empty()){
+        mPendingRequest = {CommandRequestType::ChangeLanguage, args[0]};
+        return {true, {std::string("Changed language to " + args[0])}};   
+    }
+    else{
+        mPendingRequest = {CommandRequestType::Error, "No language provided!"};
+        return {false, {"No language provided!"}};
+    }
+    
+    return {false, {"Something went wrong while changing language!"}};
 }
 
 std::optional<CommandRequest> CommandProcessor::consumeRequest()

@@ -129,10 +129,17 @@ enum class CommandRequestType {
     OpenFile,
     SaveFile,
     Quit,
-    ChangeLanguage
+    ChangeLanguage,
+    Error
 };
 
 struct CommandRequest{
     CommandRequestType type;
     std::string request;
+};
+
+struct CommandResult
+{
+    bool success;
+    std::string message;
 };

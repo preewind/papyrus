@@ -11,12 +11,6 @@
 #include "types.h"
 #include "TextBuffer.h"
 
-struct CommandResult
-{
-    bool success;
-    TextBuffer output;
-};
-
 class CommandProcessor
 {
 public:

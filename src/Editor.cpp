@@ -572,10 +572,10 @@ void Editor::ensureCursorVisibleVertically()
 // should work because new visible rows isnt updated yet
 void Editor::adjustCursor(uint32_t rows)
 {
-    if(isTerminalVisible() && mCursor.row > rows){
-        mCursor.row -= mVisibleRows-rows;
+    if (isTerminalVisible() && mCursor.row > rows)
+    {
+        mCursor.row -= mVisibleRows - rows;
     }
-    
 }
 
 void Editor::loadFile(const std::filesystem::path &path)
@@ -827,6 +827,9 @@ void Editor::handleRequest(const CommandRequest &request)
 
     case CommandRequestType::OpenFile:
         loadFile(request.request);
+        break;
+    case CommandRequestType::Error:
+        LOG_ERROR() << "Error: " << request.request;
         break;
 
     default:

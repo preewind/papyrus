@@ -51,7 +51,6 @@ void Terminal::handleTextInput(const std::string &text)
 {
     mInput.insert(0, mCursor, text);
     mCursor += text.size();
-    LOG_DEBUG() << "Text: " << mInput.getLine(0);
 }
 
 void Terminal::handleBackSpace()
@@ -73,6 +72,7 @@ void Terminal::handleDelete()
 
 void Terminal::handleReturn()
 {
+    if(mInput.getText().size() == 0 || mInput.getLine(0).size() == 0) return;
     std::string trimmedInput = trim(mInput.getLine(0));
 
     std::string command;
@@ -88,11 +88,7 @@ void Terminal::handleReturn()
         }
         mCmdHistory.push_back(trimmedInput);
     }
-    const auto &result = mProcessor.executeCommand(command, options).output;
-    for (auto &line : result.getText())
-    {
-        LOG_DEBUG() << line;
-    }
+    mProcessor.executeCommand(command, options);
     mInput.clear();
     mCursor = 0;
     mHistoryIndex = 0;
