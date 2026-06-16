@@ -90,6 +90,9 @@ void Editor::handleKey(const SDL_Event &event)
         case SDLK_V:
             handleV(mod);
             break;
+        case SDLK_X:
+            handleX(mod);
+            break;
 
         // IO
         case SDLK_F1:
@@ -132,26 +135,34 @@ void Editor::handleBackSpace(SDL_Keymod mod)
     }
     else
     {
-        bool ctrlHeld = mod & SDL_KMOD_CTRL;
-        if (ctrlHeld)
+        if (mSelectionActive)
         {
-            // delete word left to cursor
-            Range leftWord = findWordLeftOfIndex(mBuffer.getLine(mCursor.row).substr(0, mCursor.col));
-            mBuffer.eraseRange(mCursor.row, leftWord.start, leftWord.end);
-            mCursor.col = leftWord.start;
+            mBuffer.eraseRangeMultiRow(mSelection.normalized());
+            mCursor = mSelection.normalized().begin;
         }
         else
         {
-            if (mCursor.col > 0)
+            bool ctrlHeld = mod & SDL_KMOD_CTRL;
+            if (ctrlHeld)
             {
-                mBuffer.erase(mCursor.row, mCursor.col - 1);
-                mCursor.col--;
+                // delete word left to cursor
+                Range leftWord = findWordLeftOfIndex(mBuffer.getLine(mCursor.row).substr(0, mCursor.col));
+                mBuffer.eraseRange(mCursor.row, leftWord.start, leftWord.end);
+                mCursor.col = leftWord.start;
             }
-            else if (mCursor.col == 0 && mCursor.row > 0)
+            else
             {
-                mCursor.row--;
-                moveCursorToEndCol();
-                mBuffer.mergeWithNext(mCursor.row);
+                if (mCursor.col > 0)
+                {
+                    mBuffer.erase(mCursor.row, mCursor.col - 1);
+                    mCursor.col--;
+                }
+                else if (mCursor.col == 0 && mCursor.row > 0)
+                {
+                    mCursor.row--;
+                    moveCursorToEndCol();
+                    mBuffer.mergeWithNext(mCursor.row);
+                }
             }
         }
         clearSelection();
@@ -494,6 +505,22 @@ void Editor::handleV(SDL_Keymod mod)
         const std::string &text = SDL_GetClipboardText();
         LOG_DEBUG() << text;
         mCursor = mBuffer.insertFormatted(mCursor.row, mCursor.col, text);
+        updateTokens();
+    }
+}
+
+void Editor::handleX(SDL_Keymod mod)
+{
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+
+    if (ctrlHeld)
+    {
+        const std::string &text = getSelectedText();
+        SDL_SetClipboardText(text.c_str());
+        mBuffer.eraseRangeMultiRow(mSelection.normalized());
+        mCursor = mSelection.normalized().begin;
+        clearSelection();
+        ensureCursorVisibleVertically();
         updateTokens();
     }
 }

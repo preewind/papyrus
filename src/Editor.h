@@ -15,7 +15,8 @@
 #include "SyntaxHighlighter.h"
 #include "Terminal.h"
 
-enum class Focus {
+enum class Focus
+{
     Editor,
     Terminal
 };
@@ -47,6 +48,7 @@ public:
     void handleS(SDL_Keymod mod);
     void handleT(SDL_Keymod mod);
     void handleV(SDL_Keymod mod);
+    void handleX(SDL_Keymod mod);
 
     void moveCursorLeft(SDL_Keymod mod);
     void moveCursorRight(SDL_Keymod mod);
@@ -76,8 +78,8 @@ public:
 
     bool isTerminalVisible() const;
     void switchFocus();
-    const Terminal& getTerminalConst() const;
-    Terminal& getTerminal();
+    const Terminal &getTerminalConst() const;
+    Terminal &getTerminal();
 
     const Selection &getSelection() const;
     void setSelectionActive(bool b);

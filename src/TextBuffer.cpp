@@ -18,7 +18,8 @@ TextBuffer::TextBuffer(const std::vector<std::string> &buffer)
 
 void TextBuffer::insert(size_t row, size_t col, const std::string &text)
 {
-    if(row == 0 && mLines.size() == 0){
+    if (row == 0 && mLines.size() == 0)
+    {
         mLines.resize(1);
     }
     else if (mLines.size() <= row)
@@ -114,6 +115,63 @@ void TextBuffer::eraseRange(size_t row, size_t begin_col, size_t end_col)
     }
 }
 
+void TextBuffer::eraseRangeMultiRow(size_t begin_row, size_t begin_col, size_t end_row, size_t end_col)
+{
+    if (begin_row >= mLines.size() || end_row >= mLines.size() || begin_row > end_row) {
+        return;
+    }
+
+    if(begin_row == end_row){
+        eraseRange(begin_row, begin_col, end_col);
+        return;
+    }
+
+    std::string finalLineSuffix = "";
+    if (end_col < mLines[end_row].size()) {
+        finalLineSuffix = mLines[end_row].substr(end_col);
+    }
+
+    // delete everything after begin col in first row
+    if (begin_col <= mLines[begin_row].size()) {
+        mLines[begin_row].resize(begin_col);
+    }
+
+    mLines[begin_row] += finalLineSuffix;
+
+    // remove lines in between
+    mLines.erase(mLines.begin() + begin_row + 1, mLines.begin() + end_row + 1);
+
+}
+
+void TextBuffer::eraseRangeMultiRow(const Selection &selection)
+{
+    const Position& begin = selection.begin;
+    const Position& end = selection.end;
+    if (begin.row >= mLines.size() || end.row >= mLines.size() || begin.row > end.row) {
+        return;
+    }
+
+    if(begin.row == end.row){
+        eraseRange(begin.row, begin.col, end.col);
+        return;
+    }
+
+    std::string finalLineSuffix = "";
+    if (end.col < mLines[end.row].size()) {
+        finalLineSuffix = mLines[end.row].substr(end.col);
+    }
+
+    // delete everything after begin col in first row
+    if (begin.col <= mLines[begin.row].size()) {
+        mLines[begin.row].resize(begin.col);
+    }
+
+    mLines[begin.row] += finalLineSuffix;
+
+    // remove lines in between
+    mLines.erase(mLines.begin() + begin.row + 1, mLines.begin() + end.row + 1);
+}
+
 void TextBuffer::clear()
 {
     mLines.clear();
@@ -154,11 +212,11 @@ const std::string &TextBuffer::getLine(size_t row) const
 
 size_t TextBuffer::getLineSize(size_t row) const
 {
-    if(mLines.size() > 0){
+    if (row < mLines.size())
+    {
         return mLines[row].size();
     }
     return 0;
-    
 }
 
 size_t TextBuffer::getLineCount() const
