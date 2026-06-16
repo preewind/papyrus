@@ -58,6 +58,7 @@ public:
     void moveCursorToLastRow();
 
     void ensureCursorVisibleVertically();
+    void adjustCursor(uint32_t rows);
 
     void loadFile(const std::filesystem::path &path);
     void saveFileAs(const std::filesystem::path &path);

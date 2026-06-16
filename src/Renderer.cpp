@@ -415,8 +415,9 @@ void Renderer::updateEditor(Editor &editor)
     }
     if (editor.isTerminalVisible())
     {
-        mLayout.windowHeight = mLayout.totalWindowHeight * 0.8;
+        mLayout.windowHeight = mLayout.totalWindowHeight * 0.75;
         editor.getTerminal().setVisibleRows(((mTerminalLayout.windowHeight - mTerminalLayout.marginTop) / mLayout.lineHeight)-1);
+        editor.adjustCursor((mLayout.windowHeight - mLayout.marginTop) / mLayout.lineHeight);
     }
     else
     {
@@ -425,7 +426,7 @@ void Renderer::updateEditor(Editor &editor)
     updateCursor();
     clear();
     renderEditor(editor);
-    editor.setVisibleRows((mLayout.windowHeight - mLayout.marginTop) / mLayout.lineHeight);
+    editor.setVisibleRows(((mLayout.windowHeight - mLayout.marginTop) / mLayout.lineHeight));
     Cursor cursor = editor.getCursor();
     ensureCursorVisibleHorizontally(cursor, editor.getLineString(cursor.row));
     present();

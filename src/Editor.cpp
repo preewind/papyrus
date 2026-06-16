@@ -463,7 +463,6 @@ void Editor::handleT(SDL_Keymod mod)
     {
         mTerminalVisible = !mTerminalVisible;
         mFocus = mTerminalVisible ? Focus::Terminal : Focus::Editor;
-        ensureCursorVisibleVertically();
     }
 }
 
@@ -569,6 +568,14 @@ void Editor::ensureCursorVisibleVertically()
     {
         mScrollOffsetY = mCursor.row - mVisibleRows + 1;
     }
+}
+// should work because new visible rows isnt updated yet
+void Editor::adjustCursor(uint32_t rows)
+{
+    if(isTerminalVisible() && mCursor.row > rows){
+        mCursor.row -= mVisibleRows-rows;
+    }
+    
 }
 
 void Editor::loadFile(const std::filesystem::path &path)
