@@ -86,9 +86,6 @@ void Editor::handleKey(const SDL_Event &event)
         case SDLK_S:
             handleS(mod);
             break;
-        case SDLK_T:
-            handleT(mod);
-            break;
         case SDLK_V:
             handleV(mod);
             break;
@@ -465,7 +462,7 @@ void Editor::handleT(SDL_Keymod mod)
     if (ctrlHeld)
     {
         mTerminalVisible = !mTerminalVisible;
-        mFocus = Focus::Terminal;
+        mFocus = mTerminalVisible ? Focus::Terminal : Focus::Editor;
         ensureCursorVisibleVertically();
     }
 }

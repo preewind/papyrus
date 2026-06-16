@@ -44,7 +44,6 @@ Application::~Application()
 
 void Application::run()
 {
-    
 
     while (mRunning)
     {
@@ -64,6 +63,7 @@ void Application::run()
             if (event.type == SDL_EVENT_KEY_DOWN)
             {
                 SDL_Keycode key = event.key.key;
+                SDL_Keymod mod = event.key.mod;
                 switch (key)
                 {
                 case SDLK_F3:
@@ -71,6 +71,9 @@ void Application::run()
                     break;
                 case SDLK_F4:
                     mCurrentScreen = Screen::Editor;
+                    break;
+                case SDLK_T:
+                    mEditor.handleT(mod);
                     break;
                 case SDLK_HASH:
                     handleHash(event.key.mod);
@@ -97,14 +100,15 @@ void Application::update()
     switch (mCurrentScreen)
     {
     case Screen::Editor:
-        if(auto request = mEditor.consumeRequest()){
+        if (auto request = mEditor.consumeRequest())
+        {
             CommandRequest req = *request;
             switch (req.type)
             {
             case CommandRequestType::Quit:
                 mRunning = false;
                 break;
-            
+
             default:
                 break;
             }
@@ -133,7 +137,8 @@ void Application::handleHash(SDL_Keymod mod)
     bool ctrlHeld = mod & SDL_KMOD_CTRL;
     bool shiftHeld = mod & SDL_KMOD_SHIFT;
 
-    if(ctrlHeld && shiftHeld){
+    if (ctrlHeld && shiftHeld)
+    {
         mEditor.switchFocus();
     }
 }
