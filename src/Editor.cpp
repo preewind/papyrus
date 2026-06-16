@@ -147,7 +147,7 @@ void Editor::handleBackSpace(SDL_Keymod mod)
             {
                 // delete word left to cursor
                 Range leftWord = findWordLeftOfIndex(mBuffer.getLine(mCursor.row).substr(0, mCursor.col));
-                mBuffer.eraseRange(mCursor.row, leftWord.start, leftWord.end);
+                mBuffer.eraseRange(mCursor.row, leftWord);
                 mCursor.col = leftWord.start;
             }
             else
@@ -175,7 +175,7 @@ void Editor::handleReturn()
 {
     if (!isSearchActive())
     {
-        mBuffer.splitLine(mCursor.row, mCursor.col);
+        mBuffer.splitLine(mCursor);
         moveCursorToBeginCol();
         mCursor.row++;
         markActivity();

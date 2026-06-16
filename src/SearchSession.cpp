@@ -55,7 +55,7 @@ Cursor SearchSession::handleUp(Cursor &cursor)
     {
         mCurrentMatch = (mCurrentMatch + mMatches.size() - 1) % mMatches.size();
         SearchMatch match = mMatches[mCurrentMatch];
-        return {match.row, match.col}; // TODO: operator= for cursor to match
+        return {match.row, match.col};
     }
     return cursor;
 }
@@ -66,7 +66,7 @@ Cursor SearchSession::handleDown(Cursor &cursor)
     {
         mCurrentMatch = (mCurrentMatch + 1) % mMatches.size();
         SearchMatch match = mMatches[mCurrentMatch];
-        return {match.row, match.col}; // TODO: operator= for cursor to match
+        return {match.row, match.col};
     }
     return cursor;
 }

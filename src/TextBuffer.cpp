@@ -115,6 +115,11 @@ void TextBuffer::eraseRange(size_t row, size_t begin_col, size_t end_col)
     }
 }
 
+void TextBuffer::eraseRange(size_t row, Range range)
+{
+    eraseRange(row, range.start, range.end);
+}
+
 void TextBuffer::eraseRangeMultiRow(size_t begin_row, size_t begin_col, size_t end_row, size_t end_col)
 {
     if (begin_row >= mLines.size() || end_row >= mLines.size() || begin_row > end_row) {
@@ -145,31 +150,7 @@ void TextBuffer::eraseRangeMultiRow(size_t begin_row, size_t begin_col, size_t e
 
 void TextBuffer::eraseRangeMultiRow(const Selection &selection)
 {
-    const Position& begin = selection.begin;
-    const Position& end = selection.end;
-    if (begin.row >= mLines.size() || end.row >= mLines.size() || begin.row > end.row) {
-        return;
-    }
-
-    if(begin.row == end.row){
-        eraseRange(begin.row, begin.col, end.col);
-        return;
-    }
-
-    std::string finalLineSuffix = "";
-    if (end.col < mLines[end.row].size()) {
-        finalLineSuffix = mLines[end.row].substr(end.col);
-    }
-
-    // delete everything after begin col in first row
-    if (begin.col <= mLines[begin.row].size()) {
-        mLines[begin.row].resize(begin.col);
-    }
-
-    mLines[begin.row] += finalLineSuffix;
-
-    // remove lines in between
-    mLines.erase(mLines.begin() + begin.row + 1, mLines.begin() + end.row + 1);
+    eraseRangeMultiRow(selection.begin.row, selection.begin.col, selection.end.row, selection.end.col);
 }
 
 void TextBuffer::clear()
@@ -185,6 +166,11 @@ void TextBuffer::splitLine(size_t row, size_t col)
     std::string secondPart = mLines[row].substr(col);
     mLines[row].resize(col);
     mLines.insert(mLines.begin() + row + 1, std::move(secondPart));
+}
+
+void TextBuffer::splitLine(const Cursor &cursor)
+{
+    splitLine(cursor.row, cursor.col);
 }
 
 void TextBuffer::mergeWithNext(size_t row)

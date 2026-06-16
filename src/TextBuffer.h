@@ -19,10 +19,12 @@ public:
     void addLine(const std::string& text);
     void erase(size_t row, size_t col);
     void eraseRange(size_t row, size_t begin_col, size_t end_col);
+    void eraseRange(size_t row, Range range);
     void eraseRangeMultiRow(size_t begin_row, size_t begin_col, size_t end_row, size_t end_col);
     void eraseRangeMultiRow(const Selection& selection);
     void clear();
     void splitLine(size_t row, size_t col);
+    void splitLine(const Cursor& cursor);
     void mergeWithNext(size_t row);
 
     void setLines(const std::vector<std::string> &lines);
