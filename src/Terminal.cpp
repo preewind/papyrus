@@ -72,12 +72,13 @@ void Terminal::handleDelete()
 
 void Terminal::handleReturn()
 {
-    if(mInput.getText().size() == 0 || mInput.getLine(0).size() == 0) return;
+    if (mInput.getText().size() == 0 || mInput.getLine(0).size() == 0)
+        return;
     std::string trimmedInput = trim(mInput.getLine(0));
 
     std::string command;
     std::vector<std::string> options;
-    if (!trimmedInput.empty())
+    if (!trimmedInput.empty() && !trimmedInput.starts_with("!"))
     {
         std::stringstream ss(trimmedInput);
         ss >> command;
@@ -86,9 +87,13 @@ void Terminal::handleReturn()
         {
             options.push_back(option);
         }
-        mCmdHistory.push_back(trimmedInput);
+        mProcessor.executeCommand(command, options);
     }
-    mProcessor.executeCommand(command, options);
+    else if (trimmedInput.starts_with("!"))
+    {
+        mProcessor.executeCommand(trimmedInput, {});
+    }
+    mCmdHistory.push_back(trimmedInput);
     mInput.clear();
     mCursor = 0;
     mHistoryIndex = 0;
@@ -116,7 +121,6 @@ void Terminal::handleUp(SDL_Keymod mod)
             mCursor = 0;
             uint32_t targetIndex = mCmdHistory.size() - mHistoryIndex;
             handleTextInput(mCmdHistory[targetIndex]);
-            
         }
     }
 }

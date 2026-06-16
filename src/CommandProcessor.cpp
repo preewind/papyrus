@@ -31,9 +31,12 @@ CommandProcessor::CommandProcessor()
 
 CommandResult CommandProcessor::executeCommand(const std::string &name, const std::vector<std::string> &args)
 {
+    CommandResult result;
     if (name.starts_with("!"))
     {
-        return executeShell(name.substr(1));
+        result = executeShell(name.substr(1));
+        mOutput.addLine(result.message);
+        return result;
     }
 
     auto it = mCommands.find(name);
@@ -44,7 +47,7 @@ CommandResult CommandProcessor::executeCommand(const std::string &name, const st
             false,
             {"Unknown command"}};
     }
-    CommandResult result = it->second(args);
+    result = it->second(args);
     mOutput.addLine(result.message);
     return result;
 }
