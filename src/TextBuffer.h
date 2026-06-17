@@ -20,6 +20,7 @@ public:
     void erase(size_t row, size_t col);
     void eraseRange(size_t row, size_t begin_col, size_t end_col);
     void eraseRange(size_t row, Range range);
+    void eraseRange(Position pos, uint32_t length);
     void eraseRangeMultiRow(size_t begin_row, size_t begin_col, size_t end_row, size_t end_col);
     void eraseRangeMultiRow(const Selection& selection);
     void clear();

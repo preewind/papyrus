@@ -120,6 +120,11 @@ void TextBuffer::eraseRange(size_t row, Range range)
     eraseRange(row, range.start, range.end);
 }
 
+void TextBuffer::eraseRange(Position pos, uint32_t length)
+{
+    eraseRange(pos.row, pos.col, pos.col + length);
+}
+
 void TextBuffer::eraseRangeMultiRow(size_t begin_row, size_t begin_col, size_t end_row, size_t end_col)
 {
     if (begin_row >= mLines.size() || end_row >= mLines.size() || begin_row > end_row) {

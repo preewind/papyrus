@@ -93,6 +93,12 @@ void Editor::handleKey(const SDL_Event &event)
         case SDLK_X:
             handleX(mod);
             break;
+        case SDLK_Y:
+            handleY(mod);
+            break;
+        case SDLK_Z:
+            handleZ(mod);
+            break;
 
         // IO
         case SDLK_F1:
@@ -117,7 +123,7 @@ void Editor::handleTextInput(const std::string &text)
     }
     else
     {
-        mBuffer.insert(mCursor.row, mCursor.col, text);
+        insertText(text);
         mCursor.col += text.size();
         clearSelection();
         ensureCursorVisibleVertically();
@@ -523,6 +529,30 @@ void Editor::handleX(SDL_Keymod mod)
         ensureCursorVisibleVertically();
         updateTokens();
     }
+}
+
+void Editor::handleY(SDL_Keymod mod)
+{
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+    if(ctrlHeld && mUndoManager.canRedo()){
+        mCursor = mUndoManager.redo(mBuffer);
+    }
+    
+}
+
+void Editor::handleZ(SDL_Keymod mod)
+{
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+    if(ctrlHeld && mUndoManager.canUndo()){
+        mCursor = mUndoManager.undo(mBuffer);
+    }
+}
+
+void Editor::insertText(const std::string &text)
+{
+    mBuffer.insert(mCursor.row, mCursor.col, text);
+    auto action = std::make_unique<InsertAction>(mCursor, text);
+    mUndoManager.push(std::move(action));
 }
 
 void Editor::handleTab()

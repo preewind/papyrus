@@ -20,6 +20,8 @@ add_executable(papyrus
     src/Renderer.h
     src/Editor.cpp
     src/Editor.h
+    src/UndoManager.h
+    src/UndoManager.cpp
     src/TextBuffer.cpp
     src/TextBuffer.h
     src/FileBrowser.h

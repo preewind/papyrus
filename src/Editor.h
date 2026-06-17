@@ -14,6 +14,7 @@
 #include "SearchSession.h"
 #include "SyntaxHighlighter.h"
 #include "Terminal.h"
+#include "UndoManager.h"
 
 enum class Focus
 {
@@ -49,6 +50,10 @@ public:
     void handleT(SDL_Keymod mod);
     void handleV(SDL_Keymod mod);
     void handleX(SDL_Keymod mod);
+    void handleY(SDL_Keymod mod);
+    void handleZ(SDL_Keymod mod);
+
+    void insertText(const std::string& text);
 
     void moveCursorLeft(SDL_Keymod mod);
     void moveCursorRight(SDL_Keymod mod);
@@ -105,6 +110,7 @@ private:
     Selection mSelection;
     Cursor mCursor;
     TextBuffer mBuffer;
+    UndoManager mUndoManager;
     Focus mFocus = Focus::Editor;
     bool mTerminalVisible = false;
     std::unique_ptr<Terminal> mTerminal;
