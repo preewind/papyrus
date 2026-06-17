@@ -68,7 +68,7 @@ std::vector<std::string> FileBrowser::getCurrentDirFilesToRender()
             fileStrings.push_back("..");
             continue;
         }
-        fileStrings.push_back(mCurrentDirFiles[i].filename());
+        fileStrings.push_back(mCurrentDirFiles[i].filename().string());
     }
 
     return fileStrings;
@@ -184,5 +184,5 @@ const uint32_t &FileBrowser::getScrollOffset() const
 
 const std::string FileBrowser::getFileExtension(std::filesystem::path path) const
 {
-    return path.extension();
+    return path.extension().string();
 }
