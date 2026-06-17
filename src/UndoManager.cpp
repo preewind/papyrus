@@ -14,8 +14,7 @@ Position InsertAction::undo(TextBuffer &buffer)
 
 Position InsertAction::redo(TextBuffer &buffer)
 {
-    buffer.insertFormatted(position.row, position.col, text);
-    return {position.row, position.col + text.size()};
+    return buffer.insertFormatted(position.row, position.col, text);
 }
 
 /**
@@ -54,11 +53,36 @@ bool InsertAction::tryMerge(const EditAction &action)
 
 DeleteAction::DeleteAction(Position pos, std::string text): position(pos), text(std::move(text)) {}
 
+bool DeleteAction::tryMerge(const EditAction &action)
+{
+    auto *next = dynamic_cast<const DeleteAction *>(&action);
+    if (!next)
+    {
+        return false;
+    }
+
+    // Sequential delete-key actions delete from the same position.
+    if (next->position == this->position)
+    {
+        this->text += next->text;
+        return true;
+    }
+
+    // Sequential backspace actions delete immediately before the previous delete.
+    if (next->position.row == this->position.row &&
+        next->position.col + next->text.size() == this->position.col)
+    {
+        this->position = next->position;
+        this->text = next->text + this->text;
+        return true;
+    }
+
+    return false;
+}
 
 Position DeleteAction::undo(TextBuffer &buffer)
 {
-    buffer.insertFormatted(position.row, position.col, text);
-    return {position.row, position.col + text.size()};
+    return buffer.insertFormatted(position.row, position.col, text);
 }
 
 Position DeleteAction::redo(TextBuffer &buffer)

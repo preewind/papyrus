@@ -571,6 +571,9 @@ void Editor::handleY(SDL_Keymod mod)
     if (ctrlHeld && mUndoManager.canRedo())
     {
         mCursor = mUndoManager.redo(mBuffer);
+        updateTokens();
+        ensureCursorVisibleVertically();
+        markActivity();
     }
 }
 
@@ -580,6 +583,9 @@ void Editor::handleZ(SDL_Keymod mod)
     if (ctrlHeld && mUndoManager.canUndo())
     {
         mCursor = mUndoManager.undo(mBuffer);
+        updateTokens();
+        ensureCursorVisibleVertically();
+        markActivity();
     }
 }
 

@@ -57,6 +57,7 @@ public:
 
     Position undo(TextBuffer &buffer) override;
     Position redo(TextBuffer &buffer) override;
+    bool tryMerge(const EditAction& action) override;
 };
 
 /**

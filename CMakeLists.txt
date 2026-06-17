@@ -2,11 +2,14 @@ cmake_minimum_required(VERSION 3.20)
 
 project(papyrus)
 
+enable_testing()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(third_party/SDL)
 add_subdirectory(third_party/SDL_ttf)
+add_subdirectory(third_party/googletest)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
@@ -49,3 +52,5 @@ target_link_libraries(papyrus
     SDL3::SDL3
     SDL3_ttf::SDL3_ttf
 )
+
+add_subdirectory(tests)
