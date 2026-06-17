@@ -59,8 +59,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -G Ninja .. -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake \
-            -DSDL_SHARED=OFF -DSDL_STATIC=ON
+          cmake -G Ninja .. -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DSDL_SHARED=OFF -DSDL_STATIC=ON
 
       - name: Build
         run: |
