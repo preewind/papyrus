@@ -7,6 +7,8 @@ enable_testing()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build libraries as static by default" FORCE)
+
 add_subdirectory(third_party/SDL)
 add_subdirectory(third_party/SDL_ttf)
 add_subdirectory(third_party/googletest)
