@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build build-essential pkg-config \
+            libfreetype6-dev libharfbuzz-dev libx11-dev libxext-dev libxrandr-dev \
+            libxcursor-dev libxinerama-dev libxi-dev libxss-dev libxrender-dev \
+            libwayland-dev libwayland-egl-dev libdbus-1-dev libudev-dev libasound2-dev \
+            libpulse-dev libjack-jackd2-dev
+
+      - name: Configure
+        run: |
+          mkdir build
+          cd build
+          cmake -G Ninja ..
+
+      - name: Build
+        run: |
+          cd build
+          cmake --build .
+
+      - name: Run tests
+        run: |
+          cd build
+          ctest --output-on-failure
