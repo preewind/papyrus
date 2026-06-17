@@ -44,7 +44,7 @@ jobs:
           refreshenv
           git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
           C:\vcpkg\bootstrap-vcpkg.bat
-          C:\vcpkg\vcpkg.exe install freetype harfbuzz
+          C:\vcpkg\vcpkg.exe install freetype harfbuzz sdl3 sdl3-ttf
 
       - name: Configure (Linux/macOS)
         if: matrix.os != 'windows-latest'
