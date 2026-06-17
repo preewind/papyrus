@@ -8,7 +8,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout repository
@@ -17,7 +20,8 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Install dependencies
+      - name: Install dependencies (Linux)
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build build-essential pkg-config \
@@ -25,6 +29,19 @@ jobs:
             libxcursor-dev libxinerama-dev libxi-dev libxss-dev libxrender-dev \
             libxtst-dev libwayland-dev libegl1-mesa-dev libdbus-1-dev libudev-dev \
             libasound2-dev libpulse-dev libjack-jackd2-dev
+
+      - name: Install dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew update
+          brew install cmake ninja pkg-config
+
+      - name: Install dependencies (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: powershell
+        run: |
+          choco install -y cmake ninja
+          refreshenv
 
       - name: Configure
         run: |
