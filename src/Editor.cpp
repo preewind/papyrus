@@ -123,7 +123,7 @@ void Editor::handleTextInput(const std::string &text)
     }
     else
     {
-        insertText(text);
+        insertText(mCursor, text);
         mCursor.col += text.size();
         clearSelection();
         ensureCursorVisibleVertically();
@@ -143,8 +143,12 @@ void Editor::handleBackSpace(SDL_Keymod mod)
     {
         if (mSelectionActive)
         {
-            mBuffer.eraseRangeMultiRow(mSelection.normalized());
-            mCursor = mSelection.normalized().begin;
+            // mBuffer.eraseRangeMultiRow(mSelection.normalized());
+            Selection normSel = mSelection.normalized();
+            Position targetPos = normSel.begin;
+            std::string textToDelete = mBuffer.getTextSlice(normSel.begin, normSel.end);
+            deleteText(targetPos, textToDelete);
+            mCursor = targetPos;
         }
         else
         {
@@ -153,22 +157,28 @@ void Editor::handleBackSpace(SDL_Keymod mod)
             {
                 // delete word left to cursor
                 Range leftWord = findWordLeftOfIndex(mBuffer.getLine(mCursor.row).substr(0, mCursor.col));
-                mBuffer.eraseRange(mCursor.row, leftWord);
+                deleteText({mCursor.row, leftWord.start}, mBuffer.getLine(mCursor.row).substr(leftWord.start, leftWord.end - leftWord.start));
+                // mBuffer.eraseRange(mCursor.row, leftWord);
                 mCursor.col = leftWord.start;
             }
             else
             {
+                if (mCursor.row == 0 && mCursor.col == 0)
+                    return;
+                Position targetPos;
+                std::string textToDelete;
                 if (mCursor.col > 0)
                 {
-                    mBuffer.erase(mCursor.row, mCursor.col - 1);
-                    mCursor.col--;
+                    targetPos = {mCursor.row, mCursor.col - 1};
+                    textToDelete = mBuffer.getLine(mCursor.row).substr(mCursor.col - 1, 1);
                 }
                 else if (mCursor.col == 0 && mCursor.row > 0)
                 {
-                    mCursor.row--;
-                    moveCursorToEndCol();
-                    mBuffer.mergeWithNext(mCursor.row);
+                    targetPos = {mCursor.row - 1, mBuffer.getLineSize(mCursor.row - 1)};
+                    textToDelete = "\n";
                 }
+                deleteText(targetPos, textToDelete);
+                mCursor = targetPos;
             }
         }
         clearSelection();
@@ -181,7 +191,7 @@ void Editor::handleReturn()
 {
     if (!isSearchActive())
     {
-        mBuffer.splitLine(mCursor);
+        insertText(mCursor, "\n");
         moveCursorToBeginCol();
         mCursor.row++;
         markActivity();
@@ -206,26 +216,42 @@ void Editor::handleDelete(SDL_Keymod mod)
         // shift + del deletes entire line
         if (shiftHeld)
         {
-            mBuffer.eraseRange(mCursor.row, 0, mBuffer.getLineSize(mCursor.row));
-            mBuffer.mergeWithNext(mCursor.row);
-            moveCursorToBeginCol();
+            Position targetPos = {mCursor.row, 0};
+            std::string textToDelete = mBuffer.getLine(mCursor.row);
+            if (mCursor.row < mBuffer.getText().size() - 1)
+            {
+                textToDelete += "\n";
+            }
+            deleteText(targetPos, textToDelete);
+            mCursor = targetPos;
+            // mBuffer.eraseRange(mCursor.row, 0, mBuffer.getLineSize(mCursor.row));
+            // mBuffer.mergeWithNext(mCursor.row);
+            // moveCursorToBeginCol();
         }
         else if (ctrlHeld)
         {
             // delete word right to cursor
             Range rightWord = findWordRightOfIndex(mBuffer.getLine(mCursor.row).substr(mCursor.col, mBuffer.getLineSize(mCursor.row)));
-            mBuffer.eraseRange(mCursor.row, mCursor.col + rightWord.start, mCursor.col + rightWord.end);
+            deleteText({mCursor.row, mCursor.col + rightWord.start}, mBuffer.getLine(mCursor.row).substr(mCursor.col + rightWord.start, rightWord.end - rightWord.start));
+            // mBuffer.eraseRange(mCursor.row, mCursor.col + rightWord.start, mCursor.col + rightWord.end);
         }
         else
         {
+            Position targetPos;
+            std::string textToDelete;
             if (mCursor.col < mBuffer.getLineSize(mCursor.row))
             {
-                mBuffer.erase(mCursor.row, mCursor.col);
+                targetPos = mCursor;
+                textToDelete = mBuffer.getLine(mCursor.row).substr(mCursor.col, 1);
+                // mBuffer.erase(mCursor.row, mCursor.col);
             }
             else if (mCursor.col == mBuffer.getLineSize(mCursor.row) && mCursor.row < mBuffer.getLineCount() - 1)
             {
-                mBuffer.mergeWithNext(mCursor.row);
+                targetPos = {mCursor.row, mBuffer.getLineSize(mCursor.row)};
+                textToDelete = "\n";
+                // mBuffer.mergeWithNext(mCursor.row);
             }
+            deleteText(targetPos, textToDelete);
         }
 
         clearSelection();
@@ -430,7 +456,7 @@ void Editor::handleComma(SDL_Keymod mod)
     bool ctrlHeld = mod & SDL_KMOD_CTRL;
     if (ctrlHeld)
     {
-        mBuffer.insert(mCursor.row, mBuffer.getLine(mCursor.row).size(), ";");
+        insertText({mCursor.row, mBuffer.getLine(mCursor.row).size()}, ";");
         moveCursorToEndCol();
         updateTokens();
     }
@@ -510,7 +536,11 @@ void Editor::handleV(SDL_Keymod mod)
     {
         const std::string &text = SDL_GetClipboardText();
         LOG_DEBUG() << text;
+        // not using insertText here because of convenience of getting the new cursor
+        auto action = std::make_unique<InsertAction>(mCursor, text);
         mCursor = mBuffer.insertFormatted(mCursor.row, mCursor.col, text);
+        mUndoManager.push(std::move(action));
+
         updateTokens();
     }
 }
@@ -523,8 +553,12 @@ void Editor::handleX(SDL_Keymod mod)
     {
         const std::string &text = getSelectedText();
         SDL_SetClipboardText(text.c_str());
-        mBuffer.eraseRangeMultiRow(mSelection.normalized());
-        mCursor = mSelection.normalized().begin;
+        Selection normSel = mSelection.normalized();
+        Position targetPos = normSel.begin;
+        deleteText(targetPos, text);
+        mCursor = targetPos;
+        // mBuffer.eraseRangeMultiRow(mSelection.normalized());
+        // mCursor = mSelection.normalized().begin;
         clearSelection();
         ensureCursorVisibleVertically();
         updateTokens();
@@ -534,25 +568,49 @@ void Editor::handleX(SDL_Keymod mod)
 void Editor::handleY(SDL_Keymod mod)
 {
     bool ctrlHeld = mod & SDL_KMOD_CTRL;
-    if(ctrlHeld && mUndoManager.canRedo()){
+    if (ctrlHeld && mUndoManager.canRedo())
+    {
         mCursor = mUndoManager.redo(mBuffer);
     }
-    
 }
 
 void Editor::handleZ(SDL_Keymod mod)
 {
     bool ctrlHeld = mod & SDL_KMOD_CTRL;
-    if(ctrlHeld && mUndoManager.canUndo()){
+    if (ctrlHeld && mUndoManager.canUndo())
+    {
         mCursor = mUndoManager.undo(mBuffer);
     }
 }
 
-void Editor::insertText(const std::string &text)
+/**
+ * @brief Safe wrapper to inject text into the buffer AND record it in history.
+ * * ALWAYS use this function in your UI key handlers instead of calling the buffer directly.
+ * It modifies the file and saves the action to the Undo stack in one unified step.
+ */
+void Editor::insertText(Position pos, const std::string &text)
 {
-    mBuffer.insert(mCursor.row, mCursor.col, text);
-    auto action = std::make_unique<InsertAction>(mCursor, text);
+    if (text.empty())
+        return;
+
+    auto action = std::make_unique<InsertAction>(pos, text);
+    action->redo(mBuffer);
     mUndoManager.push(std::move(action));
+}
+
+/**
+ * @brief Safe wrapper to erase text from the buffer AND record it in history.
+ * * ALWAYS use this function for backspace or delete keys. It creates a DeleteAction,
+ * runs the erasure, and logs it so Ctrl+Z can restore the deleted text later.
+ */
+void Editor::deleteText(Position pos, const std::string &text)
+{
+    if (text.empty()) return;
+
+        auto action = std::make_unique<DeleteAction>(pos, text);
+        action->redo(mBuffer); 
+        
+        mUndoManager.push(std::move(action));
 }
 
 void Editor::handleTab()

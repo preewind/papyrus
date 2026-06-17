@@ -29,10 +29,15 @@ void TextBuffer::insert(size_t row, size_t col, const std::string &text)
     mLines[row].insert(col, text);
 }
 
-/*
-    Inserts the passed text into the line buffer and splits at new lines.
-    It returns the Position the Cursor is after inserting.
-*/
+/**
+ * @brief Inserts text at a coordinate, automatically splitting it into multiple lines if it contains '\n'.
+ * * This is the ultimate insertion tool. It safely handles regular single-char typing, 
+ * carriage returns (\r\n), and pasting huge blocks of multi-line text.
+ * * @param row The starting line index.
+ * @param col The starting column character index.
+ * @param text The string to inject (can contain newlines).
+ * @return Position The exact coordinates where the cursor should land after insertion.
+ */
 Position TextBuffer::insertFormatted(size_t row, size_t col, const std::string &text)
 {
     if (text.empty())
@@ -40,11 +45,10 @@ Position TextBuffer::insertFormatted(size_t row, size_t col, const std::string &
         return {row, col};
     }
     std::vector<std::string> lines = splitByNewline(text);
-    size_t newSize = row + lines.size();
 
-    if (mLines.size() < newSize)
+    if (mLines.empty() || row >= mLines.size())
     {
-        mLines.resize(newSize);
+        mLines.resize(row + 1);
     }
 
     std::string prefix = mLines[row].substr(0, col);
@@ -54,9 +58,7 @@ Position TextBuffer::insertFormatted(size_t row, size_t col, const std::string &
     if (lines.size() == 1)
     {
         mLines[row] = prefix + lines.front() + suffix;
-        return {
-            row,
-            col + lines[0].size()};
+        return {row, col + lines[0].size()};
     }
 
     // first line in multiline case
@@ -127,22 +129,26 @@ void TextBuffer::eraseRange(Position pos, uint32_t length)
 
 void TextBuffer::eraseRangeMultiRow(size_t begin_row, size_t begin_col, size_t end_row, size_t end_col)
 {
-    if (begin_row >= mLines.size() || end_row >= mLines.size() || begin_row > end_row) {
+    if (begin_row >= mLines.size() || end_row >= mLines.size() || begin_row > end_row)
+    {
         return;
     }
 
-    if(begin_row == end_row){
+    if (begin_row == end_row)
+    {
         eraseRange(begin_row, begin_col, end_col);
         return;
     }
 
     std::string finalLineSuffix = "";
-    if (end_col < mLines[end_row].size()) {
+    if (end_col < mLines[end_row].size())
+    {
         finalLineSuffix = mLines[end_row].substr(end_col);
     }
 
     // delete everything after begin col in first row
-    if (begin_col <= mLines[begin_row].size()) {
+    if (begin_col <= mLines[begin_row].size())
+    {
         mLines[begin_row].resize(begin_col);
     }
 
@@ -150,12 +156,50 @@ void TextBuffer::eraseRangeMultiRow(size_t begin_row, size_t begin_col, size_t e
 
     // remove lines in between
     mLines.erase(mLines.begin() + begin_row + 1, mLines.begin() + end_row + 1);
-
 }
 
 void TextBuffer::eraseRangeMultiRow(const Selection &selection)
 {
     eraseRangeMultiRow(selection.begin.row, selection.begin.col, selection.end.row, selection.end.col);
+}
+
+/**
+ * @brief Deletes a continuous block of text starting from a position, spanning across multiple lines if needed.
+ * * It counts characters sequentially. If the length to delete is longer than the current line,
+ * it safely jumps down to the next row, treats the line-break as 1 character, and keeps deleting.
+ * * @param start The coordinate where the deletion begins.
+ * @param length How many total characters to delete.
+ */
+void TextBuffer::eraseRangeSmart(Position start, uint32_t length)
+{
+    if (length == 0)
+        return;
+
+    size_t curRow = start.row;
+    size_t curCol = start.col;
+
+    size_t endRow = curRow;
+    size_t endCol = curCol;
+
+    // advance coordinates by 'length' characters to find the end boundary
+    while (length > 0 && endRow < mLines.size())
+    {
+        size_t availableInLine = mLines[endRow].size() - endCol;
+
+        if (length <= availableInLine)
+        {
+            endCol += length;
+            length = 0;
+        }
+        else
+        {
+            // Consume the remaining characters on this line plus the implicit newline '\n'
+            length -= (availableInLine + 1);
+            endRow++;
+            endCol = 0;
+        }
+    }
+    eraseRangeMultiRow(curRow, curCol, endRow, endCol);
 }
 
 void TextBuffer::clear()

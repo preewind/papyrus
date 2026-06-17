@@ -23,6 +23,7 @@ public:
     void eraseRange(Position pos, uint32_t length);
     void eraseRangeMultiRow(size_t begin_row, size_t begin_col, size_t end_row, size_t end_col);
     void eraseRangeMultiRow(const Selection& selection);
+    void eraseRangeSmart(Position start, uint32_t length);
     void clear();
     void splitLine(size_t row, size_t col);
     void splitLine(const Cursor& cursor);

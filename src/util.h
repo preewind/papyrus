@@ -44,18 +44,29 @@ inline std::vector<std::string> splitByNewline(const std::string &input)
 {
     std::vector<std::string> result;
 
-    std::stringstream ss(input);
-    std::string line;
+    size_t start = 0;
+    size_t end = input.find('\n');
 
-    while (std::getline(ss, line, '\n'))
+    while (end != std::string::npos)
     {
-        // pop trailing carriage return from Windows
+        std::string line = input.substr(start, end - start);
         if (!line.empty() && line.back() == '\r')
         {
             line.pop_back();
         }
         result.push_back(line);
+        
+        start = end + 1;
+        end = input.find('\n', start);
     }
+
+    // push the remaining part of the string after the last newline
+    std::string trailingLine = input.substr(start);
+    if (!trailingLine.empty() && trailingLine.back() == '\r')
+    {
+        trailingLine.pop_back();
+    }
+    result.push_back(trailingLine);
 
     return result;
 }

@@ -1,3 +1,5 @@
+#include <cctype>
+
 #include "UndoManager.h"
 
 InsertAction::InsertAction(Position pos, std::string text) : position(pos), text(std::move(text))
@@ -6,7 +8,7 @@ InsertAction::InsertAction(Position pos, std::string text) : position(pos), text
 
 Position InsertAction::undo(TextBuffer &buffer)
 {
-    buffer.eraseRange(position, text.size());
+    buffer.eraseRangeSmart(position, text.size());
     return position;
 }
 
@@ -16,9 +18,42 @@ Position InsertAction::redo(TextBuffer &buffer)
     return {position.row, position.col + text.size()};
 }
 
-DeleteAction::DeleteAction(Position pos, std::string text) : position(pos), text(std::move(text))
+/**
+ * @brief Tries to merge a newly typed character into this action.
+ * * Instead of creating a brand new undo step for every single keystroke,
+ * this groups consecutive characters together. It stops merging and starts
+ * a new group whenever the user types a space, tab, or newline.
+ */
+bool InsertAction::tryMerge(const EditAction &action)
 {
+    // try to cast nextAction to an InsertAction
+    auto *next = dynamic_cast<const InsertAction *>(&action);
+    if (!next)
+    {
+        return false;
+    }
+    if (next->position.row != this->position.row ||
+        next->position.col != this->position.col + (int)this->text.size())
+    {
+        return false;
+    }
+    if (!this->text.empty() && !next->text.empty())
+    {
+        char lastChar = this->text.back();
+        char nextChar = next->text.front();
+
+        if (std::isspace(static_cast<unsigned char>(lastChar)) ||
+            std::isspace(static_cast<unsigned char>(nextChar)))
+        {
+            return false; // Break the merge! This creates a new undo group.
+        }
+    }
+    this->text += next->text;
+    return true;
 }
+
+DeleteAction::DeleteAction(Position pos, std::string text): position(pos), text(std::move(text)) {}
+
 
 Position DeleteAction::undo(TextBuffer &buffer)
 {
@@ -28,14 +63,19 @@ Position DeleteAction::undo(TextBuffer &buffer)
 
 Position DeleteAction::redo(TextBuffer &buffer)
 {
-    buffer.eraseRange(position, text.size());
+    buffer.eraseRangeSmart(position, text.size());
     return position;
 }
 
 void UndoManager::push(std::unique_ptr<EditAction> action)
 {
-    mUndoStack.push_back(std::move(action));
     mRedoStack.clear();
+    if (!mUndoStack.empty() && mUndoStack.back()->tryMerge(*action))
+    {
+        return;
+    }
+
+    mUndoStack.push_back(std::move(action));
 }
 
 Position UndoManager::undo(TextBuffer &buffer)
