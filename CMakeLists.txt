@@ -33,6 +33,8 @@ add_executable(papyrus
     src/SearchView.cpp
     src/TerminalView.h
     src/TerminalView.cpp
+    src/FileBrowserView.h
+    src/FileBrowserView.cpp
     src/Editor.cpp
     src/Editor.h
     src/UndoManager.h

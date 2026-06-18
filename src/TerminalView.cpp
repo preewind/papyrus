@@ -1,6 +1,5 @@
 #include "TerminalView.h"
 #include "Renderer.h"
-#include "Terminal.h"
 
 void TerminalView::render(Renderer &renderer, const Editor &editor)
 {

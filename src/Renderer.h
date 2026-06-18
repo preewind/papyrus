@@ -13,6 +13,7 @@
 #include "EditorView.h"
 #include "SearchView.h"
 #include "TerminalView.h"
+#include "FileBrowserView.h"
 
 class Cursor;
 class Editor;
@@ -106,7 +107,6 @@ public:
     void renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY);
     void updateEditor(Editor &editor);
     void updateFileBrowser(FileBrowser &browser);
-    void renderFileBrowserSelection(FileBrowser &browser);
     const std::string fitTextToWidthFile(const std::string &text, std::string &extension);
     void present();
 
@@ -129,6 +129,7 @@ private:
     EditorView mEditorView;
     SearchView mSearchView;
     TerminalView mTerminalView;
+    FileBrowserView mFileBrowserView;
     uint8_t mFontSize = 20;
     ScrollViewport mEditorScrollPort;
     ScrollViewport mSearchScrollPort;
