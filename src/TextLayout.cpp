@@ -6,7 +6,7 @@ void TextLayout::setFont(TTF_Font *font)
     mFont = font;
 }
 
-uint32_t TextLayout::width(std::string text)
+uint32_t TextLayout::width(const std::string& text) const
 {
     if (text.empty())
     {
@@ -20,7 +20,7 @@ uint32_t TextLayout::width(std::string text)
     return w;
 }
 
-std::string TextLayout::expandTabs(std::string_view text)
+std::string TextLayout::expandTabs(std::string_view text) const
 {
     std::string result = "";
 
@@ -55,7 +55,7 @@ uint32_t TextLayout::virtualColumn(std::string_view line, uint32_t rawCol)
     return virtualCol;
 }
 
-int TextLayout::columnToPixel(std::string_view line, uint32_t col)
+int TextLayout::columnToPixel(std::string_view line, uint32_t col) const
 {
     return width(expandTabs(line.substr(0, col)));
 }

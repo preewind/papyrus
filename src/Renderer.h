@@ -10,6 +10,7 @@
 #include "theme.h"
 #include "CursorBlinker.h"
 #include "TextLayout.h"
+#include "EditorView.h"
 
 class Cursor;
 class Editor;
@@ -85,15 +86,17 @@ public:
     void clear();
     int getLineHeight() const;
     const EditorLayout &getEditorLayout() const;
+    const Theme &getTheme() const;
+    const TextLayout &getTextLayout() const;
+    const CursorBlinker& getCursorBlinker() const;
+    uint32_t getScrollOffsetX() const;
     SDL_Color getColorFromTokenType(const Token &token);
     void drawText(const std::string &text, int x, int y);
     void drawText(const std::string &text, int x, int y, SDL_Color color);
     void drawTextTokenized(const std::string &text, uint32_t y, const std::vector<Token> &tokens);
     void drawRect(int x, int y, int w, int h, SDL_Color color);
-    void renderLineNumbers(uint32_t numLines, uint32_t offsetY, uint32_t visibleRows);
-    void renderCursor(const Cursor &cursor, const std::string &text, uint32_t offsetY);
-    void renderText(const Editor &editor);
-    void renderSelection(const Editor &editor);
+    void pushClipRect(const SDL_Rect& rect);
+    void clearClipRect();
     void renderEditor(const Editor &editor);
     void renderTerminal(const Editor &editor);
     void renderTerminalCursor(const Terminal &terminal);
@@ -123,6 +126,7 @@ private:
     SDL_Renderer *mRenderer;
     TTF_Font *mFont;
     TextLayout mTextLayout;
+    EditorView mEditorView;
     uint8_t mFontSize = 20;
     ScrollViewport mEditorScrollPort;
     ScrollViewport mSearchScrollPort;

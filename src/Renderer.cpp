@@ -73,6 +73,26 @@ const EditorLayout &Renderer::getEditorLayout() const
     return mLayout;
 }
 
+const Theme &Renderer::getTheme() const
+{
+    return mTheme;
+}
+
+const TextLayout &Renderer::getTextLayout() const
+{
+    return mTextLayout;
+}
+
+const CursorBlinker& Renderer::getCursorBlinker() const
+{
+    return mCursorBlinker;
+}
+
+uint32_t Renderer::getScrollOffsetX() const
+{
+    return mScrollOffsetX;
+}
+
 SDL_Color Renderer::getColorFromTokenType(const Token &token)
 {
     switch (token.type)
@@ -157,128 +177,30 @@ void Renderer::drawRect(int x, int y, int w, int h, SDL_Color color)
     CSF(SDL_RenderFillRect(mRenderer, &rect));
 }
 
-void Renderer::renderLineNumbers(uint32_t numLines, uint32_t scrollOffsetY, uint32_t visibleRows)
+void Renderer::pushClipRect(const SDL_Rect &rect)
 {
-    uint32_t first = scrollOffsetY;
-    uint32_t last = std::min(first + visibleRows, numLines);
-    for (uint32_t i = first; i < last; ++i)
-    {
-
-        drawText(std::to_string(i + 1), mLayout.lineNumberAreaWidth / 2 - mTextLayout.width(std::to_string(i + 1)) / 2, screenY(i, scrollOffsetY), mTheme.lineNumbers);
-    }
+    CSF(SDL_SetRenderClipRect(mRenderer, &rect));
 }
 
-void Renderer::renderCursor(const Cursor &cursor, const std::string &text, uint32_t offsetY)
+void Renderer::clearClipRect()
 {
-    if (mCursorBlinker.visible())
-    {
-        int x = mLayout.marginLeft + mTextLayout.columnToPixel(text, cursor.col) - mScrollOffsetX;
-        int y = screenY(cursor.row, offsetY);
-
-        drawRect(x, y, 2, mLayout.lineHeight, mTheme.cursor);
-    }
-}
-
-void Renderer::renderText(const Editor &editor)
-{
-    auto &text = editor.getText();
-    int visRows = editor.getVisibleRows();
-    int first = editor.getScrollOffsetY();
-    int last = std::min(
-        first + visRows,
-        (int)text.size());
-    const auto &tokens = editor.getTokens();
-    for (int i = first; i < last; ++i)
-    {
-        if (tokens.size() > 0)
-        {
-            drawTextTokenized(text[i], screenY(i, first), tokens[i]);
-        }
-        else
-        {
-            drawText(mTextLayout.expandTabs(text[i]), mLayout.marginLeft - mScrollOffsetX, screenY(i, first));
-        }
-    }
-}
-
-void Renderer::renderSelection(const Editor &editor)
-{
-    Selection selection = editor.getSelection().normalized();
-
-    if (selection.empty())
-        return;
-
-    const Position &start = selection.begin;
-    const Position &end = selection.end;
-
-    for (size_t row = start.row; row <= end.row; ++row)
-    {
-        if (row < editor.getScrollOffsetY())
-            continue;
-        if (row >= editor.getScrollOffsetY() + editor.getVisibleRows())
-            break;
-
-        int beginCol, endCol;
-        if (row == start.row)
-        {
-
-            beginCol = start.col;
-            // if only one line selected
-            if (start.row == end.row)
-            {
-                endCol = end.col;
-            }
-            else
-            {
-                endCol = editor.getLineString(row).size();
-            }
-        }
-        // in between line -> should be fully selected
-        else if (row < end.row)
-        {
-            beginCol = 0;
-            endCol = editor.getLineString(row).size();
-        }
-        else
-        {
-            beginCol = 0;
-            endCol = end.col;
-        }
-        const std::string &line = editor.getLineString(row);
-        renderHighlightedRange(line, row, beginCol, endCol - beginCol, editor.getScrollOffsetY());
-    }
+    CSF(SDL_SetRenderClipRect(mRenderer, nullptr));
 }
 
 void Renderer::renderEditor(const Editor &editor)
 {
-    renderLineNumbers(editor.getLineCount(), editor.getScrollOffsetY(), editor.getVisibleRows());
-    SDL_Rect clipRect{
-        mLayout.marginLeft,
-        0,
-        mLayout.windowWidth - mLayout.marginLeft,
-        mLayout.windowHeight};
-
-    CSF(SDL_SetRenderClipRect(mRenderer, &clipRect));
-
-    if (editor.getSelectionActive())
-    {
-        renderSelection(editor);
-    }
     if (editor.isSearchActive())
     {
         renderSearchMatches(editor.getSearch(), editor);
     }
-    Cursor cursor = editor.getCursor();
-    std::string currentLineText = editor.getLineString(cursor.row);
-    renderCursor(cursor, currentLineText, editor.getScrollOffsetY());
-    renderText(editor);
+    mEditorView.render(*this, editor);
+
     if (editor.isSearchActive())
     {
         ensureCursorVisibleHorizontallySearch(editor.getSearch().getCursor(), editor.getSearch().getQuery());
         renderSearchOverlay(editor.getSearch());
         renderSearchCursor(editor.getSearch());
     }
-    CSF(SDL_SetRenderClipRect(mRenderer, nullptr));
     if (editor.isTerminalVisible())
     {
         renderTerminal(editor);
