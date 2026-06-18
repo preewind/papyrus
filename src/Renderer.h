@@ -93,7 +93,7 @@ public:
     const TerminalLayout &getTerminalLayout() const;
     const Theme &getTheme() const;
     const TextLayout &getTextLayout() const;
-    const CursorBlinker& getCursorBlinker() const;
+    const CursorBlinker &getCursorBlinker() const;
     uint32_t getScrollOffsetX() const;
     uint32_t getScrollOffsetXSearch() const;
     SDL_Color getColorFromTokenType(const Token &token);
@@ -101,7 +101,7 @@ public:
     void drawText(const std::string &text, int x, int y, SDL_Color color);
     void drawTextTokenized(const std::string &text, uint32_t y, const std::vector<Token> &tokens);
     void drawRect(int x, int y, int w, int h, SDL_Color color);
-    void pushClipRect(const SDL_Rect& rect);
+    void pushClipRect(const SDL_Rect &rect);
     void clearClipRect();
     void renderEditor(const Editor &editor);
     void renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY);

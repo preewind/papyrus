@@ -3,7 +3,8 @@
 #include "../src/UndoManager.h"
 #include "../src/types.h"
 
-TEST(UndoManager, SingleLineDeleteUndoRedo) {
+TEST(UndoManager, SingleLineDeleteUndoRedo)
+{
     TextBuffer buffer(std::vector<std::string>{"hello world"});
     DeleteAction action({0, 6}, "world");
 
@@ -17,7 +18,8 @@ TEST(UndoManager, SingleLineDeleteUndoRedo) {
     EXPECT_EQ(undoCursor.col, 11u);
 }
 
-TEST(UndoManager, MultiLineDeleteUndoRedo) {
+TEST(UndoManager, MultiLineDeleteUndoRedo)
+{
     TextBuffer buffer(std::vector<std::string>{"abc", "def", "ghi"});
     Position start{0, 1};
     Position end{2, 2};
@@ -37,7 +39,8 @@ TEST(UndoManager, MultiLineDeleteUndoRedo) {
     EXPECT_EQ(undoCursor.col, 2u);
 }
 
-TEST(UndoManager, ConsecutiveBackspaceDeletesMergeIntoSingleUndo) {
+TEST(UndoManager, ConsecutiveBackspaceDeletesMergeIntoSingleUndo)
+{
     TextBuffer buffer(std::vector<std::string>{"abcde"});
     UndoManager manager;
 

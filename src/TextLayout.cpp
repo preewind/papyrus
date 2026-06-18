@@ -6,7 +6,7 @@ void TextLayout::setFont(TTF_Font *font)
     mFont = font;
 }
 
-uint32_t TextLayout::width(const std::string& text) const
+uint32_t TextLayout::width(const std::string &text) const
 {
     if (text.empty())
     {

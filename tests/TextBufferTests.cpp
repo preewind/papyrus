@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 #include "../src/TextBuffer.h"
 
-TEST(TextBuffer, InsertFormattedSingleLine) {
+TEST(TextBuffer, InsertFormattedSingleLine)
+{
     TextBuffer buf(std::vector<std::string>{""});
     Position p = buf.insertFormatted(0, 0, "hello");
     EXPECT_EQ(buf.getLineCount(), 1u);
@@ -10,7 +11,8 @@ TEST(TextBuffer, InsertFormattedSingleLine) {
     EXPECT_EQ(p.col, 5u);
 }
 
-TEST(TextBuffer, InsertFormattedMultiLine) {
+TEST(TextBuffer, InsertFormattedMultiLine)
+{
     TextBuffer buf(std::vector<std::string>{"abc"});
     Position p = buf.insertFormatted(0, 1, "X\nY");
     EXPECT_EQ(buf.getLineCount(), 2u);
@@ -20,7 +22,8 @@ TEST(TextBuffer, InsertFormattedMultiLine) {
     EXPECT_EQ(p.col, 1u);
 }
 
-TEST(TextBuffer, SplitLineAndMergeWithNext) {
+TEST(TextBuffer, SplitLineAndMergeWithNext)
+{
     TextBuffer buf(std::vector<std::string>{"abcd"});
     buf.splitLine(0, 2);
     EXPECT_EQ(buf.getLineCount(), 2u);
@@ -31,21 +34,24 @@ TEST(TextBuffer, SplitLineAndMergeWithNext) {
     EXPECT_EQ(buf.getLine(0), "abcd");
 }
 
-TEST(TextBuffer, EraseRangeSmartSingleLine) {
+TEST(TextBuffer, EraseRangeSmartSingleLine)
+{
     TextBuffer buf(std::vector<std::string>{"hello world"});
     buf.eraseRangeSmart(Position{0, 6}, 5);
     EXPECT_EQ(buf.getLineCount(), 1u);
     EXPECT_EQ(buf.getLine(0), "hello ");
 }
 
-TEST(TextBuffer, EraseRangeSmartAcrossNewline) {
+TEST(TextBuffer, EraseRangeSmartAcrossNewline)
+{
     TextBuffer buf(std::vector<std::string>{"abc", "def", "ghi"});
     buf.eraseRangeSmart(Position{0, 3}, 1);
     EXPECT_EQ(buf.getLineCount(), 2u);
     EXPECT_EQ(buf.getLine(0), "abcdef");
 }
 
-TEST(TextBuffer, GetTextSliceMultiLine) {
+TEST(TextBuffer, GetTextSliceMultiLine)
+{
     TextBuffer buf(std::vector<std::string>{"abc", "def", "ghi"});
     Position s{0, 1};
     Position e{2, 2};

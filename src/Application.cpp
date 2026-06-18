@@ -78,8 +78,9 @@ void Application::run()
                 case SDLK_PLUS:
                     mRenderer->handlePlus(mod);
                     break;
-                case SDLK_MINUS: 
-                    mRenderer->handleMinus(mod); break;
+                case SDLK_MINUS:
+                    mRenderer->handleMinus(mod);
+                    break;
                 case SDLK_HASH:
                     handleHash(event.key.mod);
                     break;

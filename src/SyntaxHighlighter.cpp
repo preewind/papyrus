@@ -8,7 +8,7 @@ std::vector<std::vector<Token>> SyntaxHighlighter::tokenize(const TextBuffer &bu
     case Language::Cpp:
         tokens = mCppLexer.tokenize(buffer);
         break;
-    
+
     default:
         break;
     }

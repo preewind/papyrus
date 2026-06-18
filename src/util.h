@@ -56,7 +56,7 @@ inline std::vector<std::string> splitByNewline(const std::string &input)
             line.pop_back();
         }
         result.push_back(line);
-        
+
         start = end + 1;
         end = input.find('\n', start);
     }
@@ -74,49 +74,50 @@ inline std::vector<std::string> splitByNewline(const std::string &input)
 
 #include <SDL3/SDL_pixels.h>
 
-constexpr uint8_t hexCharToInt(char c) 
+constexpr uint8_t hexCharToInt(char c)
 {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
     return 0;
 }
 
 constexpr SDL_Color hexToSDLColor(std::string_view hex)
 {
-    if (!hex.empty() && hex[0] == '#') 
+    if (!hex.empty() && hex[0] == '#')
     {
         hex.remove_prefix(1);
     }
 
-    if (hex.length() != 6 && hex.length() != 8) 
+    if (hex.length() != 6 && hex.length() != 8)
     {
         return SDL_Color{255, 255, 255, 255};
     }
 
     uint32_t colorValue = 0;
-    for (char c : hex) 
+    for (char c : hex)
     {
         colorValue = (colorValue << 4) | hexCharToInt(c);
     }
 
-    if (hex.length() == 6) 
+    if (hex.length() == 6)
     {
         return SDL_Color{
             static_cast<Uint8>((colorValue >> 16) & 0xFF),
             static_cast<Uint8>((colorValue >> 8) & 0xFF),
             static_cast<Uint8>(colorValue & 0xFF),
-            255
-        };
-    } 
-    else 
+            255};
+    }
+    else
     {
         return SDL_Color{
             static_cast<Uint8>((colorValue >> 24) & 0xFF),
             static_cast<Uint8>((colorValue >> 16) & 0xFF),
             static_cast<Uint8>((colorValue >> 8) & 0xFF),
-            static_cast<Uint8>(colorValue & 0xFF)
-        };
+            static_cast<Uint8>(colorValue & 0xFF)};
     }
 }
 
@@ -162,7 +163,7 @@ inline Range findWordRightOfIndex(const std::string_view &str)
     if (str.empty())
         return {0, 0};
     size_t start = str.find_first_not_of(" \t\n\v\f\r");
-    
+
     if (start == std::string::npos)
     {
         return {0, 0};

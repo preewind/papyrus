@@ -4,20 +4,23 @@
 #include <stdint.h>
 #include <iostream>
 
-enum class Screen {
+enum class Screen
+{
     Editor,
     FileBrowser,
     Settings,
     Terminal
 };
 
-struct SearchMatch {
+struct SearchMatch
+{
     uint32_t row;
     uint32_t col;
     uint32_t length;
 };
 
-struct Range{
+struct Range
+{
     size_t start;
     size_t end;
 };
@@ -56,7 +59,7 @@ struct Position
 
 struct Cursor : Position
 {
-    Cursor& operator=(const Position &other)
+    Cursor &operator=(const Position &other)
     {
         Position::operator=(other);
         return *this;
@@ -85,7 +88,8 @@ struct Selection
     }
 };
 
-enum class TokenType {
+enum class TokenType
+{
     Normal,
     OpenParen,
     CloseParen,
@@ -100,37 +104,68 @@ enum class TokenType {
     Unknown
 };
 
-inline std::ostream &operator<<(std::ostream &os, const TokenType &type) {
-    switch (type) {
-        case TokenType::Normal: os << "Normal"; break;
-        case TokenType::OpenParen: os << "OpenParen"; break;
-        case TokenType::CloseParen: os << "CloseParen"; break;
-        case TokenType::OpenCurly: os << "OpenCurly"; break;
-        case TokenType::CloseCurly: os << "CloseCurly"; break;
-        case TokenType::Keyword: os << "Keyword"; break;
-        case TokenType::String: os << "String"; break;
-        case TokenType::Number: os << "Number"; break;
-        case TokenType::Comment: os << "Comment"; break;
-        case TokenType::Preprocessor: os << "Preprocessor"; break;
-        case TokenType::IncludeLib: os << "IncludeLib"; break;
-        case TokenType::Unknown: os << "Unknown"; break;
-        default: throw(std::runtime_error("Dont forget!!!")); break;
+inline std::ostream &operator<<(std::ostream &os, const TokenType &type)
+{
+    switch (type)
+    {
+    case TokenType::Normal:
+        os << "Normal";
+        break;
+    case TokenType::OpenParen:
+        os << "OpenParen";
+        break;
+    case TokenType::CloseParen:
+        os << "CloseParen";
+        break;
+    case TokenType::OpenCurly:
+        os << "OpenCurly";
+        break;
+    case TokenType::CloseCurly:
+        os << "CloseCurly";
+        break;
+    case TokenType::Keyword:
+        os << "Keyword";
+        break;
+    case TokenType::String:
+        os << "String";
+        break;
+    case TokenType::Number:
+        os << "Number";
+        break;
+    case TokenType::Comment:
+        os << "Comment";
+        break;
+    case TokenType::Preprocessor:
+        os << "Preprocessor";
+        break;
+    case TokenType::IncludeLib:
+        os << "IncludeLib";
+        break;
+    case TokenType::Unknown:
+        os << "Unknown";
+        break;
+    default:
+        throw(std::runtime_error("Dont forget!!!"));
+        break;
     }
     return os;
 }
 
-struct Token {
+struct Token
+{
     uint32_t col;
     uint32_t length;
     TokenType type;
 };
 
-enum class Language {
+enum class Language
+{
     PlainText,
     Cpp
 };
 
-enum class CommandRequestType {
+enum class CommandRequestType
+{
     OpenFile,
     SaveFile,
     Quit,
@@ -138,7 +173,8 @@ enum class CommandRequestType {
     Error
 };
 
-struct CommandRequest{
+struct CommandRequest
+{
     CommandRequestType type;
     std::string request;
 };

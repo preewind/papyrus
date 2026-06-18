@@ -10,10 +10,10 @@
 #include "CommandProcessor.h"
 #include "types.h"
 
-class Terminal{
+class Terminal
+{
 
 public:
-    
     void handleKey(const SDL_Event &event);
     void handleTextInput(const std::string &text);
     void handleBackSpace();

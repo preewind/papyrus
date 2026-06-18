@@ -93,7 +93,7 @@ const TextLayout &Renderer::getTextLayout() const
     return mTextLayout;
 }
 
-const CursorBlinker& Renderer::getCursorBlinker() const
+const CursorBlinker &Renderer::getCursorBlinker() const
 {
     return mCursorBlinker;
 }

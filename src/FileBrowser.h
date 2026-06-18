@@ -30,7 +30,7 @@ public:
     const uint32_t &getVisibleFiles() const;
     const uint32_t &getScrollOffset() const;
 
-    const std::string getFileExtension(std::filesystem::path path) const; 
+    const std::string getFileExtension(std::filesystem::path path) const;
 
 private:
     std::vector<std::filesystem::path> mCurrentDirFiles;

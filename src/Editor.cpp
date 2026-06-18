@@ -611,12 +611,13 @@ void Editor::insertText(Position pos, const std::string &text)
  */
 void Editor::deleteText(Position pos, const std::string &text)
 {
-    if (text.empty()) return;
+    if (text.empty())
+        return;
 
-        auto action = std::make_unique<DeleteAction>(pos, text);
-        action->redo(mBuffer); 
-        
-        mUndoManager.push(std::move(action));
+    auto action = std::make_unique<DeleteAction>(pos, text);
+    action->redo(mBuffer);
+
+    mUndoManager.push(std::move(action));
 }
 
 void Editor::handleTab()

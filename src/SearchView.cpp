@@ -14,9 +14,9 @@ void SearchView::render(Renderer &renderer, const Editor &editor)
 
 void SearchView::renderSearchOverlay(Renderer &renderer, const SearchSession &session)
 {
-    const auto& layout = renderer.getSearchLayout();
-    const auto& theme = renderer.getTheme();
-    const auto& textLayout = renderer.getTextLayout();
+    const auto &layout = renderer.getSearchLayout();
+    const auto &theme = renderer.getTheme();
+    const auto &textLayout = renderer.getTextLayout();
     uint32_t currMatch = session.hasMatches() ? session.getCurrentMatchIndex() + 1 : 0;
     const std::string &matchStr = std::to_string(currMatch) + "/" + std::to_string(session.getMatches().size());
     uint32_t matchBoxWidth = textLayout.width(matchStr) + layout.matchBoxPadding;
@@ -39,10 +39,10 @@ void SearchView::renderSearchOverlay(Renderer &renderer, const SearchSession &se
 
 void SearchView::renderSearchCursor(Renderer &renderer, const SearchSession &session)
 {
-    const auto& layout = renderer.getSearchLayout();
-    const auto& editorLayout = renderer.getEditorLayout();
-    const auto& theme = renderer.getTheme();
-    const auto& textLayout = renderer.getTextLayout();
+    const auto &layout = renderer.getSearchLayout();
+    const auto &editorLayout = renderer.getEditorLayout();
+    const auto &theme = renderer.getTheme();
+    const auto &textLayout = renderer.getTextLayout();
     if (renderer.getCursorBlinker().visible())
     {
         uint32_t cursorTextWidth = textLayout.width(session.getQuery().substr(0, session.getCursor()));
@@ -57,4 +57,3 @@ void SearchView::renderSearchCursor(Renderer &renderer, const SearchSession &ses
         renderer.clearClipRect();
     }
 }
-

@@ -117,17 +117,19 @@ std::vector<std::vector<Token>> CppLexer::tokenize(const TextBuffer &buffer)
                 continue;
             }
             // includeLib
-            if (c == '<' && !tokens.empty() && tokens.back().type == TokenType::Preprocessor) 
+            if (c == '<' && !tokens.empty() && tokens.back().type == TokenType::Preprocessor)
             {
                 ++i;
-                while (i < line.size() && line[i] != '>') ++i;
-                if (i < line.size()) ++i; // Consume '>'
-                
+                while (i < line.size() && line[i] != '>')
+                    ++i;
+                if (i < line.size())
+                    ++i; // Consume '>'
+
                 tokens.push_back(Token{.col = start, .length = i - start, .type = TokenType::IncludeLib});
                 continue;
             }
             // for now just unknown the rest
-            tokens.push_back(Token{.col = start, .length=1, .type=TokenType::Unknown});
+            tokens.push_back(Token{.col = start, .length = 1, .type = TokenType::Unknown});
             ++i;
         }
         std::stringstream lineTokens;

@@ -53,8 +53,8 @@ public:
     void handleY(SDL_Keymod mod);
     void handleZ(SDL_Keymod mod);
 
-    void insertText(Position pos, const std::string& text);
-    void deleteText(Position pos, const std::string& text);
+    void insertText(Position pos, const std::string &text);
+    void deleteText(Position pos, const std::string &text);
 
     void moveCursorLeft(SDL_Keymod mod);
     void moveCursorRight(SDL_Keymod mod);

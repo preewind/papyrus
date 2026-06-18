@@ -10,7 +10,6 @@
 class SearchSession
 {
 public:
-
     std::string getQuery() const;
     void addToQuery(const std::string &text);
     void handleBackSpace();
@@ -18,7 +17,7 @@ public:
     void handleLeft();
     void handleRight();
     void handleEnd();
-    Cursor handleUp(Cursor& cursor);
+    Cursor handleUp(Cursor &cursor);
     Cursor handleDown(Cursor &cursor);
     void addToCursor(uint32_t size);
     void resetCursor();
@@ -33,5 +32,4 @@ private:
     TextBuffer mQuery;
     std::vector<SearchMatch> mMatches;
     uint32_t mCursor = 0;
-    
 };

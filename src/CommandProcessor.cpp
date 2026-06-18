@@ -116,15 +116,17 @@ CommandResult CommandProcessor::saveCommand(const std::vector<std::string> &args
 CommandResult CommandProcessor::changeLanguageCommand(const std::vector<std::string> &args)
 {
     CommandRequest result;
-    if(!args.empty()){
+    if (!args.empty())
+    {
         mPendingRequest = {CommandRequestType::ChangeLanguage, args[0]};
-        return {true, {std::string("Changed language to " + args[0])}};   
+        return {true, {std::string("Changed language to " + args[0])}};
     }
-    else{
+    else
+    {
         mPendingRequest = {CommandRequestType::Error, "No language provided!"};
         return {false, {"No language provided!"}};
     }
-    
+
     return {false, {"Something went wrong while changing language!"}};
 }
 

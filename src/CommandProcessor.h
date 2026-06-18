@@ -26,6 +26,7 @@ public:
     std::optional<CommandRequest> consumeRequest();
 
     TextBuffer getOutput() const;
+
 private:
     TextBuffer mOutput;
     mutable std::mutex mOutputMutex;

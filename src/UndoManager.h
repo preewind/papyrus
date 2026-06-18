@@ -9,7 +9,7 @@
 
 /**
  * @brief Represents a single change made to the text buffer.
- * * Think of this as a recipe that knows how to apply a change (redo) 
+ * * Think of this as a recipe that knows how to apply a change (redo)
  * and how to completely reverse that exact same change (undo).
  */
 class EditAction
@@ -20,7 +20,11 @@ public:
 
     virtual Position undo(TextBuffer &buffer) = 0;
     virtual Position redo(TextBuffer &buffer) = 0;
-    virtual bool tryMerge(const EditAction& action) { (void)action; return false; }
+    virtual bool tryMerge(const EditAction &action)
+    {
+        (void)action;
+        return false;
+    }
 };
 
 /**
@@ -38,7 +42,7 @@ public:
 
     Position undo(TextBuffer &buffer) override;
     Position redo(TextBuffer &buffer) override;
-    bool tryMerge(const EditAction& action) override;
+    bool tryMerge(const EditAction &action) override;
 };
 
 /**
@@ -57,12 +61,12 @@ public:
 
     Position undo(TextBuffer &buffer) override;
     Position redo(TextBuffer &buffer) override;
-    bool tryMerge(const EditAction& action) override;
+    bool tryMerge(const EditAction &action) override;
 };
 
 /**
  * @brief The brains of the history system. Tracks what can be undone and redone.
- * * It manages two stacks of actions. 
+ * * It manages two stacks of actions.
  * - When you type normally: Actions go to the Undo stack, and the Redo stack is cleared.
  * - When you Undo: An action pops off the Undo stack, runs its undo() code, and moves to Redo.
  * - When you Redo: An action pops off the Redo stack, runs its redo() code, and moves to Undo.

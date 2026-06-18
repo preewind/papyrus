@@ -1,16 +1,16 @@
 #include "FileBrowserView.h"
 #include "Renderer.h"
 
-void FileBrowserView::render(Renderer &renderer, FileBrowser& browser)
+void FileBrowserView::render(Renderer &renderer, FileBrowser &browser)
 {
     renderFileBrowser(renderer, browser);
 }
 
 void FileBrowserView::renderFileBrowserSelection(Renderer &renderer, FileBrowser &browser)
 {
-    const auto& layout = renderer.getEditorLayout();
-    const auto& theme = renderer.getTheme();
-    const auto& textLayout = renderer.getTextLayout();
+    const auto &layout = renderer.getEditorLayout();
+    const auto &theme = renderer.getTheme();
+    const auto &textLayout = renderer.getTextLayout();
     const std::vector<std::string> filesToRender = browser.getCurrentDirFilesToRender();
     int x = layout.marginLeft;
     int y = renderer.screenYBrowser(browser.getSelectedIndex(), browser.getScrollOffset(), layout.marginTop + (layout.lineHeight * 2));
@@ -19,9 +19,10 @@ void FileBrowserView::renderFileBrowserSelection(Renderer &renderer, FileBrowser
     renderer.drawRect(x, y, w, h, theme.selection);
 }
 
-void FileBrowserView::renderFileBrowser(Renderer &renderer, FileBrowser &browser){
-    const auto& layout = renderer.getEditorLayout();
-    const auto& theme = renderer.getTheme();
+void FileBrowserView::renderFileBrowser(Renderer &renderer, FileBrowser &browser)
+{
+    const auto &layout = renderer.getEditorLayout();
+    const auto &theme = renderer.getTheme();
     renderFileBrowserSelection(renderer, browser);
     std::string currentPathStr = browser.getCurrentDir().string();
     renderer.drawText(currentPathStr, layout.marginLeft, layout.marginTop);

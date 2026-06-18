@@ -11,9 +11,9 @@ void TerminalView::render(Renderer &renderer, const Editor &editor)
 
 void TerminalView::renderTerminal(Renderer &renderer, const Editor &editor)
 {
-    const auto& layout = renderer.getTerminalLayout();
-    const auto& editorLayout = renderer.getEditorLayout();
-    const auto& theme = renderer.getTheme();
+    const auto &layout = renderer.getTerminalLayout();
+    const auto &editorLayout = renderer.getEditorLayout();
+    const auto &theme = renderer.getTheme();
     renderer.drawRect(layout.windowX, layout.windowY, editorLayout.windowWidth, layout.windowHeight, theme.terminalBackground);
     const Terminal &terminal = editor.getTerminalConst();
     renderTerminalCursor(renderer, terminal);
@@ -33,12 +33,12 @@ void TerminalView::renderTerminal(Renderer &renderer, const Editor &editor)
     renderer.drawText(text, layout.windowX + layout.marginLeft, editorLayout.totalWindowHeight - layout.marginTop - editorLayout.lineHeight);
 }
 
-void TerminalView::renderTerminalCursor(Renderer& renderer, const Terminal &terminal)
+void TerminalView::renderTerminalCursor(Renderer &renderer, const Terminal &terminal)
 {
-    const auto& layout = renderer.getTerminalLayout();
-    const auto& editorLayout = renderer.getEditorLayout();
-    const auto& theme = renderer.getTheme();
-    const auto& textLayout = renderer.getTextLayout();
+    const auto &layout = renderer.getTerminalLayout();
+    const auto &editorLayout = renderer.getEditorLayout();
+    const auto &theme = renderer.getTheme();
+    const auto &textLayout = renderer.getTextLayout();
     const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();
     uint32_t cursorTextWidth = textLayout.width(text.substr(0, text.size() + terminal.getCursor() - terminal.getInput().size()));
     renderer.drawRect(layout.windowX + layout.marginLeft + cursorTextWidth, editorLayout.totalWindowHeight - layout.marginTop - editorLayout.lineHeight, 12, editorLayout.lineHeight, theme.terminalCursor);

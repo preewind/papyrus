@@ -9,7 +9,7 @@ void EditorView::render(Renderer &renderer, const Editor &editor)
     {
         renderSearchMatches(renderer, editor);
     }
-    const auto& layout = renderer.getEditorLayout();
+    const auto &layout = renderer.getEditorLayout();
     renderLineNumbers(renderer, editor.getLineCount(), editor.getScrollOffsetY(), editor.getVisibleRows());
     SDL_Rect clipRect{
         layout.marginLeft,
@@ -30,9 +30,9 @@ void EditorView::render(Renderer &renderer, const Editor &editor)
 
 void EditorView::renderLineNumbers(Renderer &renderer, uint32_t numLines, uint32_t scrollOffsetY, uint32_t visibleRows)
 {
-    const auto& layout = renderer.getEditorLayout();
-    const auto& theme = renderer.getTheme();
-    const auto& textLayout = renderer.getTextLayout();
+    const auto &layout = renderer.getEditorLayout();
+    const auto &theme = renderer.getTheme();
+    const auto &textLayout = renderer.getTextLayout();
     uint32_t first = scrollOffsetY;
     uint32_t last = std::min(first + visibleRows, numLines);
     for (uint32_t i = first; i < last; ++i)
@@ -90,11 +90,11 @@ void EditorView::renderSelection(Renderer &renderer, const Editor &editor)
     }
 }
 
-void EditorView::renderCursor(Renderer& renderer, const Editor& editor)
+void EditorView::renderCursor(Renderer &renderer, const Editor &editor)
 {
-    const auto& layout = renderer.getEditorLayout();
-    const auto& theme = renderer.getTheme();
-    const auto& textLayout = renderer.getTextLayout();
+    const auto &layout = renderer.getEditorLayout();
+    const auto &theme = renderer.getTheme();
+    const auto &textLayout = renderer.getTextLayout();
     Cursor cursor = editor.getCursor();
     std::string text = editor.getLineString(cursor.row);
 
@@ -105,13 +105,12 @@ void EditorView::renderCursor(Renderer& renderer, const Editor& editor)
 
         renderer.drawRect(x, y, 2, layout.lineHeight, theme.cursor);
     }
-
 }
 
 void EditorView::renderText(Renderer &renderer, const Editor &editor)
 {
-    const auto& layout = renderer.getEditorLayout();
-    const auto& textLayout = renderer.getTextLayout();
+    const auto &layout = renderer.getEditorLayout();
+    const auto &textLayout = renderer.getTextLayout();
     auto &text = editor.getText();
     int visRows = editor.getVisibleRows();
     int first = editor.getScrollOffsetY();

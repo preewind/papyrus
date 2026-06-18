@@ -31,7 +31,7 @@ void TextBuffer::insert(size_t row, size_t col, const std::string &text)
 
 /**
  * @brief Inserts text at a coordinate, automatically splitting it into multiple lines if it contains '\n'.
- * * This is the ultimate insertion tool. It safely handles regular single-char typing, 
+ * * This is the ultimate insertion tool. It safely handles regular single-char typing,
  * carriage returns (\r\n), and pasting huge blocks of multi-line text.
  * * @param row The starting line index.
  * @param col The starting column character index.

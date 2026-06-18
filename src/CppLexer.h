@@ -14,6 +14,5 @@ public:
     const std::unordered_set<std::string> importantKeywords = {
         "int", "float", "double", "char", "void", "if", "else", "for", "while", "return",
         "class", "struct", "enum", "union", "namespace", "template", "typename",
-        "public", "private", "protected", "virtual", "override", "final"
-    };
+        "public", "private", "protected", "virtual", "override", "final"};
 };

@@ -64,7 +64,8 @@ std::vector<std::string> FileBrowser::getCurrentDirFilesToRender()
             fileStrings.push_back("..");
             continue;
         }
-        else if(i==0 && mCurrentDirFiles[i].parent_path() == mCurrentDir.root_directory() /*&& mCurrentDir != mCurrentDir.root_directory()*/){
+        else if (i == 0 && mCurrentDirFiles[i].parent_path() == mCurrentDir.root_directory() /*&& mCurrentDir != mCurrentDir.root_directory()*/)
+        {
             fileStrings.push_back("..");
             continue;
         }
