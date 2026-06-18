@@ -23,7 +23,7 @@ Renderer::Renderer(SDL_Window *window)
     {
         throw std::runtime_error("Failed to initialize SDL_ttf");
     }
-    mFont = TTF_OpenFont("assets/JetBrainsMono-Regular.ttf", 20);
+    mFont = TTF_OpenFont("assets/JetBrainsMono-Regular.ttf", mFontSize);
 
     if (!mFont)
     {
@@ -108,34 +108,34 @@ std::string Renderer::expandTabs(const std::string &text)
 SDL_Color Renderer::getColorFromTokenType(const Token &token)
 {
     switch (token.type)
-    {
-    case TokenType::OpenCurly:
-    case TokenType::CloseCurly:
-    case TokenType::OpenParen:
-    case TokenType::CloseParen:
-        return {255, 255, 0, 255};
-        break;
-    case TokenType::Comment:
-        return hexToSDLColor("#8B949E");
-        break;
-    case TokenType::String:
-        return hexToSDLColor("#A5D6FF");
-        break;
-    case TokenType::Keyword:
-        return hexToSDLColor("#FF7B72");
-        break;
-    case TokenType::Preprocessor:
-        return hexToSDLColor("#C586C0");
-        break;
-    case TokenType::IncludeLib:
-        return hexToSDLColor("#A5D6FF");
-        break;
-    default:
-        return {255, 255, 255, 255};
-    }
+        {
+        case TokenType::OpenCurly:
+        case TokenType::CloseCurly:
+        case TokenType::OpenParen:
+        case TokenType::CloseParen:
+            return mLexerTheme.Punctuation;
+        case TokenType::Comment:
+            return mLexerTheme.Comment;
+        case TokenType::String:
+            return mLexerTheme.String;
+        case TokenType::Keyword:
+            return mLexerTheme.Keyword;
+        case TokenType::Preprocessor:
+            return mLexerTheme.Preprocessor;
+        case TokenType::IncludeLib:
+            return mLexerTheme.IncludeLib;
+        default:
+            return mLexerTheme.Default;
+        }
 }
 
-void Renderer::drawText(const std::string &text, int x, int y, SDL_Color color = {255, 255, 255, 255})
+
+void Renderer::drawText(const std::string &text, int x, int y)
+{
+    drawText(text, x, y, mTheme.text);
+}
+
+void Renderer::drawText(const std::string &text, int x, int y, SDL_Color color)
 {
     if (text.empty())
         return;
@@ -203,7 +203,7 @@ void Renderer::renderLineNumbers(uint32_t numLines, uint32_t scrollOffsetY, uint
     for (uint32_t i = first; i < last; ++i)
     {
 
-        drawText(std::to_string(i + 1), mLayout.lineNumberAreaWidth / 2 - measureTextWidth(std::to_string(i + 1)) / 2, screenY(i, scrollOffsetY), SDL_Color{66, 67, 68, 255});
+        drawText(std::to_string(i + 1), mLayout.lineNumberAreaWidth / 2 - measureTextWidth(std::to_string(i + 1)) / 2, screenY(i, scrollOffsetY), mTheme.lineNumbers);
     }
 }
 
@@ -214,7 +214,7 @@ void Renderer::renderCursor(const Cursor &cursor, const std::string &text, uint3
         int x = textX(text, cursor.col);
         int y = screenY(cursor.row, offsetY);
 
-        drawRect(x, y, 2, mLayout.lineHeight, SDL_Color{255, 255, 255, 255});
+        drawRect(x, y, 2, mLayout.lineHeight, mTheme.cursor);
     }
 }
 
@@ -326,7 +326,7 @@ void Renderer::renderEditor(const Editor &editor)
 
 void Renderer::renderTerminal(const Editor &editor)
 {
-    drawRect(mTerminalLayout.windowX, mTerminalLayout.windowY, mLayout.windowWidth, mTerminalLayout.windowHeight, SDL_Color{31, 32, 33, 255});
+    drawRect(mTerminalLayout.windowX, mTerminalLayout.windowY, mLayout.windowWidth, mTerminalLayout.windowHeight, mTheme.terminalBackground);
     const Terminal &terminal = editor.getTerminalConst();
     renderTerminalCursor(terminal);
     const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();
@@ -349,10 +349,10 @@ void Renderer::renderTerminalCursor(const Terminal &terminal)
 {
     const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();
     uint32_t cursorTextWidth = measureTextWidth(text.substr(0, text.size() + terminal.getCursor() - terminal.getInput().size()));
-    drawRect(mTerminalLayout.windowX + mTerminalLayout.marginLeft + cursorTextWidth, mLayout.totalWindowHeight - mTerminalLayout.marginTop - mLayout.lineHeight, 12, mLayout.lineHeight, SDL_Color{101, 102, 103, 200});
+    drawRect(mTerminalLayout.windowX + mTerminalLayout.marginLeft + cursorTextWidth, mLayout.totalWindowHeight - mTerminalLayout.marginTop - mLayout.lineHeight, 12, mLayout.lineHeight, mTheme.terminalCursor);
 }
 
-void Renderer::renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY, SDL_Color color)
+void Renderer::renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY)
 {
 
     std::string selectedText = expandTabs(text.substr(col, length));
@@ -360,7 +360,7 @@ void Renderer::renderHighlightedRange(const std::string &text, uint32_t row, uin
     int y = screenY(row, scrollOffsetY);
     int w = measureTextWidth(selectedText);
     int h = mLayout.lineHeight;
-    drawRect(x, y, w, h, color);
+    drawRect(x, y, w, h, mTheme.selection);
 }
 
 void Renderer::renderSearchOverlay(const SearchSession &session)
@@ -369,8 +369,8 @@ void Renderer::renderSearchOverlay(const SearchSession &session)
     const std::string &matchStr = std::to_string(currMatch) + "/" + std::to_string(session.getMatches().size());
     mSearchLayout.matchBoxWidth = measureTextWidth(matchStr) + mSearchLayout.matchBoxPadding;
 
-    drawRect(mSearchLayout.queryX, mSearchLayout.queryY, mSearchLayout.queryWidth, mSearchLayout.queryHeight, mSearchLayout.rectColor);
-    drawRect(mSearchLayout.matchBoxX, mSearchLayout.queryY, mSearchLayout.matchBoxWidth, mSearchLayout.queryHeight, mSearchLayout.rectColor);
+    drawRect(mSearchLayout.queryX, mSearchLayout.queryY, mSearchLayout.queryWidth, mSearchLayout.queryHeight, mTheme.overlayBackground);
+    drawRect(mSearchLayout.matchBoxX, mSearchLayout.queryY, mSearchLayout.matchBoxWidth, mSearchLayout.queryHeight, mTheme.overlayBackground);
 
     SDL_Rect searchClipRect{
         static_cast<int>(mSearchLayout.queryX + mSearchLayout.textPadding),
@@ -397,7 +397,7 @@ void Renderer::renderSearchCursor(const SearchSession &session)
             static_cast<int>(mSearchLayout.queryWidth - (mSearchLayout.textPadding * 2)),
             static_cast<int>(mSearchLayout.queryHeight)};
         CSF(SDL_SetRenderClipRect(mRenderer, &searchClipRect));
-        drawRect(cursorX, mSearchLayout.textY, 2, mLayout.lineHeight, SDL_Color{255, 255, 255, 255});
+        drawRect(cursorX, mSearchLayout.textY, 2, mLayout.lineHeight, mTheme.cursor);
         CSF(SDL_SetRenderClipRect(mRenderer, nullptr));
     }
 }
@@ -411,7 +411,7 @@ void Renderer::renderSearchMatches(const SearchSession &session, const Editor &e
     for (SearchMatch &match : session.getMatches())
     {
         const std::string &line = editor.getLineString(match.row);
-        renderHighlightedRange(line, match.row, match.col, match.length, editor.getScrollOffsetY(), SDL_Color{46, 47, 108, 255});
+        renderHighlightedRange(line, match.row, match.col, match.length, editor.getScrollOffsetY());
     }
 }
 
@@ -469,10 +469,10 @@ void Renderer::updateFileBrowser(FileBrowser &browser)
     for (size_t i = first; i < last; ++i)
     {
         std::string file = filesToRender[i];
-        color = {255, 255, 255, 255};
+        color = mTheme.text;
         if (std::filesystem::is_directory(currentPathStr / std::filesystem::path{file}))
         {
-            color = {255, 255, 0, 255};
+            color = mTheme.fileBrowserDir;
         }
         std::string extension = browser.getFileExtension(file);
         uint32_t first = browser.getScrollOffset();
@@ -489,7 +489,7 @@ void Renderer::renderFileBrowserSelection(FileBrowser &browser)
     int y = screenYBrowser(browser.getSelectedIndex(), browser.getScrollOffset(), mLayout.marginTop + (mLayout.lineHeight * 2));
     int w = measureTextWidth(filesToRender[browser.getSelectedIndex()]);
     int h = mLayout.lineHeight;
-    drawRect(x, y, w, h, SDL_Color{46, 47, 108, 255});
+    drawRect(x, y, w, h, mTheme.selection);
 }
 
 /*
@@ -554,6 +554,30 @@ void Renderer::onResize(uint32_t w, uint32_t h)
 {
     mLayout.windowWidth = w;
     mLayout.windowHeight = h;
+}
+
+void Renderer::setFontSize()
+{
+    TTF_SetFontSize(mFont, mFontSize);
+    mLayout.lineHeight = getLineHeight();
+}
+
+void Renderer::handlePlus(SDL_Keymod mod)
+{
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+    if(ctrlHeld){
+        mFontSize++;
+        setFontSize();
+    }
+}
+
+void Renderer::handleMinus(SDL_Keymod mod)
+{
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+    if(ctrlHeld){
+        mFontSize--;
+        setFontSize();
+    }
 }
 
 void Renderer::ensureCursorVisibleHorizontally(const Cursor &cursor, const std::string &line)

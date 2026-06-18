@@ -73,38 +73,50 @@ inline std::vector<std::string> splitByNewline(const std::string &input)
 
 #include <SDL3/SDL_pixels.h>
 
-inline SDL_Color hexToSDLColor(std::string hex)
+constexpr uint8_t hexCharToInt(char c) 
 {
-    if (!hex.empty() && hex[0] == '#')
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return 0;
+}
+
+constexpr SDL_Color hexToSDLColor(std::string_view hex)
+{
+    if (!hex.empty() && hex[0] == '#') 
     {
-        hex = hex.substr(1);
+        hex.remove_prefix(1);
     }
 
-    if (hex.length() != 6 && hex.length() != 8)
+    if (hex.length() != 6 && hex.length() != 8) 
     {
-        // Fallback to white if the string format is invalid
         return SDL_Color{255, 255, 255, 255};
     }
 
-    uint32_t colorValue = std::stoul(hex, nullptr, 16);
-
-    SDL_Color color;
-    if (hex.length() == 6)
+    uint32_t colorValue = 0;
+    for (char c : hex) 
     {
-        color.r = (colorValue >> 16) & 0xFF;
-        color.g = (colorValue >> 8) & 0xFF;
-        color.b = colorValue & 0xFF;
-        color.a = 255;
-    }
-    else
-    {
-        color.r = (colorValue >> 24) & 0xFF;
-        color.g = (colorValue >> 16) & 0xFF;
-        color.b = (colorValue >> 8) & 0xFF;
-        color.a = colorValue & 0xFF;
+        colorValue = (colorValue << 4) | hexCharToInt(c);
     }
 
-    return color;
+    if (hex.length() == 6) 
+    {
+        return SDL_Color{
+            static_cast<Uint8>((colorValue >> 16) & 0xFF),
+            static_cast<Uint8>((colorValue >> 8) & 0xFF),
+            static_cast<Uint8>(colorValue & 0xFF),
+            255
+        };
+    } 
+    else 
+    {
+        return SDL_Color{
+            static_cast<Uint8>((colorValue >> 24) & 0xFF),
+            static_cast<Uint8>((colorValue >> 16) & 0xFF),
+            static_cast<Uint8>((colorValue >> 8) & 0xFF),
+            static_cast<Uint8>(colorValue & 0xFF)
+        };
+    }
 }
 
 #include <algorithm>

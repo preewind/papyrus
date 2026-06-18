@@ -7,6 +7,7 @@
 #include <SDL3_ttf/SDL_ttf.h>
 
 #include "types.h"
+#include "theme.h"
 
 class Cursor;
 class Editor;
@@ -48,7 +49,6 @@ struct SearchOverlayLayout{
     uint32_t matchBoxTextX;
     uint32_t textPadding = 5;
     uint32_t boxSpacing = 5;
-    SDL_Color rectColor = {34, 35, 36, 255};
 };
 
 
@@ -66,7 +66,8 @@ public:
     const EditorLayout &getEditorLayout() const;
     std::string expandTabs(const std::string& text);
     SDL_Color getColorFromTokenType(const Token &token);
-    void drawText(const std::string& text, int x, int y, SDL_Color color);
+    void drawText(const std::string &text, int x, int y);
+    void drawText(const std::string &text, int x, int y, SDL_Color color);
     void drawTextTokenized(const std::string& text, uint32_t y, const std::vector<Token> &tokens);
     void drawRect(int x, int y, int w, int h, SDL_Color color);
     void resetCursorBlink();
@@ -77,7 +78,7 @@ public:
     void renderEditor(const Editor &editor);
     void renderTerminal(const Editor &editor);
     void renderTerminalCursor(const Terminal& terminal);
-    void renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length,  uint32_t scrollOffsetY, SDL_Color color = {46, 47, 48, 255});
+    void renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length,  uint32_t scrollOffsetY);
     void renderSearchOverlay(const SearchSession &session);
     void renderSearchCursor(const SearchSession &session);
     void renderSearchMatches(const SearchSession &session, const Editor &editor);
@@ -91,6 +92,10 @@ public:
 
     void onResize(uint32_t w, uint32_t h);
 
+    void setFontSize();
+    void handlePlus(SDL_Keymod mod);
+    void handleMinus(SDL_Keymod mod);
+
     void ensureCursorVisibleHorizontally(const Cursor& cursor,const std::string& line);
     void ensureCursorVisibleHorizontallySearch(uint32_t cursor,const std::string& line);
 
@@ -102,6 +107,9 @@ private:
     bool mCursorVisible;
     SDL_Renderer *mRenderer;
     TTF_Font *mFont;
+    uint8_t mFontSize = 20;
+    Theme mTheme;
+    LexerTheme mLexerTheme;
     EditorLayout mLayout;
     SearchOverlayLayout mSearchLayout;
     TerminalLayout mTerminalLayout;
