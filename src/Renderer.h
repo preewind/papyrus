@@ -9,6 +9,7 @@
 #include "types.h"
 #include "theme.h"
 #include "CursorBlinker.h"
+#include "TextLayout.h"
 
 class Cursor;
 class Editor;
@@ -54,6 +55,24 @@ struct SearchOverlayLayout
     uint32_t boxSpacing = 5;
 };
 
+struct ScrollViewport
+{
+    int offsetX = 0;
+    int visibleWidth = 0;
+
+    void ensureVisible(int x, int padding = 0)
+    {
+        if (x < offsetX)
+        {
+            offsetX = x;
+        }
+        else if (x > offsetX + visibleWidth)
+        {
+            offsetX = x - visibleWidth + padding;
+        }
+    }
+};
+
 class Renderer
 {
 
@@ -64,10 +83,8 @@ public:
     Renderer &operator=(const Renderer &) = delete;
 
     void clear();
-    uint32_t measureTextWidth(const std::string &text);
     int getLineHeight() const;
     const EditorLayout &getEditorLayout() const;
-    std::string expandTabs(const std::string &text);
     SDL_Color getColorFromTokenType(const Token &token);
     void drawText(const std::string &text, int x, int y);
     void drawText(const std::string &text, int x, int y, SDL_Color color);
@@ -88,7 +105,6 @@ public:
     void updateFileBrowser(FileBrowser &browser);
     void renderFileBrowserSelection(FileBrowser &browser);
     const std::string fitTextToWidthFile(const std::string &text, std::string &extension);
-    uint32_t getVirtualCol(const std::string &text, uint32_t rawCol);
     void present();
 
     void onResize(uint32_t w, uint32_t h);
@@ -100,14 +116,16 @@ public:
     void ensureCursorVisibleHorizontally(const Cursor &cursor, const std::string &line);
     void ensureCursorVisibleHorizontallySearch(uint32_t cursor, const std::string &line);
 
-    int textX(const std::string &line, uint32_t col);
     int screenY(uint32_t row, uint32_t scrollOffset) const;
     int screenYBrowser(uint32_t row, uint32_t scrollOffset, uint32_t margin) const;
 
 private:
     SDL_Renderer *mRenderer;
     TTF_Font *mFont;
+    TextLayout mTextLayout;
     uint8_t mFontSize = 20;
+    ScrollViewport mEditorScrollPort;
+    ScrollViewport mSearchScrollPort;
     CursorBlinker mCursorBlinker;
     Theme mTheme;
     LexerTheme mLexerTheme;

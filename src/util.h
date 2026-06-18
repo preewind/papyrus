@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "logger.h"
+#include "types.h"
 /*
     Macro to check the success of an SDL function, throws an error if not successfull
     csf = check sdl function

@@ -24,11 +24,11 @@ Renderer::Renderer(SDL_Window *window)
         throw std::runtime_error("Failed to initialize SDL_ttf");
     }
     mFont = TTF_OpenFont("assets/JetBrainsMono-Regular.ttf", mFontSize);
-
     if (!mFont)
     {
         throw std::runtime_error("Failed to load font");
     }
+    mTextLayout.setFont(mFont);
     // editor layout
     mLayout.lineHeight = getLineHeight();
     SDL_GetWindowSize(window, (int *)&mLayout.windowWidth, (int *)&mLayout.totalWindowHeight);
@@ -63,20 +63,6 @@ void Renderer::clear()
     CSF(SDL_RenderClear(mRenderer));
 }
 
-uint32_t Renderer::measureTextWidth(const std::string &text)
-{
-    if (text.empty())
-    {
-        return 0;
-    }
-    int w = 0;
-    int h = 0;
-
-    CSF(TTF_GetStringSize(mFont, text.c_str(), 0, &w, &h));
-
-    return w;
-}
-
 int Renderer::getLineHeight() const
 {
     return TTF_GetFontHeight(mFont);
@@ -85,24 +71,6 @@ int Renderer::getLineHeight() const
 const EditorLayout &Renderer::getEditorLayout() const
 {
     return mLayout;
-}
-
-std::string Renderer::expandTabs(const std::string &text)
-{
-    std::string result = "";
-
-    for (char c : text)
-    {
-        if (c == '\t')
-        {
-            result += "    ";
-        }
-        else
-        {
-            result += c;
-        }
-    }
-    return result;
 }
 
 SDL_Color Renderer::getColorFromTokenType(const Token &token)
@@ -165,12 +133,12 @@ void Renderer::drawText(const std::string &text, int x, int y, SDL_Color color)
 
 void Renderer::drawTextTokenized(const std::string &text, uint32_t y, const std::vector<Token> &tokens)
 {
-    std::string expandedLine = expandTabs(text);
+    std::string expandedLine = mTextLayout.expandTabs(text);
     for (const Token &token : tokens)
     {
-        uint32_t vCol = getVirtualCol(text, token.col);
+        uint32_t vCol = mTextLayout.virtualColumn(text, token.col);
         const std::string &subs = expandedLine.substr(vCol, token.length);
-        int xOffset = measureTextWidth(std::string(vCol, ' '));
+        int xOffset = mTextLayout.width(std::string(vCol, ' '));
         int renderX = mLayout.marginLeft - mScrollOffsetX + xOffset;
         drawText(subs, renderX, y, getColorFromTokenType(token));
     }
@@ -196,7 +164,7 @@ void Renderer::renderLineNumbers(uint32_t numLines, uint32_t scrollOffsetY, uint
     for (uint32_t i = first; i < last; ++i)
     {
 
-        drawText(std::to_string(i + 1), mLayout.lineNumberAreaWidth / 2 - measureTextWidth(std::to_string(i + 1)) / 2, screenY(i, scrollOffsetY), mTheme.lineNumbers);
+        drawText(std::to_string(i + 1), mLayout.lineNumberAreaWidth / 2 - mTextLayout.width(std::to_string(i + 1)) / 2, screenY(i, scrollOffsetY), mTheme.lineNumbers);
     }
 }
 
@@ -204,7 +172,7 @@ void Renderer::renderCursor(const Cursor &cursor, const std::string &text, uint3
 {
     if (mCursorBlinker.visible())
     {
-        int x = textX(text, cursor.col);
+        int x = mLayout.marginLeft + mTextLayout.columnToPixel(text, cursor.col) - mScrollOffsetX;
         int y = screenY(cursor.row, offsetY);
 
         drawRect(x, y, 2, mLayout.lineHeight, mTheme.cursor);
@@ -228,7 +196,7 @@ void Renderer::renderText(const Editor &editor)
         }
         else
         {
-            drawText(expandTabs(text[i]), mLayout.marginLeft - mScrollOffsetX, screenY(i, first));
+            drawText(mTextLayout.expandTabs(text[i]), mLayout.marginLeft - mScrollOffsetX, screenY(i, first));
         }
     }
 }
@@ -341,17 +309,17 @@ void Renderer::renderTerminal(const Editor &editor)
 void Renderer::renderTerminalCursor(const Terminal &terminal)
 {
     const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();
-    uint32_t cursorTextWidth = measureTextWidth(text.substr(0, text.size() + terminal.getCursor() - terminal.getInput().size()));
+    uint32_t cursorTextWidth = mTextLayout.width(text.substr(0, text.size() + terminal.getCursor() - terminal.getInput().size()));
     drawRect(mTerminalLayout.windowX + mTerminalLayout.marginLeft + cursorTextWidth, mLayout.totalWindowHeight - mTerminalLayout.marginTop - mLayout.lineHeight, 12, mLayout.lineHeight, mTheme.terminalCursor);
 }
 
 void Renderer::renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY)
 {
 
-    std::string selectedText = expandTabs(text.substr(col, length));
-    int x = textX(text, col);
+    std::string selectedText = mTextLayout.expandTabs(text.substr(col, length));
+    int x = mLayout.marginLeft + mTextLayout.columnToPixel(text, col) - mScrollOffsetX;
     int y = screenY(row, scrollOffsetY);
-    int w = measureTextWidth(selectedText);
+    int w = mTextLayout.width(selectedText);
     int h = mLayout.lineHeight;
     drawRect(x, y, w, h, mTheme.selection);
 }
@@ -360,7 +328,7 @@ void Renderer::renderSearchOverlay(const SearchSession &session)
 {
     uint32_t currMatch = session.hasMatches() ? session.getCurrentMatchIndex() + 1 : 0;
     const std::string &matchStr = std::to_string(currMatch) + "/" + std::to_string(session.getMatches().size());
-    mSearchLayout.matchBoxWidth = measureTextWidth(matchStr) + mSearchLayout.matchBoxPadding;
+    mSearchLayout.matchBoxWidth = mTextLayout.width(matchStr) + mSearchLayout.matchBoxPadding;
 
     drawRect(mSearchLayout.queryX, mSearchLayout.queryY, mSearchLayout.queryWidth, mSearchLayout.queryHeight, mTheme.overlayBackground);
     drawRect(mSearchLayout.matchBoxX, mSearchLayout.queryY, mSearchLayout.matchBoxWidth, mSearchLayout.queryHeight, mTheme.overlayBackground);
@@ -382,7 +350,7 @@ void Renderer::renderSearchCursor(const SearchSession &session)
 {
     if (mCursorBlinker.visible())
     {
-        uint32_t cursorTextWidth = measureTextWidth(session.getQuery().substr(0, session.getCursor()));
+        uint32_t cursorTextWidth = mTextLayout.width(session.getQuery().substr(0, session.getCursor()));
         int cursorX = mSearchLayout.queryX + mSearchLayout.textPadding + cursorTextWidth - mScrollOffsetXSearch;
         SDL_Rect searchClipRect{
             static_cast<int>(mSearchLayout.queryX + mSearchLayout.textPadding),
@@ -470,7 +438,7 @@ void Renderer::renderFileBrowserSelection(FileBrowser &browser)
     std::vector<std::string> filesToRender = browser.getCurrentDirFilesToRender();
     int x = mLayout.marginLeft;
     int y = screenYBrowser(browser.getSelectedIndex(), browser.getScrollOffset(), mLayout.marginTop + (mLayout.lineHeight * 2));
-    int w = measureTextWidth(filesToRender[browser.getSelectedIndex()]);
+    int w = mTextLayout.width(filesToRender[browser.getSelectedIndex()]);
     int h = mLayout.lineHeight;
     drawRect(x, y, w, h, mTheme.selection);
 }
@@ -480,9 +448,9 @@ void Renderer::renderFileBrowserSelection(FileBrowser &browser)
 */
 const std::string Renderer::fitTextToWidthFile(const std::string &text, std::string &extension)
 {
-    uint32_t visibleWidth = mLayout.windowWidth - mLayout.marginLeft - measureTextWidth("...") - measureTextWidth(extension);
+    uint32_t visibleWidth = mLayout.windowWidth - mLayout.marginLeft - mTextLayout.width("...") - mTextLayout.width(extension);
 
-    if (measureTextWidth(text) - measureTextWidth(extension) <= visibleWidth)
+    if (mTextLayout.width(text) - mTextLayout.width(extension) <= visibleWidth)
     {
         return text;
     }
@@ -497,7 +465,7 @@ const std::string Renderer::fitTextToWidthFile(const std::string &text, std::str
 
         const std::string subs = text.substr(0, mid);
 
-        if (measureTextWidth(subs) <= visibleWidth)
+        if (mTextLayout.width(subs) <= visibleWidth)
         {
             bestLength = mid;
             low = mid + 1;
@@ -509,23 +477,6 @@ const std::string Renderer::fitTextToWidthFile(const std::string &text, std::str
     }
 
     return (text.substr(0, bestLength) + "..." + extension);
-}
-
-uint32_t Renderer::getVirtualCol(const std::string &text, uint32_t rawCol)
-{
-    uint32_t virtualCol = 0;
-    for (uint32_t i = 0; i < rawCol && i < text.size(); ++i)
-    {
-        if (text[i] == '\t')
-        {
-            virtualCol += 4;
-        }
-        else
-        {
-            virtualCol += 1;
-        }
-    }
-    return virtualCol;
 }
 
 void Renderer::present()
@@ -567,41 +518,19 @@ void Renderer::handleMinus(SDL_Keymod mod)
 
 void Renderer::ensureCursorVisibleHorizontally(const Cursor &cursor, const std::string &line)
 {
-    int cursorPixelX = measureTextWidth(expandTabs(line.substr(0, cursor.col)));
-
-    int visibleWidth =
-        mLayout.windowWidth - mLayout.marginLeft - mLayout.lineNumberAreaWidth;
-
-    if (cursorPixelX < mScrollOffsetX)
-    {
-        mScrollOffsetX = cursorPixelX;
-    }
-    else if (cursorPixelX > mScrollOffsetX + visibleWidth)
-    {
-        mScrollOffsetX = cursorPixelX - visibleWidth + 20;
-    }
+    int cursorPixelX = mTextLayout.columnToPixel(line, cursor.col);
+    mEditorScrollPort.visibleWidth = mLayout.windowWidth - mLayout.marginLeft - mLayout.lineNumberAreaWidth;
+    mEditorScrollPort.ensureVisible(cursorPixelX, 20);
+    mScrollOffsetX = mEditorScrollPort.offsetX;
 }
 
 void Renderer::ensureCursorVisibleHorizontallySearch(uint32_t cursor, const std::string &line)
 {
-    int cursorPixelX = measureTextWidth(expandTabs(line.substr(0, cursor)));
+    int cursorPixelX = mTextLayout.columnToPixel(line, cursor);
 
-    int visibleWidth =
-        mSearchLayout.queryWidth - mSearchLayout.textPadding * 2;
-
-    if (cursorPixelX < mScrollOffsetXSearch)
-    {
-        mScrollOffsetXSearch = cursorPixelX;
-    }
-    else if (cursorPixelX > mScrollOffsetXSearch + visibleWidth)
-    {
-        mScrollOffsetXSearch = cursorPixelX - visibleWidth;
-    }
-}
-
-int Renderer::textX(const std::string &line, uint32_t col)
-{
-    return mLayout.marginLeft + measureTextWidth(expandTabs(line.substr(0, col))) - mScrollOffsetX;
+    mSearchScrollPort.visibleWidth = mSearchLayout.queryWidth - mSearchLayout.textPadding * 2;
+    mSearchScrollPort.ensureVisible(cursorPixelX, 2);
+    mScrollOffsetXSearch = mSearchScrollPort.offsetX;
 }
 
 int Renderer::screenY(uint32_t row, uint32_t scrollOffset) const
