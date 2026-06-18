@@ -23,6 +23,8 @@ add_executable(papyrus
     src/Application.cpp
     src/Renderer.cpp
     src/Renderer.h
+    src/CursorBlinker.h
+    src/CursorBlinker.cpp
     src/Editor.cpp
     src/Editor.h
     src/UndoManager.h
@@ -47,6 +49,7 @@ add_executable(papyrus
     src/logger.h
     src/types.h
     src/util.h
+    src/theme.h
 )
 
 target_link_libraries(papyrus

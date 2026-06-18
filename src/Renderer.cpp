@@ -108,27 +108,26 @@ std::string Renderer::expandTabs(const std::string &text)
 SDL_Color Renderer::getColorFromTokenType(const Token &token)
 {
     switch (token.type)
-        {
-        case TokenType::OpenCurly:
-        case TokenType::CloseCurly:
-        case TokenType::OpenParen:
-        case TokenType::CloseParen:
-            return mLexerTheme.Punctuation;
-        case TokenType::Comment:
-            return mLexerTheme.Comment;
-        case TokenType::String:
-            return mLexerTheme.String;
-        case TokenType::Keyword:
-            return mLexerTheme.Keyword;
-        case TokenType::Preprocessor:
-            return mLexerTheme.Preprocessor;
-        case TokenType::IncludeLib:
-            return mLexerTheme.IncludeLib;
-        default:
-            return mLexerTheme.Default;
-        }
+    {
+    case TokenType::OpenCurly:
+    case TokenType::CloseCurly:
+    case TokenType::OpenParen:
+    case TokenType::CloseParen:
+        return mLexerTheme.Punctuation;
+    case TokenType::Comment:
+        return mLexerTheme.Comment;
+    case TokenType::String:
+        return mLexerTheme.String;
+    case TokenType::Keyword:
+        return mLexerTheme.Keyword;
+    case TokenType::Preprocessor:
+        return mLexerTheme.Preprocessor;
+    case TokenType::IncludeLib:
+        return mLexerTheme.IncludeLib;
+    default:
+        return mLexerTheme.Default;
+    }
 }
-
 
 void Renderer::drawText(const std::string &text, int x, int y)
 {
@@ -190,12 +189,6 @@ void Renderer::drawRect(int x, int y, int w, int h, SDL_Color color)
     CSF(SDL_RenderFillRect(mRenderer, &rect));
 }
 
-void Renderer::resetCursorBlink()
-{
-    mCursorVisible = true;
-    mLastBlink = SDL_GetTicks();
-}
-
 void Renderer::renderLineNumbers(uint32_t numLines, uint32_t scrollOffsetY, uint32_t visibleRows)
 {
     uint32_t first = scrollOffsetY;
@@ -209,7 +202,7 @@ void Renderer::renderLineNumbers(uint32_t numLines, uint32_t scrollOffsetY, uint
 
 void Renderer::renderCursor(const Cursor &cursor, const std::string &text, uint32_t offsetY)
 {
-    if (mCursorVisible)
+    if (mCursorBlinker.visible())
     {
         int x = textX(text, cursor.col);
         int y = screenY(cursor.row, offsetY);
@@ -387,7 +380,7 @@ void Renderer::renderSearchOverlay(const SearchSession &session)
 
 void Renderer::renderSearchCursor(const SearchSession &session)
 {
-    if (mCursorVisible)
+    if (mCursorBlinker.visible())
     {
         uint32_t cursorTextWidth = measureTextWidth(session.getQuery().substr(0, session.getCursor()));
         int cursorX = mSearchLayout.queryX + mSearchLayout.textPadding + cursorTextWidth - mScrollOffsetXSearch;
@@ -415,21 +408,11 @@ void Renderer::renderSearchMatches(const SearchSession &session, const Editor &e
     }
 }
 
-void Renderer::updateCursor()
-{
-    Uint64 now = SDL_GetTicks();
-    if (now - mLastBlink > 500)
-    {
-        mCursorVisible = !mCursorVisible;
-        mLastBlink = now;
-    }
-}
-
 void Renderer::updateEditor(Editor &editor)
 {
     if (editor.consumeActivity())
     {
-        resetCursorBlink();
+        mCursorBlinker.reset();
     }
     if (editor.isTerminalVisible())
     {
@@ -441,7 +424,7 @@ void Renderer::updateEditor(Editor &editor)
     {
         mLayout.windowHeight = mLayout.totalWindowHeight;
     }
-    updateCursor();
+    mCursorBlinker.update();
     clear();
     renderEditor(editor);
     editor.setVisibleRows(((mLayout.windowHeight - mLayout.marginTop) / mLayout.lineHeight));
@@ -565,7 +548,8 @@ void Renderer::setFontSize()
 void Renderer::handlePlus(SDL_Keymod mod)
 {
     bool ctrlHeld = mod & SDL_KMOD_CTRL;
-    if(ctrlHeld){
+    if (ctrlHeld)
+    {
         mFontSize++;
         setFontSize();
     }
@@ -574,7 +558,8 @@ void Renderer::handlePlus(SDL_Keymod mod)
 void Renderer::handleMinus(SDL_Keymod mod)
 {
     bool ctrlHeld = mod & SDL_KMOD_CTRL;
-    if(ctrlHeld){
+    if (ctrlHeld)
+    {
         mFontSize--;
         setFontSize();
     }
@@ -602,7 +587,7 @@ void Renderer::ensureCursorVisibleHorizontallySearch(uint32_t cursor, const std:
     int cursorPixelX = measureTextWidth(expandTabs(line.substr(0, cursor)));
 
     int visibleWidth =
-        mSearchLayout.queryWidth - mSearchLayout.textPadding*2;
+        mSearchLayout.queryWidth - mSearchLayout.textPadding * 2;
 
     if (cursorPixelX < mScrollOffsetXSearch)
     {
