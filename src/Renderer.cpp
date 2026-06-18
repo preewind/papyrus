@@ -73,6 +73,11 @@ const EditorLayout &Renderer::getEditorLayout() const
     return mLayout;
 }
 
+const SearchOverlayLayout &Renderer::getSearchLayout() const
+{
+    return mSearchLayout;
+}
+
 const Theme &Renderer::getTheme() const
 {
     return mTheme;
@@ -91,6 +96,11 @@ const CursorBlinker& Renderer::getCursorBlinker() const
 uint32_t Renderer::getScrollOffsetX() const
 {
     return mScrollOffsetX;
+}
+
+uint32_t Renderer::getScrollOffsetXSearch() const
+{
+    return mScrollOffsetXSearch;
 }
 
 SDL_Color Renderer::getColorFromTokenType(const Token &token)
@@ -189,18 +199,9 @@ void Renderer::clearClipRect()
 
 void Renderer::renderEditor(const Editor &editor)
 {
-    if (editor.isSearchActive())
-    {
-        renderSearchMatches(editor.getSearch(), editor);
-    }
     mEditorView.render(*this, editor);
-
-    if (editor.isSearchActive())
-    {
-        ensureCursorVisibleHorizontallySearch(editor.getSearch().getCursor(), editor.getSearch().getQuery());
-        renderSearchOverlay(editor.getSearch());
-        renderSearchCursor(editor.getSearch());
-    }
+    mSearchView.render(*this, editor);
+    
     if (editor.isTerminalVisible())
     {
         renderTerminal(editor);
@@ -244,58 +245,6 @@ void Renderer::renderHighlightedRange(const std::string &text, uint32_t row, uin
     int w = mTextLayout.width(selectedText);
     int h = mLayout.lineHeight;
     drawRect(x, y, w, h, mTheme.selection);
-}
-
-void Renderer::renderSearchOverlay(const SearchSession &session)
-{
-    uint32_t currMatch = session.hasMatches() ? session.getCurrentMatchIndex() + 1 : 0;
-    const std::string &matchStr = std::to_string(currMatch) + "/" + std::to_string(session.getMatches().size());
-    mSearchLayout.matchBoxWidth = mTextLayout.width(matchStr) + mSearchLayout.matchBoxPadding;
-
-    drawRect(mSearchLayout.queryX, mSearchLayout.queryY, mSearchLayout.queryWidth, mSearchLayout.queryHeight, mTheme.overlayBackground);
-    drawRect(mSearchLayout.matchBoxX, mSearchLayout.queryY, mSearchLayout.matchBoxWidth, mSearchLayout.queryHeight, mTheme.overlayBackground);
-
-    SDL_Rect searchClipRect{
-        static_cast<int>(mSearchLayout.queryX + mSearchLayout.textPadding),
-        static_cast<int>(mSearchLayout.queryY),
-        static_cast<int>(mSearchLayout.queryWidth - (mSearchLayout.textPadding * 2)),
-        static_cast<int>(mSearchLayout.queryHeight)};
-    CSF(SDL_SetRenderClipRect(mRenderer, &searchClipRect));
-
-    const std::string &query = session.getQuery();
-    drawText(query, mSearchLayout.textX - mScrollOffsetXSearch, mSearchLayout.textY);
-    CSF(SDL_SetRenderClipRect(mRenderer, nullptr));
-    drawText(matchStr, mSearchLayout.matchBoxTextX, mSearchLayout.textY);
-}
-
-void Renderer::renderSearchCursor(const SearchSession &session)
-{
-    if (mCursorBlinker.visible())
-    {
-        uint32_t cursorTextWidth = mTextLayout.width(session.getQuery().substr(0, session.getCursor()));
-        int cursorX = mSearchLayout.queryX + mSearchLayout.textPadding + cursorTextWidth - mScrollOffsetXSearch;
-        SDL_Rect searchClipRect{
-            static_cast<int>(mSearchLayout.queryX + mSearchLayout.textPadding),
-            static_cast<int>(mSearchLayout.queryY),
-            static_cast<int>(mSearchLayout.queryWidth - (mSearchLayout.textPadding * 2)),
-            static_cast<int>(mSearchLayout.queryHeight)};
-        CSF(SDL_SetRenderClipRect(mRenderer, &searchClipRect));
-        drawRect(cursorX, mSearchLayout.textY, 2, mLayout.lineHeight, mTheme.cursor);
-        CSF(SDL_SetRenderClipRect(mRenderer, nullptr));
-    }
-}
-
-void Renderer::renderSearchMatches(const SearchSession &session, const Editor &editor)
-{
-    if (session.getMatches().size() == 0)
-    {
-        return;
-    }
-    for (SearchMatch &match : session.getMatches())
-    {
-        const std::string &line = editor.getLineString(match.row);
-        renderHighlightedRange(line, match.row, match.col, match.length, editor.getScrollOffsetY());
-    }
 }
 
 void Renderer::updateEditor(Editor &editor)

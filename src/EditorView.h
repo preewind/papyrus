@@ -13,4 +13,5 @@ public:
     void renderSelection(Renderer &renderer, const Editor &editor);
     void renderCursor(Renderer &renderer, const Editor &editor);
     void renderText(Renderer &renderer, const Editor &editor);
+    void renderSearchMatches(Renderer &renderer, const Editor &editor);
 };

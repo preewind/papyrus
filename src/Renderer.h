@@ -11,6 +11,7 @@
 #include "CursorBlinker.h"
 #include "TextLayout.h"
 #include "EditorView.h"
+#include "SearchView.h"
 
 class Cursor;
 class Editor;
@@ -86,10 +87,12 @@ public:
     void clear();
     int getLineHeight() const;
     const EditorLayout &getEditorLayout() const;
+    const SearchOverlayLayout &getSearchLayout() const;
     const Theme &getTheme() const;
     const TextLayout &getTextLayout() const;
     const CursorBlinker& getCursorBlinker() const;
     uint32_t getScrollOffsetX() const;
+    uint32_t getScrollOffsetXSearch() const;
     SDL_Color getColorFromTokenType(const Token &token);
     void drawText(const std::string &text, int x, int y);
     void drawText(const std::string &text, int x, int y, SDL_Color color);
@@ -101,9 +104,6 @@ public:
     void renderTerminal(const Editor &editor);
     void renderTerminalCursor(const Terminal &terminal);
     void renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY);
-    void renderSearchOverlay(const SearchSession &session);
-    void renderSearchCursor(const SearchSession &session);
-    void renderSearchMatches(const SearchSession &session, const Editor &editor);
     void updateEditor(Editor &editor);
     void updateFileBrowser(FileBrowser &browser);
     void renderFileBrowserSelection(FileBrowser &browser);
@@ -127,6 +127,7 @@ private:
     TTF_Font *mFont;
     TextLayout mTextLayout;
     EditorView mEditorView;
+    SearchView mSearchView;
     uint8_t mFontSize = 20;
     ScrollViewport mEditorScrollPort;
     ScrollViewport mSearchScrollPort;

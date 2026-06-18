@@ -29,6 +29,8 @@ add_executable(papyrus
     src/TextLayout.cpp
     src/EditorView.h
     src/EditorView.cpp
+    src/SearchView.h
+    src/SearchView.cpp
     src/Editor.cpp
     src/Editor.h
     src/UndoManager.h

@@ -5,6 +5,10 @@
 
 void EditorView::render(Renderer &renderer, const Editor &editor)
 {
+    if (editor.isSearchActive())
+    {
+        renderSearchMatches(renderer, editor);
+    }
     const auto& layout = renderer.getEditorLayout();
     renderLineNumbers(renderer, editor.getLineCount(), editor.getScrollOffsetY(), editor.getVisibleRows());
     SDL_Rect clipRect{
@@ -125,5 +129,18 @@ void EditorView::renderText(Renderer &renderer, const Editor &editor)
         {
             renderer.drawText(textLayout.expandTabs(text[i]), layout.marginLeft - renderer.getScrollOffsetX(), renderer.screenY(i, first));
         }
+    }
+}
+
+void EditorView::renderSearchMatches(Renderer &renderer, const Editor &editor)
+{
+    if (editor.getSearch().getMatches().size() == 0)
+    {
+        return;
+    }
+    for (SearchMatch &match : editor.getSearch().getMatches())
+    {
+        const std::string &line = editor.getLineString(match.row);
+        renderer.renderHighlightedRange(line, match.row, match.col, match.length, editor.getScrollOffsetY());
     }
 }
