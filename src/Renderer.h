@@ -12,6 +12,7 @@
 #include "TextLayout.h"
 #include "EditorView.h"
 #include "SearchView.h"
+#include "TerminalView.h"
 
 class Cursor;
 class Editor;
@@ -88,6 +89,7 @@ public:
     int getLineHeight() const;
     const EditorLayout &getEditorLayout() const;
     const SearchOverlayLayout &getSearchLayout() const;
+    const TerminalLayout &getTerminalLayout() const;
     const Theme &getTheme() const;
     const TextLayout &getTextLayout() const;
     const CursorBlinker& getCursorBlinker() const;
@@ -101,8 +103,6 @@ public:
     void pushClipRect(const SDL_Rect& rect);
     void clearClipRect();
     void renderEditor(const Editor &editor);
-    void renderTerminal(const Editor &editor);
-    void renderTerminalCursor(const Terminal &terminal);
     void renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY);
     void updateEditor(Editor &editor);
     void updateFileBrowser(FileBrowser &browser);
@@ -128,6 +128,7 @@ private:
     TextLayout mTextLayout;
     EditorView mEditorView;
     SearchView mSearchView;
+    TerminalView mTerminalView;
     uint8_t mFontSize = 20;
     ScrollViewport mEditorScrollPort;
     ScrollViewport mSearchScrollPort;

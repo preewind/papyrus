@@ -78,6 +78,11 @@ const SearchOverlayLayout &Renderer::getSearchLayout() const
     return mSearchLayout;
 }
 
+const TerminalLayout &Renderer::getTerminalLayout() const
+{
+    return mTerminalLayout;
+}
+
 const Theme &Renderer::getTheme() const
 {
     return mTheme;
@@ -201,39 +206,7 @@ void Renderer::renderEditor(const Editor &editor)
 {
     mEditorView.render(*this, editor);
     mSearchView.render(*this, editor);
-    
-    if (editor.isTerminalVisible())
-    {
-        renderTerminal(editor);
-    }
-}
-
-void Renderer::renderTerminal(const Editor &editor)
-{
-    drawRect(mTerminalLayout.windowX, mTerminalLayout.windowY, mLayout.windowWidth, mTerminalLayout.windowHeight, mTheme.terminalBackground);
-    const Terminal &terminal = editor.getTerminalConst();
-    renderTerminalCursor(terminal);
-    const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();
-    std::vector<std::string> output = terminal.getOutput().getText();
-    std::reverse(output.begin(), output.end());
-    if (output.size() == 0)
-        return;
-    uint32_t visRows = terminal.getVisibleRows();
-    uint32_t first = terminal.getScrollOffset();
-    uint32_t last = std::min(visRows, (uint32_t)output.size());
-    for (uint32_t i = 0; i < last; ++i)
-    {
-        drawText(output[first + i], mTerminalLayout.windowX + mTerminalLayout.marginLeft, mLayout.totalWindowHeight - mTerminalLayout.marginTop - (i + 2) * mLayout.lineHeight);
-    }
-
-    drawText(text, mTerminalLayout.windowX + mTerminalLayout.marginLeft, mLayout.totalWindowHeight - mTerminalLayout.marginTop - mLayout.lineHeight);
-}
-
-void Renderer::renderTerminalCursor(const Terminal &terminal)
-{
-    const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();
-    uint32_t cursorTextWidth = mTextLayout.width(text.substr(0, text.size() + terminal.getCursor() - terminal.getInput().size()));
-    drawRect(mTerminalLayout.windowX + mTerminalLayout.marginLeft + cursorTextWidth, mLayout.totalWindowHeight - mTerminalLayout.marginTop - mLayout.lineHeight, 12, mLayout.lineHeight, mTheme.terminalCursor);
+    mTerminalView.render(*this, editor);
 }
 
 void Renderer::renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY)
