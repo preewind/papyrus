@@ -21,11 +21,11 @@ void SearchView::renderSearchOverlay(Renderer &renderer, const SearchSession &se
     renderer.drawRect(searchLayout.queryBox, theme.overlayBackground);
     renderer.drawRect(searchLayout.matchBox.x, searchLayout.matchBox.y, matchBoxWidth, searchLayout.matchBox.h, theme.overlayBackground);
 
-    SDL_Rect searchClipRect{
-        static_cast<int>(searchLayout.queryBox.x + searchLayout.textPadding),
-        static_cast<int>(searchLayout.queryBox.y),
-        static_cast<int>(searchLayout.queryBox.w - (searchLayout.textPadding * 2)),
-        static_cast<int>(searchLayout.queryBox.h)};
+    Rect searchClipRect{
+        searchLayout.queryBox.x + searchLayout.textPadding,
+        searchLayout.queryBox.y,
+        searchLayout.queryBox.w - (searchLayout.textPadding * 2),
+        searchLayout.queryBox.h};
     renderer.pushClipRect(searchClipRect);
 
     const std::string &query = session.getQuery();
@@ -42,11 +42,11 @@ void SearchView::renderSearchCursor(Renderer &renderer, const SearchSession &ses
     {
         uint32_t cursorTextWidth = textLayout.width(session.getQuery().substr(0, session.getCursor()));
         int cursorX = searchLayout.queryBox.x + searchLayout.textPadding + cursorTextWidth - viewport.scrollX();
-        SDL_Rect searchClipRect{
-            static_cast<int>(searchLayout.queryBox.x + searchLayout.textPadding),
-            static_cast<int>(searchLayout.queryBox.y),
-            static_cast<int>(searchLayout.queryBox.w - (searchLayout.textPadding * 2)),
-            static_cast<int>(searchLayout.queryBox.h)};
+        Rect searchClipRect{
+            searchLayout.queryBox.x + searchLayout.textPadding,
+            searchLayout.queryBox.y,
+            searchLayout.queryBox.w - (searchLayout.textPadding * 2),
+            searchLayout.queryBox.h};
         renderer.pushClipRect(searchClipRect);
         renderer.drawRect(cursorX, searchLayout.textY, 2, editorLayout.lineHeight, theme.cursor);
         renderer.clearClipRect();

@@ -2,8 +2,11 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <memory>
 
 #include "Renderer.h"
+#include "IRenderBackend.h"
+#include "SDLRenderBackend.h"
 #include "Editor.h"
 #include "FileBrowser.h"
 #include "SearchSession.h"
@@ -12,22 +15,10 @@
 
 Renderer::Renderer(SDL_Window *window)
 {
-    mRenderer = SDL_CreateRenderer(window, nullptr);
-    CSF(SDL_SetRenderVSync(mRenderer, 1)); // TODO maybe make this an option to set manually
+    auto backend = std::make_unique<SDLRenderBackend>(window, "assets/JetBrainsMono-Regular.ttf", mFontSize);
+    mFont = backend->font();
+    mBackend = std::move(backend);
 
-    if (!mRenderer)
-    {
-        throw std::runtime_error("Failed to create renderer");
-    }
-    if (!TTF_Init())
-    {
-        throw std::runtime_error("Failed to initialize SDL_ttf");
-    }
-    mFont = TTF_OpenFont("assets/JetBrainsMono-Regular.ttf", mFontSize);
-    if (!mFont)
-    {
-        throw std::runtime_error("Failed to load font");
-    }
     mTextLayout.setFont(mFont);
     // editor layout
     mLayout.lineHeight = getLineHeight();
@@ -36,21 +27,16 @@ Renderer::Renderer(SDL_Window *window)
 
 Renderer::~Renderer()
 {
-    TTF_CloseFont(mFont);
-    TTF_Quit();
-
-    SDL_DestroyRenderer(mRenderer);
 }
 
 void Renderer::clear()
 {
-    CSF(SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, 255));
-    CSF(SDL_RenderClear(mRenderer));
+    mBackend->clear(RenderColor{0, 0, 0, 255});
 }
 
 int Renderer::getLineHeight() const
 {
-    return TTF_GetFontHeight(mFont);
+    return mBackend->lineHeight();
 }
 
 const SDL_Properties &Renderer::getSDL_Properties() const
@@ -73,7 +59,7 @@ const CursorBlinker &Renderer::getCursorBlinker() const
     return mCursorBlinker;
 }
 
-SDL_Color Renderer::getColorFromTokenType(const Token &token)
+RenderColor Renderer::getColorFromTokenType(const Token &token)
 {
     switch (token.type)
     {
@@ -102,33 +88,9 @@ void Renderer::drawText(const std::string &text, int x, int y)
     drawText(text, x, y, mTheme.text);
 }
 
-void Renderer::drawText(const std::string &text, int x, int y, SDL_Color color)
+void Renderer::drawText(const std::string &text, int x, int y, RenderColor color)
 {
-    if (text.empty())
-        return;
-
-    SDL_Surface *surface =
-        TTF_RenderText_Blended(
-            mFont,
-            text.c_str(),
-            text.size(),
-            color);
-
-    SDL_Texture *texture =
-        SDL_CreateTextureFromSurface(
-            mRenderer,
-            surface);
-
-    SDL_FRect dst;
-    dst.x = static_cast<float>(x);
-    dst.y = static_cast<float>(y);
-    dst.w = static_cast<float>(surface->w);
-    dst.h = static_cast<float>(surface->h);
-
-    CSF(SDL_RenderTexture(mRenderer, texture, nullptr, &dst));
-
-    SDL_DestroyTexture(texture);
-    SDL_DestroySurface(surface);
+    mBackend->drawText(text, x, y, color);
 }
 
 void Renderer::drawTextTokenized(const std::string &text, uint32_t y, const std::vector<Token> &tokens, uint32_t scrollOffsetX, const LayoutConfig &layoutConfig)
@@ -144,32 +106,24 @@ void Renderer::drawTextTokenized(const std::string &text, uint32_t y, const std:
     }
 }
 
-void Renderer::drawRect(int x, int y, int w, int h, SDL_Color color)
+void Renderer::drawRect(int x, int y, int w, int h, RenderColor color)
 {
-    SDL_FRect rect;
-    rect.x = static_cast<float>(x);
-    rect.y = static_cast<float>(y);
-    rect.w = static_cast<float>(w);
-    rect.h = static_cast<float>(h);
-
-    CSF(SDL_SetRenderDrawColor(mRenderer, color.r, color.g, color.b, color.a));
-
-    CSF(SDL_RenderFillRect(mRenderer, &rect));
+    mBackend->fillRect(RenderRect{x, y, w, h}, color);
 }
 
-void Renderer::drawRect(Rect rect, SDL_Color color)
+void Renderer::drawRect(Rect rect, RenderColor color)
 {
     drawRect(rect.x, rect.y, rect.w, rect.h, color);
 }
 
-void Renderer::pushClipRect(const SDL_Rect &rect)
+void Renderer::pushClipRect(const Rect &rect)
 {
-    CSF(SDL_SetRenderClipRect(mRenderer, &rect));
+    mBackend->setClipRect(RenderRect{static_cast<int>(rect.x), static_cast<int>(rect.y), static_cast<int>(rect.w), static_cast<int>(rect.h)});
 }
 
 void Renderer::clearClipRect()
 {
-    CSF(SDL_SetRenderClipRect(mRenderer, nullptr));
+    mBackend->clearClipRect();
 }
 
 void Renderer::renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY, uint32_t scrollOffsetX, const LayoutConfig &layoutConfig)
@@ -238,7 +192,7 @@ const std::string Renderer::fitTextToWidthFile(const std::string &text, std::str
 
 void Renderer::present()
 {
-    CSF(SDL_RenderPresent(mRenderer));
+    mBackend->present();
 }
 
 void Renderer::onResize(uint32_t w, uint32_t h)
@@ -249,28 +203,20 @@ void Renderer::onResize(uint32_t w, uint32_t h)
 
 void Renderer::setFontSize()
 {
-    TTF_SetFontSize(mFont, mFontSize);
+    mBackend->setFontSize(mFontSize);
     mLayout.lineHeight = getLineHeight();
 }
 
-void Renderer::handlePlus(SDL_Keymod mod)
+void Renderer::handlePlus()
 {
-    bool ctrlHeld = mod & SDL_KMOD_CTRL;
-    if (ctrlHeld)
-    {
-        mFontSize++;
-        setFontSize();
-    }
+    mFontSize++;
+    setFontSize();
 }
 
-void Renderer::handleMinus(SDL_Keymod mod)
+void Renderer::handleMinus()
 {
-    bool ctrlHeld = mod & SDL_KMOD_CTRL;
-    if (ctrlHeld)
-    {
-        mFontSize--;
-        setFontSize();
-    }
+    mFontSize--;
+    setFontSize();
 }
 
 int Renderer::screenY(uint32_t row, uint32_t scrollOffset, uint32_t editorMarginTop) const

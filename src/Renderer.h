@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -19,6 +20,7 @@ class Selection;
 class FileBrowser;
 class SearchSession;
 class Terminal;
+class IRenderBackend;
 
 
 class Renderer
@@ -37,13 +39,13 @@ public:
 
     TTF_Font *getFont() const;
     const CursorBlinker &getCursorBlinker() const;
-    SDL_Color getColorFromTokenType(const Token &token);
+    RenderColor getColorFromTokenType(const Token &token);
     void drawText(const std::string &text, int x, int y);
-    void drawText(const std::string &text, int x, int y, SDL_Color color);
+    void drawText(const std::string &text, int x, int y, RenderColor color);
     void drawTextTokenized(const std::string &text, uint32_t y, const std::vector<Token> &tokens, uint32_t scrollOffsetX, const LayoutConfig &layoutConfig);
-    void drawRect(int x, int y, int w, int h, SDL_Color color);
-    void drawRect(Rect rect, SDL_Color color);
-    void pushClipRect(const SDL_Rect &rect);
+    void drawRect(int x, int y, int w, int h, RenderColor color);
+    void drawRect(Rect rect, RenderColor color);
+    void pushClipRect(const Rect &rect);
     void clearClipRect();
     void renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY, uint32_t scrollOffsetX, const LayoutConfig &layoutConfig);
     void updateEditor(Editor &editor);
@@ -54,14 +56,14 @@ public:
     void onResize(uint32_t w, uint32_t h);
 
     void setFontSize();
-    void handlePlus(SDL_Keymod mod);
-    void handleMinus(SDL_Keymod mod);
+    void handlePlus();
+    void handleMinus();
 
     int screenY(uint32_t row, uint32_t scrollOffset, uint32_t editorMarginTop) const;
     int screenYBrowser(uint32_t row, uint32_t scrollOffset, uint32_t margin) const;
 
 private:
-    SDL_Renderer *mRenderer;
+    std::unique_ptr<IRenderBackend> mBackend;
     TTF_Font *mFont;
     TextLayout mTextLayout;
     FileBrowserView mFileBrowserView;

@@ -10,11 +10,11 @@ void EditorView::render(Renderer &renderer, const Editor &editor, const EditorVi
         renderSearchMatches(renderer, editor, viewport, layoutConfig);
     }
     renderLineNumbers(renderer, editor.getLineCount(), editor.getScrollOffsetY(), editor.getVisibleRows(), textLayout, layoutConfig);
-    SDL_Rect clipRect{
-        (int)layoutConfig.editorMarginLeft,
+    Rect clipRect{
+        layoutConfig.editorMarginLeft,
         0,
-        (int)editorLayout.viewport.w - (int)layoutConfig.editorMarginLeft,
-        (int)editorLayout.viewport.h};
+        editorLayout.viewport.w - layoutConfig.editorMarginLeft,
+        editorLayout.viewport.h};
     renderer.pushClipRect(clipRect);
     if (editor.getSelectionActive())
     {

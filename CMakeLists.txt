@@ -23,6 +23,10 @@ add_executable(papyrus
     src/Application.cpp
     src/Renderer.cpp
     src/Renderer.h
+    src/RenderTypes.h
+    src/IRenderBackend.h
+    src/SDLRenderBackend.h
+    src/SDLRenderBackend.cpp
     src/CursorBlinker.h
     src/CursorBlinker.cpp
     src/TextLayout.h

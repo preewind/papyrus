@@ -1,31 +1,28 @@
 #pragma once
 
-#include <SDL3/SDL_pixels.h>
-
-#include "types.h"
-#include "util.h"
+#include "RenderTypes.h"
 
 struct Theme
 {
-    SDL_Color background{0, 0, 0, 255};
-    SDL_Color text{255, 255, 255, 255};
-    SDL_Color cursor{255, 255, 255, 255};
-    SDL_Color selection{46, 47, 108, 255};
-    SDL_Color searchMatch{46, 47, 108, 255};
-    SDL_Color terminalBackground{31, 32, 33, 255};
-    SDL_Color terminalCursor{101, 102, 103, 255};
-    SDL_Color lineNumbers{66, 67, 68, 255};
-    SDL_Color overlayBackground{34, 35, 36, 255};
-    SDL_Color fileBrowserDir = {255, 255, 0, 255};
+    RenderColor background{0, 0, 0, 255};
+    RenderColor text{255, 255, 255, 255};
+    RenderColor cursor{255, 255, 255, 255};
+    RenderColor selection{46, 47, 108, 255};
+    RenderColor searchMatch{46, 47, 108, 255};
+    RenderColor terminalBackground{31, 32, 33, 255};
+    RenderColor terminalCursor{101, 102, 103, 255};
+    RenderColor lineNumbers{66, 67, 68, 255};
+    RenderColor overlayBackground{34, 35, 36, 255};
+    RenderColor fileBrowserDir = {255, 255, 0, 255};
 };
 
 struct LexerTheme
 {
-    SDL_Color Punctuation = {255, 255, 0, 255};
-    SDL_Color Comment = hexToSDLColor("#8B949E");
-    SDL_Color String = hexToSDLColor("#A5D6FF");
-    SDL_Color Keyword = hexToSDLColor("#FF7B72");
-    SDL_Color Preprocessor = hexToSDLColor("#C586C0");
-    SDL_Color IncludeLib = hexToSDLColor("#A5D6FF");
-    SDL_Color Default = {255, 255, 255, 255};
+    RenderColor Punctuation = {255, 255, 0, 255};
+    RenderColor Comment = {139, 148, 158, 255};
+    RenderColor String = {165, 214, 255, 255};
+    RenderColor Keyword = {255, 123, 114, 255};
+    RenderColor Preprocessor = {197, 134, 192, 255};
+    RenderColor IncludeLib = {165, 214, 255, 255};
+    RenderColor Default = {255, 255, 255, 255};
 };

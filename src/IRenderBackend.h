@@ -1,0 +1,25 @@
+#pragma once
+
+#include <cstdint>
+#include <string>
+
+#include "RenderTypes.h"
+
+class IRenderBackend
+{
+public:
+    virtual ~IRenderBackend() = default;
+
+    virtual void setVSync(bool enabled) = 0;
+    virtual void clear(const RenderColor &color) = 0;
+    virtual void present() = 0;
+
+    virtual void fillRect(const RenderRect &rect, const RenderColor &color) = 0;
+    virtual void setClipRect(const RenderRect &rect) = 0;
+    virtual void clearClipRect() = 0;
+
+    virtual void drawText(const std::string &text, int x, int y, const RenderColor &color) = 0;
+
+    virtual int lineHeight() const = 0;
+    virtual void setFontSize(uint8_t size) = 0;
+};

@@ -78,10 +78,16 @@ void Application::run()
                     mEditor.handleT(mod);
                     break;
                 case SDLK_PLUS:
-                    mRenderer->handlePlus(mod);
+                    if (mod & SDL_KMOD_CTRL)
+                    {
+                        mRenderer->handlePlus();
+                    }
                     break;
                 case SDLK_MINUS:
-                    mRenderer->handleMinus(mod);
+                    if (mod & SDL_KMOD_CTRL)
+                    {
+                        mRenderer->handleMinus();
+                    }
                     break;
                 case SDLK_HASH:
                     handleHash(event.key.mod);
