@@ -10,12 +10,13 @@ void EditorView::render(Renderer &renderer, const Editor &editor)
         renderSearchMatches(renderer, editor);
     }
     const auto &layout = renderer.getEditorLayout();
+    const auto &layoutConfig = renderer.getLayoutConfig();
     renderLineNumbers(renderer, editor.getLineCount(), editor.getScrollOffsetY(), editor.getVisibleRows());
     SDL_Rect clipRect{
-        layout.marginLeft,
+        (int)layoutConfig.editorMarginLeft,
         0,
-        layout.windowWidth - layout.marginLeft,
-        layout.windowHeight};
+        (int)layout.viewport.w - (int)layoutConfig.editorMarginLeft,
+        (int)layout.viewport.h};
     renderer.pushClipRect(clipRect);
     if (editor.getSelectionActive())
     {
@@ -30,15 +31,15 @@ void EditorView::render(Renderer &renderer, const Editor &editor)
 
 void EditorView::renderLineNumbers(Renderer &renderer, uint32_t numLines, uint32_t scrollOffsetY, uint32_t visibleRows)
 {
-    const auto &layout = renderer.getEditorLayout();
     const auto &theme = renderer.getTheme();
     const auto &textLayout = renderer.getTextLayout();
+    const auto &layoutConfig = renderer.getLayoutConfig();
     uint32_t first = scrollOffsetY;
     uint32_t last = std::min(first + visibleRows, numLines);
     for (uint32_t i = first; i < last; ++i)
     {
 
-        renderer.drawText(std::to_string(i + 1), layout.lineNumberAreaWidth / 2 - textLayout.width(std::to_string(i + 1)) / 2, renderer.screenY(i, scrollOffsetY), theme.lineNumbers);
+        renderer.drawText(std::to_string(i + 1), layoutConfig.lineNumberWidth / 2 - textLayout.width(std::to_string(i + 1)) / 2, renderer.screenY(i, scrollOffsetY), theme.lineNumbers);
     }
 }
 
@@ -92,15 +93,16 @@ void EditorView::renderSelection(Renderer &renderer, const Editor &editor)
 
 void EditorView::renderCursor(Renderer &renderer, const Editor &editor)
 {
-    const auto &layout = renderer.getEditorLayout();
+    const auto &layout = renderer.getSDL_Properties();
     const auto &theme = renderer.getTheme();
     const auto &textLayout = renderer.getTextLayout();
+    const auto &layoutConfig = renderer.getLayoutConfig();
     Cursor cursor = editor.getCursor();
     std::string text = editor.getLineString(cursor.row);
 
     if (renderer.getCursorBlinker().visible())
     {
-        int x = layout.marginLeft + textLayout.columnToPixel(text, cursor.col) - renderer.getScrollOffsetX();
+        int x = layoutConfig.editorMarginLeft + textLayout.columnToPixel(text, cursor.col) - renderer.getScrollOffsetX();
         int y = renderer.screenY(cursor.row, editor.getScrollOffsetY());
 
         renderer.drawRect(x, y, 2, layout.lineHeight, theme.cursor);
@@ -109,8 +111,8 @@ void EditorView::renderCursor(Renderer &renderer, const Editor &editor)
 
 void EditorView::renderText(Renderer &renderer, const Editor &editor)
 {
-    const auto &layout = renderer.getEditorLayout();
     const auto &textLayout = renderer.getTextLayout();
+    const auto &layoutConfig = renderer.getLayoutConfig();
     auto &text = editor.getText();
     int visRows = editor.getVisibleRows();
     int first = editor.getScrollOffsetY();
@@ -126,7 +128,7 @@ void EditorView::renderText(Renderer &renderer, const Editor &editor)
         }
         else
         {
-            renderer.drawText(textLayout.expandTabs(text[i]), layout.marginLeft - renderer.getScrollOffsetX(), renderer.screenY(i, first));
+            renderer.drawText(textLayout.expandTabs(text[i]), layoutConfig.editorMarginLeft - renderer.getScrollOffsetX(), renderer.screenY(i, first));
         }
     }
 }

@@ -44,6 +44,7 @@ class LayoutManager{
 public:
     void recalculate(uint32_t windowWidth, uint32_t windowHeight, uint32_t lineHeight, bool terminalVisible);
 
+    const LayoutConfig &getLayoutConfig() const;
     const EditorLayout& getEditorLayout() const;
     const SearchLayout& getSearchLayout() const;
     const TerminalLayout& getTerminalLayout() const;

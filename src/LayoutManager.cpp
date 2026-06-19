@@ -13,7 +13,7 @@ void LayoutManager::recalculate(uint32_t windowWidth, uint32_t windowHeight, uin
     mTerminal.viewport = {
         0, terminalWindowY, windowWidth, terminalWindowHeight
     };
-    uint32_t matchBoxWidth = 100; // TODO calc dynamically when factored out of searchView
+    uint32_t matchBoxWidth = 100;
     // search layout
     uint32_t searchQueryBoxX = mConfig.editorMarginLeft + windowWidth / 2;
     uint32_t searchQueryBoxY = mConfig.editorMarginTop + lineHeight;
@@ -31,6 +31,11 @@ void LayoutManager::recalculate(uint32_t windowWidth, uint32_t windowHeight, uin
     mSearch.textY = searchQueryBoxY + (searchQueryHeight - lineHeight) / 2; // gives you a vertically centered text
     mSearch.matchBoxTextX =searchMatchBoxX + mSearch.textPadding;
 
+}
+
+const LayoutConfig &LayoutManager::getLayoutConfig() const
+{
+    return mConfig;
 }
 
 const EditorLayout &LayoutManager::getEditorLayout() const

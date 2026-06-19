@@ -23,16 +23,11 @@ class FileBrowser;
 class SearchSession;
 class Terminal;
 
-struct EditorLayout2
+struct SDL_Properties
 {
-    uint16_t marginTop = 20;
-    uint16_t marginLeft = 40;
-    uint32_t marginRight = 50;
-    uint16_t lineNumberAreaWidth = 40;
-    uint16_t lineHeight = 0;
-    uint16_t windowWidth = 0;
-    uint16_t windowHeight = 0;
-    uint16_t totalWindowHeight = 0;
+    uint32_t lineHeight = 0;
+    uint32_t totalWindowWidth = 0;
+    uint32_t totalWindowHeight = 0;
 };
 
 struct ScrollViewport
@@ -64,7 +59,9 @@ public:
 
     void clear();
     int getLineHeight() const;
-    const EditorLayout2 &getEditorLayout() const;
+    const LayoutConfig &getLayoutConfig() const;
+    const SDL_Properties &getSDL_Properties() const;
+    const EditorLayout &getEditorLayout() const;
     const SearchLayout &getSearchLayout() const;
     const TerminalLayout &getTerminalLayout() const;
     const Theme &getTheme() const;
@@ -114,8 +111,7 @@ private:
     Theme mTheme;
     LexerTheme mLexerTheme;
     LayoutManager mLayoutManager;
-    EditorLayout2 mLayout;
-    //SearchOverlayLayout mSearchLayout;
+    SDL_Properties mLayout;
     int mScrollOffsetX = 0;
     int mScrollOffsetXSearch = 0;
 };

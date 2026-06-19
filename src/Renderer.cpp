@@ -31,10 +31,9 @@ Renderer::Renderer(SDL_Window *window)
     mTextLayout.setFont(mFont);
     // editor layout
     mLayout.lineHeight = getLineHeight();
-    SDL_GetWindowSize(window, (int *)&mLayout.windowWidth, (int *)&mLayout.totalWindowHeight);
-    mLayout.windowHeight = mLayout.totalWindowHeight;
+    SDL_GetWindowSize(window, (int *)&mLayout.totalWindowWidth, (int *)&mLayout.totalWindowHeight);
 
-    mLayoutManager.recalculate(mLayout.windowWidth, mLayout.totalWindowHeight, mLayout.lineHeight, false);
+    mLayoutManager.recalculate(mLayout.totalWindowWidth, mLayout.totalWindowHeight, mLayout.lineHeight, false);
 }
 
 Renderer::~Renderer()
@@ -56,9 +55,19 @@ int Renderer::getLineHeight() const
     return TTF_GetFontHeight(mFont);
 }
 
-const EditorLayout2 &Renderer::getEditorLayout() const
+const LayoutConfig &Renderer::getLayoutConfig() const
+{
+    return mLayoutManager.getLayoutConfig();
+}
+
+const SDL_Properties &Renderer::getSDL_Properties() const
 {
     return mLayout;
+}
+
+const EditorLayout &Renderer::getEditorLayout() const
+{
+    return mLayoutManager.getEditorLayout();
 }
 
 const SearchLayout &Renderer::getSearchLayout() const
@@ -162,7 +171,7 @@ void Renderer::drawTextTokenized(const std::string &text, uint32_t y, const std:
         uint32_t vCol = mTextLayout.virtualColumn(text, token.col);
         const std::string &subs = expandedLine.substr(vCol, token.length);
         int xOffset = mTextLayout.width(std::string(vCol, ' '));
-        int renderX = mLayout.marginLeft - mScrollOffsetX + xOffset;
+        int renderX = getLayoutConfig().editorMarginLeft - mScrollOffsetX + xOffset;
         drawText(subs, renderX, y, getColorFromTokenType(token));
     }
 }
@@ -206,7 +215,7 @@ void Renderer::renderHighlightedRange(const std::string &text, uint32_t row, uin
 {
 
     std::string selectedText = mTextLayout.expandTabs(text.substr(col, length));
-    int x = mLayout.marginLeft + mTextLayout.columnToPixel(text, col) - mScrollOffsetX;
+    int x = getLayoutConfig().editorMarginLeft + mTextLayout.columnToPixel(text, col) - mScrollOffsetX;
     int y = screenY(row, scrollOffsetY);
     int w = mTextLayout.width(selectedText);
     int h = mLayout.lineHeight;
@@ -221,19 +230,15 @@ void Renderer::updateEditor(Editor &editor)
     }
     if (editor.isTerminalVisible())
     {
-        mLayout.windowHeight = mLayout.totalWindowHeight * 0.75;
-        mLayoutManager.recalculate(mLayout.windowWidth, mLayout.totalWindowHeight, mLayout.lineHeight, false);
+        mLayoutManager.recalculate(mLayout.totalWindowWidth, mLayout.totalWindowHeight, mLayout.lineHeight, false);
         editor.getTerminal().setVisibleRows(((getTerminalLayout().viewport.h - getTerminalLayout().marginTop) / mLayout.lineHeight) - 1);
-        editor.adjustCursor((mLayout.windowHeight - mLayout.marginTop) / mLayout.lineHeight);
+        editor.adjustCursor((getEditorLayout().viewport.h - getLayoutConfig().editorMarginTop) / mLayout.lineHeight);
     }
-    else
-    {
-        mLayout.windowHeight = mLayout.totalWindowHeight;
-    }
+    
     mCursorBlinker.update();
     clear();
     renderEditor(editor);
-    editor.setVisibleRows(((mLayout.windowHeight - mLayout.marginTop) / mLayout.lineHeight));
+    editor.setVisibleRows(((getEditorLayout().viewport.h - getLayoutConfig().editorMarginTop) / mLayout.lineHeight));
     Cursor cursor = editor.getCursor();
     ensureCursorVisibleHorizontally(cursor, editor.getLineString(cursor.row));
     present();
@@ -251,7 +256,7 @@ void Renderer::updateFileBrowser(FileBrowser &browser)
 */
 const std::string Renderer::fitTextToWidthFile(const std::string &text, std::string &extension)
 {
-    uint32_t visibleWidth = mLayout.windowWidth - mLayout.marginLeft - mTextLayout.width("...") - mTextLayout.width(extension);
+    uint32_t visibleWidth = mLayout.totalWindowWidth - getLayoutConfig().editorMarginLeft - mTextLayout.width("...") - mTextLayout.width(extension);
 
     if (mTextLayout.width(text) - mTextLayout.width(extension) <= visibleWidth)
     {
@@ -289,8 +294,8 @@ void Renderer::present()
 
 void Renderer::onResize(uint32_t w, uint32_t h)
 {
-    mLayout.windowWidth = w;
-    mLayout.windowHeight = h;
+    mLayout.totalWindowWidth = w;
+    mLayout.totalWindowHeight = h;
 }
 
 void Renderer::setFontSize()
@@ -322,7 +327,7 @@ void Renderer::handleMinus(SDL_Keymod mod)
 void Renderer::ensureCursorVisibleHorizontally(const Cursor &cursor, const std::string &line)
 {
     int cursorPixelX = mTextLayout.columnToPixel(line, cursor.col);
-    mEditorScrollPort.visibleWidth = mLayout.windowWidth - mLayout.marginLeft - mLayout.lineNumberAreaWidth;
+    mEditorScrollPort.visibleWidth = mLayout.totalWindowWidth - getLayoutConfig().editorMarginLeft - getLayoutConfig().lineNumberWidth;
     mEditorScrollPort.ensureVisible(cursorPixelX, 20);
     mScrollOffsetX = mEditorScrollPort.offsetX;
 }
@@ -337,7 +342,7 @@ void Renderer::ensureCursorVisibleHorizontallySearch(uint32_t cursor, const std:
 
 int Renderer::screenY(uint32_t row, uint32_t scrollOffset) const
 {
-    return mLayout.marginTop + (row - scrollOffset) * mLayout.lineHeight;
+    return getLayoutConfig().editorMarginTop + (row - scrollOffset) * mLayout.lineHeight;
 }
 
 int Renderer::screenYBrowser(uint32_t row, uint32_t scrollOffset, uint32_t margin) const

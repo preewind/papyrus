@@ -8,12 +8,13 @@ void FileBrowserView::render(Renderer &renderer, FileBrowser &browser)
 
 void FileBrowserView::renderFileBrowserSelection(Renderer &renderer, FileBrowser &browser)
 {
-    const auto &layout = renderer.getEditorLayout();
+    const auto &layout = renderer.getSDL_Properties();
     const auto &theme = renderer.getTheme();
     const auto &textLayout = renderer.getTextLayout();
+    const auto &layoutConfig = renderer.getLayoutConfig();
     const std::vector<std::string> filesToRender = browser.getCurrentDirFilesToRender();
-    int x = layout.marginLeft;
-    int y = renderer.screenYBrowser(browser.getSelectedIndex(), browser.getScrollOffset(), layout.marginTop + (layout.lineHeight * 2));
+    int x = layoutConfig.editorMarginLeft;
+    int y = renderer.screenYBrowser(browser.getSelectedIndex(), browser.getScrollOffset(), layoutConfig.editorMarginTop + (layout.lineHeight * 2));
     int w = textLayout.width(filesToRender[browser.getSelectedIndex()]);
     int h = layout.lineHeight;
     renderer.drawRect(x, y, w, h, theme.selection);
@@ -21,15 +22,16 @@ void FileBrowserView::renderFileBrowserSelection(Renderer &renderer, FileBrowser
 
 void FileBrowserView::renderFileBrowser(Renderer &renderer, FileBrowser &browser)
 {
-    const auto &layout = renderer.getEditorLayout();
+    const auto &layout = renderer.getSDL_Properties();
+    const auto &layoutConfig = renderer.getLayoutConfig();
     const auto &theme = renderer.getTheme();
     renderFileBrowserSelection(renderer, browser);
     std::string currentPathStr = browser.getCurrentDir().string();
-    renderer.drawText(currentPathStr, layout.marginLeft, layout.marginTop);
+    renderer.drawText(currentPathStr, layoutConfig.editorMarginLeft, layoutConfig.editorMarginTop);
 
-    uint32_t fileListTopMargin = layout.marginTop + (layout.lineHeight * 2);
+    uint32_t fileListTopMargin = layoutConfig.editorMarginTop + (layout.lineHeight * 2);
 
-    uint32_t visibleFiles = (layout.windowHeight - fileListTopMargin) / layout.lineHeight;
+    uint32_t visibleFiles = (layout.totalWindowHeight - fileListTopMargin) / layout.lineHeight;
     browser.setVisibleFiles(visibleFiles);
     SDL_Color color;
     std::vector<std::string> filesToRender = browser.getCurrentDirFilesToRender();
@@ -46,6 +48,6 @@ void FileBrowserView::renderFileBrowser(Renderer &renderer, FileBrowser &browser
         std::string extension = browser.getFileExtension(file);
         uint32_t first = browser.getScrollOffset();
         file = renderer.fitTextToWidthFile(file, extension);
-        renderer.drawText(file, layout.marginLeft, renderer.screenYBrowser(i, first, fileListTopMargin), color);
+        renderer.drawText(file, layoutConfig.editorMarginLeft, renderer.screenYBrowser(i, first, fileListTopMargin), color);
     }
 }

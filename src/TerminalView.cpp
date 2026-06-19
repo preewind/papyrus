@@ -12,7 +12,7 @@ void TerminalView::render(Renderer &renderer, const Editor &editor)
 void TerminalView::renderTerminal(Renderer &renderer, const Editor &editor)
 {
     const auto &layout = renderer.getTerminalLayout();
-    const auto &editorLayout = renderer.getEditorLayout();
+    const auto &editorLayout = renderer.getSDL_Properties();
     const auto &theme = renderer.getTheme();
     renderer.drawRect(layout.viewport, theme.terminalBackground);
     const Terminal &terminal = editor.getTerminalConst();
@@ -36,7 +36,7 @@ void TerminalView::renderTerminal(Renderer &renderer, const Editor &editor)
 void TerminalView::renderTerminalCursor(Renderer &renderer, const Terminal &terminal)
 {
     const auto &layout = renderer.getTerminalLayout();
-    const auto &editorLayout = renderer.getEditorLayout();
+    const auto &editorLayout = renderer.getSDL_Properties();
     const auto &theme = renderer.getTheme();
     const auto &textLayout = renderer.getTextLayout();
     const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();

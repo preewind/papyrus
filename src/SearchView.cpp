@@ -40,7 +40,7 @@ void SearchView::renderSearchOverlay(Renderer &renderer, const SearchSession &se
 void SearchView::renderSearchCursor(Renderer &renderer, const SearchSession &session)
 {
     const auto &layout = renderer.getSearchLayout();
-    const auto &editorLayout = renderer.getEditorLayout();
+    const auto &editorLayout = renderer.getSDL_Properties();
     const auto &theme = renderer.getTheme();
     const auto &textLayout = renderer.getTextLayout();
     if (renderer.getCursorBlinker().visible())
