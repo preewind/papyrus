@@ -126,7 +126,6 @@ void Editor::handleTextInput(const std::string &text)
         insertText(mCursor, text);
         mCursor.col += text.size();
         clearSelection();
-        ensureCursorVisibleVertically();
         updateTokens();
     }
     markActivity();
@@ -182,7 +181,6 @@ void Editor::handleBackSpace(SDL_Keymod mod)
             }
         }
         clearSelection();
-        ensureCursorVisibleVertically();
         updateTokens();
     }
     markActivity();
@@ -196,7 +194,6 @@ void Editor::handleReturn()
         mCursor.row++;
         markActivity();
         clearSelection();
-        ensureCursorVisibleVertically();
         updateTokens();
     }
 }
@@ -255,7 +252,6 @@ void Editor::handleDelete(SDL_Keymod mod)
         }
 
         clearSelection();
-        ensureCursorVisibleVertically();
         updateTokens();
     }
     markActivity();
@@ -284,7 +280,6 @@ void Editor::handleLeft(SDL_Keymod mod)
         {
             clearSelection();
         }
-        ensureCursorVisibleVertically();
     }
     markActivity();
 }
@@ -312,8 +307,6 @@ void Editor::handleRight(SDL_Keymod mod)
         {
             clearSelection();
         }
-
-        ensureCursorVisibleVertically();
     }
     markActivity();
 }
@@ -342,7 +335,6 @@ void Editor::handleUp(SDL_Keymod mod)
             clearSelection();
         }
     }
-    ensureCursorVisibleVertically();
     markActivity();
 }
 
@@ -370,8 +362,6 @@ void Editor::handleDown(SDL_Keymod mod)
             clearSelection();
         }
     }
-
-    ensureCursorVisibleVertically();
     markActivity();
 }
 
@@ -405,10 +395,7 @@ void Editor::handleHome(SDL_Keymod mod)
         {
             clearSelection();
         }
-
-        ensureCursorVisibleVertically();
     }
-
     markActivity();
 }
 
@@ -442,10 +429,7 @@ void Editor::handleEnd(SDL_Keymod mod)
         {
             clearSelection();
         }
-
-        ensureCursorVisibleVertically();
     }
-
     markActivity();
 }
 /*
@@ -560,7 +544,6 @@ void Editor::handleX(SDL_Keymod mod)
         // mBuffer.eraseRangeMultiRow(mSelection.normalized());
         // mCursor = mSelection.normalized().begin;
         clearSelection();
-        ensureCursorVisibleVertically();
         updateTokens();
     }
 }
@@ -572,7 +555,6 @@ void Editor::handleY(SDL_Keymod mod)
     {
         mCursor = mUndoManager.redo(mBuffer);
         updateTokens();
-        ensureCursorVisibleVertically();
         markActivity();
     }
 }
@@ -584,7 +566,6 @@ void Editor::handleZ(SDL_Keymod mod)
     {
         mCursor = mUndoManager.undo(mBuffer);
         updateTokens();
-        ensureCursorVisibleVertically();
         markActivity();
     }
 }
@@ -717,23 +698,12 @@ void Editor::moveCursorToLastRow()
     mCursor.row = mBuffer.getLineCount() - 1;
 }
 
-void Editor::ensureCursorVisibleVertically()
-{
-    if (mCursor.row < mScrollOffsetY)
-    {
-        mScrollOffsetY = mCursor.row;
-    }
-    else if (mCursor.row >= mScrollOffsetY + mVisibleRows)
-    {
-        mScrollOffsetY = mCursor.row - mVisibleRows + 1;
-    }
-}
 // should work because new visible rows isnt updated yet
-void Editor::adjustCursor(uint32_t rows)
+void Editor::adjustCursor(uint32_t visibleRows)
 {
-    if (isTerminalVisible() && mCursor.row > rows)
+    if (isTerminalVisible() && mCursor.row > visibleRows)
     {
-        mCursor.row -= mVisibleRows - rows;
+        mCursor.row -= mVisibleRows - visibleRows;
     }
 }
 
@@ -958,10 +928,7 @@ const uint32_t &Editor::getVisibleRows() const
     return mVisibleRows;
 }
 
-const uint32_t &Editor::getScrollOffsetY() const
-{
-    return mScrollOffsetY;
-}
+
 
 void Editor::updateViewPort(const LayoutManager &layout, uint32_t lineHeight)
 {

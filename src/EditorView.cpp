@@ -48,7 +48,7 @@ void EditorView::render(RenderContext &renderContext, const Editor &editor, cons
     {
         renderSearchMatches(renderContext, editor, viewport, textLayout, layoutConfig);
     }
-    renderLineNumbers(renderContext, editor.getLineCount(), editor.getScrollOffsetY(), editor.getVisibleRows(), textLayout, layoutConfig);
+    renderLineNumbers(renderContext, editor.getLineCount(), viewport.scrollY(), editor.getVisibleRows(), textLayout, layoutConfig);
     Rect clipRect{
         layoutConfig.editorMarginLeft,
         0,
@@ -91,9 +91,9 @@ void EditorView::renderSelection(RenderContext &renderContext, const Editor &edi
 
     for (size_t row = start.row; row <= end.row; ++row)
     {
-        if (row < editor.getScrollOffsetY())
+        if (row < viewport.scrollY())
             continue;
-        if (row >= editor.getScrollOffsetY() + editor.getVisibleRows())
+        if (row >= viewport.scrollY() + editor.getVisibleRows())
             break;
 
         int beginCol, endCol;
@@ -123,7 +123,7 @@ void EditorView::renderSelection(RenderContext &renderContext, const Editor &edi
             endCol = end.col;
         }
         const std::string &line = editor.getLineString(row);
-        renderHighlightedRange(renderContext, textLayout, line, row, beginCol, endCol - beginCol, editor.getScrollOffsetY(), viewport.scrollX(), layoutConfig);
+        renderHighlightedRange(renderContext, textLayout, line, row, beginCol, endCol - beginCol, viewport.scrollY(), viewport.scrollX(), layoutConfig);
     }
 }
 
@@ -137,7 +137,7 @@ void EditorView::renderCursor(RenderContext &renderContext, const Editor &editor
     if (cursorVisible)
     {
         int x = layoutConfig.editorMarginLeft + textLayout.columnToPixel(text, cursor.col) - viewport.scrollX();
-        int y = screenY(layout, cursor.row, editor.getScrollOffsetY(), layoutConfig.editorMarginTop);
+        int y = screenY(layout, cursor.row, viewport.scrollY(), layoutConfig.editorMarginTop);
 
         renderContext.drawRect(x, y, 2, layout.lineHeight, theme.cursor);
     }
@@ -147,7 +147,7 @@ void EditorView::renderText(RenderContext &renderContext, const Editor &editor, 
 {
     auto &text = editor.getText();
     int visRows = editor.getVisibleRows();
-    int first = editor.getScrollOffsetY();
+    int first = viewport.scrollY();
     int last = std::min(
         first + visRows,
         (int)text.size());
@@ -183,6 +183,6 @@ void EditorView::renderSearchMatches(RenderContext &renderContext, const Editor 
     for (SearchMatch &match : editor.getSearch().getMatches())
     {
         const std::string &line = editor.getLineString(match.row);
-        renderHighlightedRange(renderContext, textLayout, line, match.row, match.col, match.length, editor.getScrollOffsetY(), viewport.scrollX(), layoutConfig);
+        renderHighlightedRange(renderContext, textLayout, line, match.row, match.col, match.length, viewport.scrollY(), viewport.scrollX(), layoutConfig);
     }
 }

@@ -193,6 +193,7 @@ void Application::updateEditorScreen()
 
     mEditor.updateViewPort(mLayoutManager, mLayoutManager.getLayoutInput().lineHeight);
     mEditorViewPort.updateHorizontal(mEditor, mTextLayout, mLayoutManager.getLayoutConfig(), mLayoutManager.getLayoutInput());
+    mEditorViewPort.updateVertical(mEditor, mEditor.getVisibleRows());
     if (mEditor.isSearchActive())
     {
         mSearchViewPort.updateHorizontal(mEditor.getSearch(), mTextLayout, mLayoutManager.getSearchLayout());

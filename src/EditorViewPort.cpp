@@ -11,7 +11,27 @@ void EditorViewport::updateHorizontal(const Editor &editor, const TextLayout &te
     mHorizontal.ensureVisible(cursorPixelX, 20);
 }
 
+void EditorViewport::updateVertical(const Editor &editor, uint32_t visibleRows)
+{
+    mVisibleRows = visibleRows;
+    Cursor cursor = editor.getCursor();
+
+    if (cursor.row < mScrollOffsetY)
+    {
+        mScrollOffsetY = cursor.row;
+    }
+    else if (cursor.row >= mScrollOffsetY + mVisibleRows)
+    {
+        mScrollOffsetY = cursor.row - mVisibleRows + 1;
+    }
+}
+
 int EditorViewport::scrollX() const
 {
     return mHorizontal.offsetX;
+}
+
+uint32_t EditorViewport::scrollY() const
+{
+    return mScrollOffsetY;
 }
