@@ -14,6 +14,7 @@
 #include "SearchView.h"
 #include "TerminalView.h"
 #include "FileBrowserView.h"
+#include "LayoutManager.h"
 
 class Cursor;
 class Editor;
@@ -22,7 +23,7 @@ class FileBrowser;
 class SearchSession;
 class Terminal;
 
-struct EditorLayout
+struct EditorLayout2
 {
     uint16_t marginTop = 20;
     uint16_t marginLeft = 40;
@@ -32,15 +33,6 @@ struct EditorLayout
     uint16_t windowWidth = 0;
     uint16_t windowHeight = 0;
     uint16_t totalWindowHeight = 0;
-};
-
-struct TerminalLayout
-{
-    uint32_t windowHeight = 0;
-    uint32_t windowX = 0;
-    uint32_t windowY = 0;
-    uint32_t marginLeft = 10;
-    uint32_t marginTop = 10;
 };
 
 struct SearchOverlayLayout
@@ -88,7 +80,7 @@ public:
 
     void clear();
     int getLineHeight() const;
-    const EditorLayout &getEditorLayout() const;
+    const EditorLayout2 &getEditorLayout() const;
     const SearchOverlayLayout &getSearchLayout() const;
     const TerminalLayout &getTerminalLayout() const;
     const Theme &getTheme() const;
@@ -101,6 +93,7 @@ public:
     void drawText(const std::string &text, int x, int y, SDL_Color color);
     void drawTextTokenized(const std::string &text, uint32_t y, const std::vector<Token> &tokens);
     void drawRect(int x, int y, int w, int h, SDL_Color color);
+    void drawRect(Rect rect, SDL_Color color);
     void pushClipRect(const SDL_Rect &rect);
     void clearClipRect();
     void renderEditor(const Editor &editor);
@@ -136,9 +129,9 @@ private:
     CursorBlinker mCursorBlinker;
     Theme mTheme;
     LexerTheme mLexerTheme;
-    EditorLayout mLayout;
+    LayoutManager mLayoutManager;
+    EditorLayout2 mLayout;
     SearchOverlayLayout mSearchLayout;
-    TerminalLayout mTerminalLayout;
     int mScrollOffsetX = 0;
     int mScrollOffsetXSearch = 0;
 };

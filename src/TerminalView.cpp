@@ -14,7 +14,7 @@ void TerminalView::renderTerminal(Renderer &renderer, const Editor &editor)
     const auto &layout = renderer.getTerminalLayout();
     const auto &editorLayout = renderer.getEditorLayout();
     const auto &theme = renderer.getTheme();
-    renderer.drawRect(layout.windowX, layout.windowY, editorLayout.windowWidth, layout.windowHeight, theme.terminalBackground);
+    renderer.drawRect(layout.viewport, theme.terminalBackground);
     const Terminal &terminal = editor.getTerminalConst();
     renderTerminalCursor(renderer, terminal);
     const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();
@@ -27,10 +27,10 @@ void TerminalView::renderTerminal(Renderer &renderer, const Editor &editor)
     uint32_t last = std::min(visRows, (uint32_t)output.size());
     for (uint32_t i = 0; i < last; ++i)
     {
-        renderer.drawText(output[first + i], layout.windowX + layout.marginLeft, editorLayout.totalWindowHeight - layout.marginTop - (i + 2) * editorLayout.lineHeight);
+        renderer.drawText(output[first + i], layout.viewport.x + layout.marginLeft, editorLayout.totalWindowHeight - layout.marginTop - (i + 2) * editorLayout.lineHeight);
     }
 
-    renderer.drawText(text, layout.windowX + layout.marginLeft, editorLayout.totalWindowHeight - layout.marginTop - editorLayout.lineHeight);
+    renderer.drawText(text, layout.viewport.x + layout.marginLeft, editorLayout.totalWindowHeight - layout.marginTop - editorLayout.lineHeight);
 }
 
 void TerminalView::renderTerminalCursor(Renderer &renderer, const Terminal &terminal)
@@ -41,5 +41,5 @@ void TerminalView::renderTerminalCursor(Renderer &renderer, const Terminal &term
     const auto &textLayout = renderer.getTextLayout();
     const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();
     uint32_t cursorTextWidth = textLayout.width(text.substr(0, text.size() + terminal.getCursor() - terminal.getInput().size()));
-    renderer.drawRect(layout.windowX + layout.marginLeft + cursorTextWidth, editorLayout.totalWindowHeight - layout.marginTop - editorLayout.lineHeight, 12, editorLayout.lineHeight, theme.terminalCursor);
+    renderer.drawRect(layout.viewport.x + layout.marginLeft + cursorTextWidth, editorLayout.totalWindowHeight - layout.marginTop - editorLayout.lineHeight, 12, editorLayout.lineHeight, theme.terminalCursor);
 }

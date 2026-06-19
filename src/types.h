@@ -184,3 +184,13 @@ struct CommandResult
     bool success;
     std::string message;
 };
+
+struct Rect
+{
+    uint32_t x = 0;
+    uint32_t y = 0;
+    uint32_t w = 0;
+    uint32_t h = 0;
+    Rect():x(0), y(0), w(0), h(0){}
+    Rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h) : x(x), y(y), w(w), h(h) {}
+};

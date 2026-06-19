@@ -27,6 +27,8 @@ add_executable(papyrus
     src/CursorBlinker.cpp
     src/TextLayout.h
     src/TextLayout.cpp
+    src/LayoutManager.h
+    src/LayoutManager.cpp
     src/EditorView.h
     src/EditorView.cpp
     src/SearchView.h

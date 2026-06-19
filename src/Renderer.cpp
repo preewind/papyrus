@@ -34,9 +34,7 @@ Renderer::Renderer(SDL_Window *window)
     SDL_GetWindowSize(window, (int *)&mLayout.windowWidth, (int *)&mLayout.totalWindowHeight);
     mLayout.windowHeight = mLayout.totalWindowHeight;
 
-    mTerminalLayout.windowHeight = 0.25 * mLayout.totalWindowHeight;
-    mTerminalLayout.windowX = 0;
-    mTerminalLayout.windowY = mLayout.totalWindowHeight - mTerminalLayout.windowHeight;
+    mLayoutManager.recalculate(mLayout.windowWidth, mLayout.totalWindowHeight, mLayout.lineHeight, false);
 
     // search layout
     mSearchLayout.queryX = mLayout.marginLeft + mLayout.windowWidth / 2;
@@ -68,7 +66,7 @@ int Renderer::getLineHeight() const
     return TTF_GetFontHeight(mFont);
 }
 
-const EditorLayout &Renderer::getEditorLayout() const
+const EditorLayout2 &Renderer::getEditorLayout() const
 {
     return mLayout;
 }
@@ -80,7 +78,7 @@ const SearchOverlayLayout &Renderer::getSearchLayout() const
 
 const TerminalLayout &Renderer::getTerminalLayout() const
 {
-    return mTerminalLayout;
+    return mLayoutManager.getTerminalLayout();
 }
 
 const Theme &Renderer::getTheme() const
@@ -192,6 +190,11 @@ void Renderer::drawRect(int x, int y, int w, int h, SDL_Color color)
     CSF(SDL_RenderFillRect(mRenderer, &rect));
 }
 
+void Renderer::drawRect(Rect rect, SDL_Color color)
+{
+    drawRect(rect.x, rect.y, rect.w, rect.h, color);
+}
+
 void Renderer::pushClipRect(const SDL_Rect &rect)
 {
     CSF(SDL_SetRenderClipRect(mRenderer, &rect));
@@ -229,7 +232,8 @@ void Renderer::updateEditor(Editor &editor)
     if (editor.isTerminalVisible())
     {
         mLayout.windowHeight = mLayout.totalWindowHeight * 0.75;
-        editor.getTerminal().setVisibleRows(((mTerminalLayout.windowHeight - mTerminalLayout.marginTop) / mLayout.lineHeight) - 1);
+        mLayoutManager.recalculate(mLayout.windowWidth, mLayout.totalWindowHeight, mLayout.lineHeight, false);
+        editor.getTerminal().setVisibleRows(((getTerminalLayout().viewport.h - getTerminalLayout().marginTop) / mLayout.lineHeight) - 1);
         editor.adjustCursor((mLayout.windowHeight - mLayout.marginTop) / mLayout.lineHeight);
     }
     else
