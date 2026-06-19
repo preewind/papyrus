@@ -5,7 +5,6 @@
 #include <vector>
 
 #include <SDL3/SDL.h>
-#include <SDL3_ttf/SDL_ttf.h>
 
 #include "types.h"
 #include "theme.h"
@@ -21,6 +20,7 @@ class FileBrowser;
 class SearchSession;
 class Terminal;
 class IRenderBackend;
+class ITextMeasurer;
 
 
 class Renderer
@@ -37,7 +37,7 @@ public:
     const SDL_Properties &getSDL_Properties() const;
     const Theme &getTheme() const;
 
-    TTF_Font *getFont() const;
+    const ITextMeasurer &getTextMeasurer() const;
     const CursorBlinker &getCursorBlinker() const;
     RenderColor getColorFromTokenType(const Token &token);
     void drawText(const std::string &text, int x, int y);
@@ -64,7 +64,6 @@ public:
 
 private:
     std::unique_ptr<IRenderBackend> mBackend;
-    TTF_Font *mFont;
     TextLayout mTextLayout;
     FileBrowserView mFileBrowserView;
     uint8_t mFontSize = 20;

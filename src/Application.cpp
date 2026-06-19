@@ -28,7 +28,7 @@ Application::Application(int argc, char *argv[])
 
     mRenderer = std::make_unique<Renderer>(mWindow);
 
-    mTextLayout.setFont(mRenderer->getFont());
+    mTextLayout.setMeasurer(&mRenderer->getTextMeasurer());
 
     if (!filename.empty())
     {

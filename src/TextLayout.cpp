@@ -1,9 +1,8 @@
 #include "TextLayout.h"
-#include "util.h"
 
-void TextLayout::setFont(TTF_Font *font)
+void TextLayout::setMeasurer(const ITextMeasurer *measurer)
 {
-    mFont = font;
+    mMeasurer = measurer;
 }
 
 uint32_t TextLayout::width(const std::string &text) const
@@ -12,12 +11,11 @@ uint32_t TextLayout::width(const std::string &text) const
     {
         return 0;
     }
-    int w = 0;
-    int h = 0;
-
-    CSF(TTF_GetStringSize(mFont, text.c_str(), 0, &w, &h));
-
-    return w;
+    if (!mMeasurer)
+    {
+        return 0;
+    }
+    return mMeasurer->width(text);
 }
 
 std::string TextLayout::expandTabs(std::string_view text) const

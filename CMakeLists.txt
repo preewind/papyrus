@@ -24,6 +24,7 @@ add_executable(papyrus
     src/Renderer.cpp
     src/Renderer.h
     src/RenderTypes.h
+    src/ITextMeasurer.h
     src/IRenderBackend.h
     src/SDLRenderBackend.h
     src/SDLRenderBackend.cpp

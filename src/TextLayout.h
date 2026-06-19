@@ -2,19 +2,19 @@
 
 #include <string>
 
-#include <SDL3_ttf/SDL_ttf.h>
+#include "ITextMeasurer.h"
 
 class TextLayout
 {
 public:
     TextLayout() = default;
 
-    void setFont(TTF_Font *font);
+    void setMeasurer(const ITextMeasurer *measurer);
     uint32_t width(const std::string &text) const;
     std::string expandTabs(std::string_view text) const;
     uint32_t virtualColumn(std::string_view line, uint32_t rawCol);
     int columnToPixel(std::string_view line, uint32_t col) const;
 
 private:
-    TTF_Font *mFont;
+    const ITextMeasurer *mMeasurer = nullptr;
 };

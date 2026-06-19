@@ -6,6 +6,7 @@
 
 #include "Renderer.h"
 #include "IRenderBackend.h"
+#include "ITextMeasurer.h"
 #include "SDLRenderBackend.h"
 #include "Editor.h"
 #include "FileBrowser.h"
@@ -16,11 +17,9 @@
 Renderer::Renderer(SDL_Window *window)
 {
     auto backend = std::make_unique<SDLRenderBackend>(window, "assets/JetBrainsMono-Regular.ttf", mFontSize);
-    mFont = backend->font();
     mBackend = std::move(backend);
 
-    mTextLayout.setFont(mFont);
-    // editor layout
+    mTextLayout.setMeasurer(mBackend.get());
     mLayout.lineHeight = getLineHeight();
     SDL_GetWindowSize(window, (int *)&mLayout.totalWindowWidth, (int *)&mLayout.totalWindowHeight);
 }
@@ -49,9 +48,9 @@ const Theme &Renderer::getTheme() const
     return mTheme;
 }
 
-TTF_Font *Renderer::getFont() const
+const ITextMeasurer &Renderer::getTextMeasurer() const
 {
-    return mFont;
+    return *mBackend;
 }
 
 const CursorBlinker &Renderer::getCursorBlinker() const

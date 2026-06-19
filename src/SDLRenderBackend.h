@@ -27,11 +27,11 @@ public:
 
     void drawText(const std::string &text, int x, int y, const RenderColor &color) override;
 
+    uint32_t width(std::string_view text) const override;
     int lineHeight() const override;
     void setFontSize(uint8_t size) override;
 
     SDL_Renderer *nativeRenderer() const;
-    TTF_Font *font() const;
 
 private:
     SDL_Renderer *mRenderer = nullptr;

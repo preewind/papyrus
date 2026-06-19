@@ -4,8 +4,9 @@
 #include <string>
 
 #include "RenderTypes.h"
+#include "ITextMeasurer.h"
 
-class IRenderBackend
+class IRenderBackend : public ITextMeasurer
 {
 public:
     virtual ~IRenderBackend() = default;

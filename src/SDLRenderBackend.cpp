@@ -113,6 +113,19 @@ void SDLRenderBackend::drawText(const std::string &text, int x, int y, const Ren
     SDL_DestroySurface(surface);
 }
 
+uint32_t SDLRenderBackend::width(std::string_view text) const
+{
+    if (text.empty())
+    {
+        return 0;
+    }
+
+    int w = 0;
+    int h = 0;
+    CSF(TTF_GetStringSize(mFont, text.data(), text.size(), &w, &h));
+    return static_cast<uint32_t>(w);
+}
+
 int SDLRenderBackend::lineHeight() const
 {
     return TTF_GetFontHeight(mFont);
@@ -126,9 +139,4 @@ void SDLRenderBackend::setFontSize(uint8_t size)
 SDL_Renderer *SDLRenderBackend::nativeRenderer() const
 {
     return mRenderer;
-}
-
-TTF_Font *SDLRenderBackend::font() const
-{
-    return mFont;
 }
