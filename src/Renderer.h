@@ -32,7 +32,6 @@ public:
 
     void clear();
     int getLineHeight() const;
-    const LayoutConfig &getLayoutConfig() const;
     const SDL_Properties &getSDL_Properties() const;
     const Theme &getTheme() const;
 
@@ -41,26 +40,24 @@ public:
     SDL_Color getColorFromTokenType(const Token &token);
     void drawText(const std::string &text, int x, int y);
     void drawText(const std::string &text, int x, int y, SDL_Color color);
-    void drawTextTokenized(const std::string &text, uint32_t y, const std::vector<Token> &tokens, uint32_t scrollOffsetX);
+    void drawTextTokenized(const std::string &text, uint32_t y, const std::vector<Token> &tokens, uint32_t scrollOffsetX, const LayoutConfig &layoutConfig);
     void drawRect(int x, int y, int w, int h, SDL_Color color);
     void drawRect(Rect rect, SDL_Color color);
     void pushClipRect(const SDL_Rect &rect);
     void clearClipRect();
-    void renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY, uint32_t scrollOffsetX);
+    void renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY, uint32_t scrollOffsetX, const LayoutConfig &layoutConfig);
     void updateEditor(Editor &editor);
-    void updateFileBrowser(FileBrowser &browser);
-    const std::string fitTextToWidthFile(const std::string &text, std::string &extension);
+    void updateFileBrowser(FileBrowser &browser, const LayoutConfig &layoutConfig);
+    const std::string fitTextToWidthFile(const std::string &text, std::string &extension, const LayoutConfig &layoutConfig);
     void present();
 
     void onResize(uint32_t w, uint32_t h);
-
-    void setLayoutManager(const LayoutManager &layoutManager);
 
     void setFontSize();
     void handlePlus(SDL_Keymod mod);
     void handleMinus(SDL_Keymod mod);
 
-    int screenY(uint32_t row, uint32_t scrollOffset) const;
+    int screenY(uint32_t row, uint32_t scrollOffset, uint32_t editorMarginTop) const;
     int screenYBrowser(uint32_t row, uint32_t scrollOffset, uint32_t margin) const;
 
 private:
@@ -72,6 +69,5 @@ private:
     CursorBlinker mCursorBlinker;
     Theme mTheme;
     LexerTheme mLexerTheme;
-    LayoutManager mLayoutManager;
     SDL_Properties mLayout;
 };

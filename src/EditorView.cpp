@@ -7,7 +7,7 @@ void EditorView::render(Renderer &renderer, const Editor &editor, const EditorVi
 {
     if (editor.isSearchActive())
     {
-        renderSearchMatches(renderer, editor, viewport);
+        renderSearchMatches(renderer, editor, viewport, layoutConfig);
     }
     renderLineNumbers(renderer, editor.getLineCount(), editor.getScrollOffsetY(), editor.getVisibleRows(), textLayout, layoutConfig);
     SDL_Rect clipRect{
@@ -18,7 +18,7 @@ void EditorView::render(Renderer &renderer, const Editor &editor, const EditorVi
     renderer.pushClipRect(clipRect);
     if (editor.getSelectionActive())
     {
-        renderSelection(renderer, editor, viewport);
+        renderSelection(renderer, editor, viewport, layoutConfig);
     }
 
     renderCursor(renderer, editor, viewport, textLayout, layoutConfig);
@@ -35,11 +35,11 @@ void EditorView::renderLineNumbers(Renderer &renderer, uint32_t numLines, uint32
     for (uint32_t i = first; i < last; ++i)
     {
 
-        renderer.drawText(std::to_string(i + 1), layoutConfig.lineNumberWidth / 2 - textLayout.width(std::to_string(i + 1)) / 2, renderer.screenY(i, scrollOffsetY), theme.lineNumbers);
+        renderer.drawText(std::to_string(i + 1), layoutConfig.lineNumberWidth / 2 - textLayout.width(std::to_string(i + 1)) / 2, renderer.screenY(i, scrollOffsetY, layoutConfig.editorMarginTop), theme.lineNumbers);
     }
 }
 
-void EditorView::renderSelection(Renderer &renderer, const Editor &editor, const EditorViewport& viewport)
+void EditorView::renderSelection(Renderer &renderer, const Editor &editor, const EditorViewport& viewport, const LayoutConfig &layoutConfig)
 {
     Selection selection = editor.getSelection().normalized();
 
@@ -83,7 +83,7 @@ void EditorView::renderSelection(Renderer &renderer, const Editor &editor, const
             endCol = end.col;
         }
         const std::string &line = editor.getLineString(row);
-        renderer.renderHighlightedRange(line, row, beginCol, endCol - beginCol, editor.getScrollOffsetY(), viewport.scrollX());
+        renderer.renderHighlightedRange(line, row, beginCol, endCol - beginCol, editor.getScrollOffsetY(), viewport.scrollX(), layoutConfig);
     }
 }
 
@@ -97,7 +97,7 @@ void EditorView::renderCursor(Renderer &renderer, const Editor &editor, const Ed
     if (renderer.getCursorBlinker().visible())
     {
         int x = layoutConfig.editorMarginLeft + textLayout.columnToPixel(text, cursor.col) - viewport.scrollX();
-        int y = renderer.screenY(cursor.row, editor.getScrollOffsetY());
+        int y = renderer.screenY(cursor.row, editor.getScrollOffsetY(), layoutConfig.editorMarginTop);
 
         renderer.drawRect(x, y, 2, layout.lineHeight, theme.cursor);
     }
@@ -116,16 +116,16 @@ void EditorView::renderText(Renderer &renderer, const Editor &editor, const Edit
     {
         if (tokens.size() > 0)
         {
-            renderer.drawTextTokenized(text[i], renderer.screenY(i, first), tokens[i], viewport.scrollX());
+            renderer.drawTextTokenized(text[i], renderer.screenY(i, first, layoutConfig.editorMarginTop), tokens[i], viewport.scrollX(), layoutConfig);
         }
         else
         {
-            renderer.drawText(textLayout.expandTabs(text[i]), layoutConfig.editorMarginLeft - viewport.scrollX(), renderer.screenY(i, first));
+            renderer.drawText(textLayout.expandTabs(text[i]), layoutConfig.editorMarginLeft - viewport.scrollX(), renderer.screenY(i, first, layoutConfig.editorMarginTop));
         }
     }
 }
 
-void EditorView::renderSearchMatches(Renderer &renderer, const Editor &editor, const EditorViewport& viewport)
+void EditorView::renderSearchMatches(Renderer &renderer, const Editor &editor, const EditorViewport& viewport, const LayoutConfig &layoutConfig)
 {
     if (editor.getSearch().getMatches().size() == 0)
     {
@@ -134,6 +134,6 @@ void EditorView::renderSearchMatches(Renderer &renderer, const Editor &editor, c
     for (SearchMatch &match : editor.getSearch().getMatches())
     {
         const std::string &line = editor.getLineString(match.row);
-        renderer.renderHighlightedRange(line, match.row, match.col, match.length, editor.getScrollOffsetY(), viewport.scrollX());
+        renderer.renderHighlightedRange(line, match.row, match.col, match.length, editor.getScrollOffsetY(), viewport.scrollX(), layoutConfig);
     }
 }

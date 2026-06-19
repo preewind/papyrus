@@ -48,19 +48,9 @@ void Renderer::clear()
     CSF(SDL_RenderClear(mRenderer));
 }
 
-void Renderer::setLayoutManager(const LayoutManager &layoutManager)
-{
-    mLayoutManager = layoutManager;
-}
-
 int Renderer::getLineHeight() const
 {
     return TTF_GetFontHeight(mFont);
-}
-
-const LayoutConfig &Renderer::getLayoutConfig() const
-{
-    return mLayoutManager.getLayoutConfig();
 }
 
 const SDL_Properties &Renderer::getSDL_Properties() const
@@ -141,7 +131,7 @@ void Renderer::drawText(const std::string &text, int x, int y, SDL_Color color)
     SDL_DestroySurface(surface);
 }
 
-void Renderer::drawTextTokenized(const std::string &text, uint32_t y, const std::vector<Token> &tokens, uint32_t scrollOffsetX)
+void Renderer::drawTextTokenized(const std::string &text, uint32_t y, const std::vector<Token> &tokens, uint32_t scrollOffsetX, const LayoutConfig &layoutConfig)
 {
     std::string expandedLine = mTextLayout.expandTabs(text);
     for (const Token &token : tokens)
@@ -149,7 +139,7 @@ void Renderer::drawTextTokenized(const std::string &text, uint32_t y, const std:
         uint32_t vCol = mTextLayout.virtualColumn(text, token.col);
         const std::string &subs = expandedLine.substr(vCol, token.length);
         int xOffset = mTextLayout.width(std::string(vCol, ' '));
-        int renderX = getLayoutConfig().editorMarginLeft - scrollOffsetX + xOffset;
+        int renderX = layoutConfig.editorMarginLeft - scrollOffsetX + xOffset;
         drawText(subs, renderX, y, getColorFromTokenType(token));
     }
 }
@@ -182,12 +172,12 @@ void Renderer::clearClipRect()
     CSF(SDL_SetRenderClipRect(mRenderer, nullptr));
 }
 
-void Renderer::renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY, uint32_t scrollOffsetX)
+void Renderer::renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY, uint32_t scrollOffsetX, const LayoutConfig &layoutConfig)
 {
 
     std::string selectedText = mTextLayout.expandTabs(text.substr(col, length));
-    int x = getLayoutConfig().editorMarginLeft + mTextLayout.columnToPixel(text, col) - scrollOffsetX;
-    int y = screenY(row, scrollOffsetY);
+    int x = layoutConfig.editorMarginLeft + mTextLayout.columnToPixel(text, col) - scrollOffsetX;
+    int y = screenY(row, scrollOffsetY, layoutConfig.editorMarginTop);
     int w = mTextLayout.width(selectedText);
     int h = mLayout.lineHeight;
     drawRect(x, y, w, h, mTheme.selection);
@@ -203,19 +193,19 @@ void Renderer::updateEditor(Editor &editor)
     mCursorBlinker.update();
 }
 
-void Renderer::updateFileBrowser(FileBrowser &browser)
+void Renderer::updateFileBrowser(FileBrowser &browser, const LayoutConfig &layoutConfig)
 {
     clear();
-    mFileBrowserView.render(*this, browser, mTextLayout, mLayoutManager.getLayoutConfig(), getSDL_Properties());
+    mFileBrowserView.render(*this, browser, mTextLayout, layoutConfig, getSDL_Properties());
     present();
 }
 
 /*
     Could probably be optimized, but will change when renderer changes anyways, so good luck future me :)
 */
-const std::string Renderer::fitTextToWidthFile(const std::string &text, std::string &extension)
+const std::string Renderer::fitTextToWidthFile(const std::string &text, std::string &extension, const LayoutConfig &layoutConfig)
 {
-    uint32_t visibleWidth = mLayout.totalWindowWidth - getLayoutConfig().editorMarginLeft - mTextLayout.width("...") - mTextLayout.width(extension);
+    uint32_t visibleWidth = mLayout.totalWindowWidth - layoutConfig.editorMarginLeft - mTextLayout.width("...") - mTextLayout.width(extension);
 
     if (mTextLayout.width(text) - mTextLayout.width(extension) <= visibleWidth)
     {
@@ -283,9 +273,9 @@ void Renderer::handleMinus(SDL_Keymod mod)
     }
 }
 
-int Renderer::screenY(uint32_t row, uint32_t scrollOffset) const
+int Renderer::screenY(uint32_t row, uint32_t scrollOffset, uint32_t editorMarginTop) const
 {
-    return getLayoutConfig().editorMarginTop + (row - scrollOffset) * mLayout.lineHeight;
+    return editorMarginTop + (row - scrollOffset) * mLayout.lineHeight;
 }
 
 int Renderer::screenYBrowser(uint32_t row, uint32_t scrollOffset, uint32_t margin) const

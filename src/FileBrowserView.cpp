@@ -43,7 +43,7 @@ void FileBrowserView::renderFileBrowser(Renderer &renderer, FileBrowser &browser
         }
         std::string extension = browser.getFileExtension(file);
         uint32_t first = browser.getScrollOffset();
-        file = renderer.fitTextToWidthFile(file, extension);
+        file = renderer.fitTextToWidthFile(file, extension, layoutConfig);
         renderer.drawText(file, layoutConfig.editorMarginLeft, renderer.screenYBrowser(i, first, fileListTopMargin), color);
     }
 }

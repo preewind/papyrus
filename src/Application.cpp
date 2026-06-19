@@ -124,8 +124,6 @@ void Application::update()
         mRenderer->clear();
         mEditor.update();
         mLayoutManager.update(mRenderer->getSDL_Properties(), mEditor.isTerminalVisible());
-        
-        mRenderer->setLayoutManager(mLayoutManager);
 
         mEditor.updateViewPort(mLayoutManager, mLayoutManager.getLayoutInput().lineHeight);
         mEditorViewPort.updateHorizontal(mEditor, mTextLayout, mLayoutManager.getLayoutConfig(), mLayoutManager.getLayoutInput());
@@ -141,7 +139,8 @@ void Application::update()
         mRenderer->present();
         break;
     case Screen::FileBrowser:
-        mRenderer->updateFileBrowser(mFileBrowser);
+        mLayoutManager.update(mRenderer->getSDL_Properties(), false);
+        mRenderer->updateFileBrowser(mFileBrowser, mLayoutManager.getLayoutConfig());
         // requests
         if (auto file = mFileBrowser.consumeOpenRequest())
         {
