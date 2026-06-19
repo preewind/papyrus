@@ -129,9 +129,13 @@ void Application::update()
 
         mEditor.updateViewPort(mLayoutManager, mLayoutManager.getLayoutInput().lineHeight);
         mEditorViewPort.updateHorizontal(mEditor, mTextLayout, mLayoutManager.getLayoutConfig(), mLayoutManager.getLayoutInput());
+        if (mEditor.isSearchActive())
+        {
+            mSearchViewPort.updateHorizontal(mEditor.getSearch(), mTextLayout, mLayoutManager.getSearchLayout());
+        }
 
         mEditorView.render(*mRenderer, mEditor, mEditorViewPort, mTextLayout, mLayoutManager.getLayoutConfig(), mLayoutManager.getEditorLayout());
-        mSearchView.render(*mRenderer, mEditor, mTextLayout, mLayoutManager.getSearchLayout());
+        mSearchView.render(*mRenderer, mEditor, mTextLayout, mLayoutManager.getSearchLayout(), mSearchViewPort);
         mTerminalView.render(*mRenderer, mEditor, mTextLayout, mLayoutManager.getTerminalLayout(), mRenderer->getSDL_Properties());
         mRenderer->updateEditor(mEditor);
         mRenderer->present();

@@ -2,16 +2,16 @@
 
 #include "Renderer.h"
 
-void SearchView::render(Renderer &renderer, const Editor &editor, const TextLayout &textLayout, const SearchLayout &searchLayout)
+void SearchView::render(Renderer &renderer, const Editor &editor, const TextLayout &textLayout, const SearchLayout &searchLayout, const SearchViewport &viewport)
 {
     if (editor.isSearchActive())
     {
-        renderSearchOverlay(renderer, editor.getSearch(), textLayout, searchLayout);
-        renderSearchCursor(renderer, editor.getSearch(), textLayout, searchLayout);
+        renderSearchOverlay(renderer, editor.getSearch(), textLayout, searchLayout, viewport);
+        renderSearchCursor(renderer, editor.getSearch(), textLayout, searchLayout, viewport);
     }
 }
 
-void SearchView::renderSearchOverlay(Renderer &renderer, const SearchSession &session, const TextLayout &textLayout, const SearchLayout &searchLayout)
+void SearchView::renderSearchOverlay(Renderer &renderer, const SearchSession &session, const TextLayout &textLayout, const SearchLayout &searchLayout, const SearchViewport &viewport)
 {
     const auto &theme = renderer.getTheme();
     uint32_t currMatch = session.hasMatches() ? session.getCurrentMatchIndex() + 1 : 0;
@@ -29,19 +29,19 @@ void SearchView::renderSearchOverlay(Renderer &renderer, const SearchSession &se
     renderer.pushClipRect(searchClipRect);
 
     const std::string &query = session.getQuery();
-    renderer.drawText(query, searchLayout.textX - renderer.getScrollOffsetXSearch(), searchLayout.textY);
+    renderer.drawText(query, searchLayout.textX - viewport.scrollX(), searchLayout.textY);
     renderer.clearClipRect();
     renderer.drawText(matchStr, searchLayout.matchBoxTextX, searchLayout.textY);
 }
 
-void SearchView::renderSearchCursor(Renderer &renderer, const SearchSession &session, const TextLayout &textLayout, const SearchLayout &searchLayout)
+void SearchView::renderSearchCursor(Renderer &renderer, const SearchSession &session, const TextLayout &textLayout, const SearchLayout &searchLayout, const SearchViewport &viewport)
 {
     const auto &editorLayout = renderer.getSDL_Properties();
     const auto &theme = renderer.getTheme();
     if (renderer.getCursorBlinker().visible())
     {
         uint32_t cursorTextWidth = textLayout.width(session.getQuery().substr(0, session.getCursor()));
-        int cursorX = searchLayout.queryBox.x + searchLayout.textPadding + cursorTextWidth - renderer.getScrollOffsetXSearch();
+        int cursorX = searchLayout.queryBox.x + searchLayout.textPadding + cursorTextWidth - viewport.scrollX();
         SDL_Rect searchClipRect{
             static_cast<int>(searchLayout.queryBox.x + searchLayout.textPadding),
             static_cast<int>(searchLayout.queryBox.y),

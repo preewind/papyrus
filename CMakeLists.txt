@@ -39,6 +39,9 @@ add_executable(papyrus
     src/FileBrowserView.cpp
     src/EditorViewPort.h
     src/EditorViewPort.cpp
+    src/SearchViewPort.h
+    src/SearchViewPort.cpp
+    src/Viewport.h
     src/Editor.cpp
     src/Editor.h
     src/UndoManager.h

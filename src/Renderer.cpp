@@ -83,11 +83,6 @@ const CursorBlinker &Renderer::getCursorBlinker() const
     return mCursorBlinker;
 }
 
-uint32_t Renderer::getScrollOffsetXSearch() const
-{
-    return mScrollOffsetXSearch;
-}
-
 SDL_Color Renderer::getColorFromTokenType(const Token &token)
 {
     switch (token.type)
@@ -287,16 +282,6 @@ void Renderer::handleMinus(SDL_Keymod mod)
         setFontSize();
     }
 }
-
-/*
-void Renderer::ensureCursorVisibleHorizontallySearch(uint32_t cursor, const std::string &line)
-{
-    int cursorPixelX = mTextLayout.columnToPixel(line, cursor);
-    mSearchScrollPort.visibleWidth = getSearchLayout().queryBox.w - getSearchLayout().textPadding * 2;
-    mSearchScrollPort.ensureVisible(cursorPixelX, 2);
-    mScrollOffsetXSearch = mSearchScrollPort.offsetX;
-}
-*/
 
 int Renderer::screenY(uint32_t row, uint32_t scrollOffset) const
 {

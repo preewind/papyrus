@@ -7,6 +7,7 @@
 #include "FileBrowser.h"
 #include "types.h"
 #include "EditorViewPort.h"
+#include "SearchViewPort.h"
 #include "EditorView.h"
 #include "SearchView.h"
 #include "TerminalView.h"
@@ -30,6 +31,7 @@ private:
     Editor mEditor;
     LayoutManager mLayoutManager;
     EditorViewport mEditorViewPort;
+    SearchViewport mSearchViewPort;
     std::unique_ptr<Renderer> mRenderer;
     TextLayout mTextLayout;
     EditorView mEditorView;

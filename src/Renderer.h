@@ -38,7 +38,6 @@ public:
 
     TTF_Font *getFont() const;
     const CursorBlinker &getCursorBlinker() const;
-    uint32_t getScrollOffsetXSearch() const;
     SDL_Color getColorFromTokenType(const Token &token);
     void drawText(const std::string &text, int x, int y);
     void drawText(const std::string &text, int x, int y, SDL_Color color);
@@ -61,8 +60,6 @@ public:
     void handlePlus(SDL_Keymod mod);
     void handleMinus(SDL_Keymod mod);
 
-    //void ensureCursorVisibleHorizontallySearch(uint32_t cursor, const std::string &line);
-
     int screenY(uint32_t row, uint32_t scrollOffset) const;
     int screenYBrowser(uint32_t row, uint32_t scrollOffset, uint32_t margin) const;
 
@@ -72,11 +69,9 @@ private:
     TextLayout mTextLayout;
     FileBrowserView mFileBrowserView;
     uint8_t mFontSize = 20;
-    //ScrollViewport mSearchScrollPort;
     CursorBlinker mCursorBlinker;
     Theme mTheme;
     LexerTheme mLexerTheme;
     LayoutManager mLayoutManager;
     SDL_Properties mLayout;
-    int mScrollOffsetXSearch = 0;
 };
