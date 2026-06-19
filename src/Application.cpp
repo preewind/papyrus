@@ -1,32 +1,49 @@
 #include "Application.h"
-#include "Argparser.h"
 #include "SDLRenderBackend.h"
+#include "StartupParser.h"
 #include "logger.h"
 #include "util.h"
 
 Application::Application(int argc, char *argv[])
 {
-    ArgParser parser;
-
-    parser.parse(argc, argv);
-    std::string filename = "";
-    Argument filenameArg = Argument(ArgumentType::POSITIONAL, "positional");
-    if (parser.hasArgument(filenameArg))
+    const StartupOptions startup = parseStartupOptions(argc, argv);;
+    if (startup.showHelp)
     {
-        filename = parser.getArgumentValue(filenameArg);
-    }
-    Argument helpArg = Argument(ArgumentType::BOOL_FLAG, "h");
-    if (parser.hasArgument(helpArg))
-    {
-        std::cout << "usage: papyrus [filename] [option] \n"
-                  << "-h: displays this help message \n";
+        printUsage();
+        mRunning = false;
+        mExitCode = startup.exitCode;
+        return;
     }
 
+    if (!startup.valid)
+    {
+        std::cerr << "Error: " << startup.errorMessage << "\n\n";
+        printUsage();
+        mRunning = false;
+        mExitCode = startup.exitCode;
+        return;
+    }
+
+    initializeWindowAndRendering();
+    openInitialFileIfProvided(startup.filename);
+}
+
+void Application::printUsage() const
+{
+    std::cout << startupUsageText();
+}
+
+int Application::exitCode() const
+{
+    return mExitCode;
+}
+
+void Application::initializeWindowAndRendering()
+{
     SDL_Init(SDL_INIT_VIDEO);
-
     mWindow = SDL_CreateWindow("papyrus", 1280, 720, SDL_WINDOW_RESIZABLE);
+    CSP(mWindow);
     CSF(SDL_StartTextInput(mWindow));
-
     int windowWidth = 0;
     int windowHeight = 0;
     SDL_GetWindowSize(mWindow, &windowWidth, &windowHeight);
@@ -35,82 +52,32 @@ Application::Application(int argc, char *argv[])
     mRenderer = std::make_unique<Renderer>(*mRenderBackend, mTheme, static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight));
 
     mTextLayout.setMeasurer(mRenderBackend.get());
+}
 
+void Application::openInitialFileIfProvided(const std::string &filename)
+{
     if (!filename.empty())
     {
         mEditor.loadFile(filename);
-        SDL_SetWindowTitle(mWindow, std::format("papyrus [{}]", filename).c_str());
+        updateWindowTitle(std::format("papyrus [{}]", filename));
     }
 }
 
 Application::~Application()
 {
-    CSF(SDL_StopTextInput(mWindow));
-    SDL_DestroyWindow(mWindow);
-    SDL_Quit();
+    if (mWindow != nullptr)
+    {
+        CSF(SDL_StopTextInput(mWindow));
+        SDL_DestroyWindow(mWindow);
+        SDL_Quit();
+    }
 }
 
 void Application::run()
 {
-
     while (mRunning)
     {
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            if (mCurrentScreen == Screen::Editor)
-            {
-                mEditor.handlePaneKeyHandler(event);
-            }
-            else if (mCurrentScreen == Screen::FileBrowser)
-            {
-                mFileBrowser.handleKey(event);
-            }
-
-            // global key bindings
-            if (event.type == SDL_EVENT_KEY_DOWN)
-            {
-                SDL_Keycode key = event.key.key;
-                SDL_Keymod mod = event.key.mod;
-                switch (key)
-                {
-                case SDLK_F3:
-                    mCurrentScreen = Screen::FileBrowser;
-                    break;
-                case SDLK_F4:
-                    mCurrentScreen = Screen::Editor;
-                    break;
-                case SDLK_T:
-                    mEditor.handleT(mod);
-                    break;
-                case SDLK_PLUS:
-                    if (mod & SDL_KMOD_CTRL)
-                    {
-                        increaseFontSize();
-                    }
-                    break;
-                case SDLK_MINUS:
-                    if (mod & SDL_KMOD_CTRL)
-                    {
-                        decreaseFontSize();
-                    }
-                    break;
-                case SDLK_HASH:
-                    handleHash(event.key.mod);
-                    break;
-                }
-            }
-            if (event.type == SDL_EVENT_WINDOW_RESIZED)
-            {
-                uint32_t w, h;
-                SDL_GetWindowSize(mWindow, (int *)&w, (int *)&h);
-                mRenderer->onResize(w, h);
-            }
-            if (event.type == SDL_EVENT_QUIT)
-            {
-                mRunning = false;
-            }
-        }
+        processEvents();
         update();
     }
 }
@@ -120,62 +87,149 @@ void Application::update()
     switch (mCurrentScreen)
     {
     case Screen::Editor:
-    {
-        if (auto request = mEditor.consumeRequest())
-        {
-            CommandRequest req = *request;
-            switch (req.type)
-            {
-            case CommandRequestType::Quit:
-                mRunning = false;
-                break;
-
-            default:
-                break;
-            }
-        }
-        mRenderer->clear();
-        mEditor.update();
-        if (mEditor.consumeActivity())
-        {
-            mCursorBlinker.reset();
-        }
-        mCursorBlinker.update();
-        mLayoutManager.update(mRenderer->getSDL_Properties(), mEditor.isTerminalVisible());
-
-        mEditor.updateViewPort(mLayoutManager, mLayoutManager.getLayoutInput().lineHeight);
-        mEditorViewPort.updateHorizontal(mEditor, mTextLayout, mLayoutManager.getLayoutConfig(), mLayoutManager.getLayoutInput());
-        if (mEditor.isSearchActive())
-        {
-            mSearchViewPort.updateHorizontal(mEditor.getSearch(), mTextLayout, mLayoutManager.getSearchLayout());
-        }
-
-        bool cursorVisible = mCursorBlinker.visible();
-        mEditorView.render(*mRenderer, mEditor, mEditorViewPort, mTextLayout, mLayoutManager.getLayoutConfig(), mLayoutManager.getEditorLayout(), cursorVisible);
-        mSearchView.render(*mRenderer, mEditor, mTextLayout, mLayoutManager.getSearchLayout(), mSearchViewPort, cursorVisible);
-        mTerminalView.render(*mRenderer, mEditor, mTextLayout, mLayoutManager.getTerminalLayout(), mRenderer->getSDL_Properties());
-        mRenderer->present();
+        updateEditorScreen();
         break;
-    }
     case Screen::FileBrowser:
-    {
-        mLayoutManager.update(mRenderer->getSDL_Properties(), false);
-        mRenderer->clear();
-        mFileBrowserView.render(*mRenderer, mFileBrowser, mTextLayout, mLayoutManager.getLayoutConfig(), mRenderer->getSDL_Properties());
-        mRenderer->present();
-        // requests
-        if (auto file = mFileBrowser.consumeOpenRequest())
-        {
-            mEditor.loadFile(*file);
-            SDL_SetWindowTitle(mWindow, std::format("papyrus [{}]", file->filename().string()).c_str());
-            mCurrentScreen = Screen::Editor;
-        }
+        updateFileBrowserScreen();
         break;
-    }
     default:
         LOG_ERROR() << "Unknown Screen!";
         break;
     }
+}
+
+void Application::processEvents()
+{
+    SDL_Event event;
+    while (SDL_PollEvent(&event))
+    {
+        handleEvent(event);
+    }
+}
+
+void Application::handleEvent(const SDL_Event &event)
+{
+    if (mCurrentScreen == Screen::Editor)
+    {
+        mEditor.handlePaneKeyHandler(event);
+    }
+    else if (mCurrentScreen == Screen::FileBrowser)
+    {
+        mFileBrowser.handleKey(event);
+    }
+
+    if (event.type == SDL_EVENT_KEY_DOWN)
+    {
+        handleGlobalKeyDown(event.key);
+    }
+    else if (event.type == SDL_EVENT_WINDOW_RESIZED)
+    {
+        handleWindowResized();
+    }
+    else if (event.type == SDL_EVENT_QUIT)
+    {
+        mRunning = false;
+    }
+}
+
+void Application::handleGlobalKeyDown(const SDL_KeyboardEvent &keyEvent)
+{
+    const SDL_Keycode key = keyEvent.key;
+    const SDL_Keymod mod = keyEvent.mod;
+
+    switch (key)
+    {
+    case SDLK_F3:
+        mCurrentScreen = Screen::FileBrowser;
+        break;
+    case SDLK_F4:
+        mCurrentScreen = Screen::Editor;
+        break;
+    case SDLK_T:
+        mEditor.handleT(mod);
+        break;
+    case SDLK_PLUS:
+        if (mod & SDL_KMOD_CTRL)
+        {
+            increaseFontSize();
+        }
+        break;
+    case SDLK_MINUS:
+        if (mod & SDL_KMOD_CTRL)
+        {
+            decreaseFontSize();
+        }
+        break;
+    case SDLK_HASH:
+        handleHash(mod);
+        break;
+    }
+}
+
+void Application::handleWindowResized()
+{
+    int width = 0;
+    int height = 0;
+    SDL_GetWindowSize(mWindow, &width, &height);
+    mRenderer->onResize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+}
+
+void Application::updateEditorScreen()
+{
+    if (auto request = mEditor.consumeRequest())
+    {
+        const CommandRequest req = *request;
+        switch (req.type)
+        {
+        case CommandRequestType::Quit:
+            mRunning = false;
+            break;
+        default:
+            break;
+        }
+    }
+
+    mRenderer->clear();
+    mEditor.update();
+    if (mEditor.consumeActivity())
+    {
+        mCursorBlinker.reset();
+    }
+    mCursorBlinker.update();
+    mLayoutManager.update(mRenderer->getSDL_Properties(), mEditor.isTerminalVisible());
+
+    mEditor.updateViewPort(mLayoutManager, mLayoutManager.getLayoutInput().lineHeight);
+    mEditorViewPort.updateHorizontal(mEditor, mTextLayout, mLayoutManager.getLayoutConfig(), mLayoutManager.getLayoutInput());
+    if (mEditor.isSearchActive())
+    {
+        mSearchViewPort.updateHorizontal(mEditor.getSearch(), mTextLayout, mLayoutManager.getSearchLayout());
+    }
+
+    const bool cursorVisible = mCursorBlinker.visible();
+    mEditorView.render(*mRenderer, mEditor, mEditorViewPort, mTextLayout, mLayoutManager.getLayoutConfig(), mLayoutManager.getEditorLayout(), cursorVisible);
+    mSearchView.render(*mRenderer, mEditor, mTextLayout, mLayoutManager.getSearchLayout(), mSearchViewPort, cursorVisible);
+    mTerminalView.render(*mRenderer, mEditor, mTextLayout, mLayoutManager.getTerminalLayout(), mRenderer->getSDL_Properties());
+    mRenderer->present();
+}
+
+void Application::updateFileBrowserScreen()
+{
+    mLayoutManager.update(mRenderer->getSDL_Properties(), false);
+    mRenderer->clear();
+    mFileBrowserView.render(*mRenderer, mFileBrowser, mTextLayout, mLayoutManager.getLayoutConfig(), mRenderer->getSDL_Properties());
+    mRenderer->present();
+
+    if (auto file = mFileBrowser.consumeOpenRequest())
+    {
+        mEditor.loadFile(*file);
+        updateWindowTitle(std::format("papyrus [{}]", file->filename().string()));
+        mCurrentScreen = Screen::Editor;
+    }
+}
+
+void Application::updateWindowTitle(const std::string &title)
+{
+    SDL_SetWindowTitle(mWindow, title.c_str());
 }
 
 void Application::handleHash(SDL_Keymod mod)

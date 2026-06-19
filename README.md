@@ -11,6 +11,56 @@ The idea here is to use as few libraries as possible and write everything I need
 - SDL3
 - SDL-ttf
 
+# Usage
+
+## Synopsis
+
+```bash
+papyrus [filename] [options]
+```
+
+## Description
+
+`papyrus` starts the editor UI and optionally opens a file at startup.
+
+## Arguments
+
+| Name | Type | Required | Description |
+|---|---|---|---|
+| `filename` | Positional | No | Path to a file to open on launch. |
+
+## Options
+
+| Short | Long | Description |
+|---|---|---|
+| `-h` | `--help` | Print usage information and exit. |
+
+## Exit Codes
+
+| Code | Meaning |
+|---|---|
+| `0` | Success (normal launch or `--help`). |
+| `2` | Invalid command-line arguments. |
+
+## Validation Rules
+
+- Only one positional argument (`filename`) is supported.
+- Unknown options are rejected.
+- `-h` / `--help` do not accept values.
+
+## Examples
+
+```bash
+# Launch editor
+papyrus
+
+# Launch and open a file
+papyrus ./notes/todo.txt
+
+# Show help
+papyrus --help
+```
+
 # Current features
 - Basic editor UI with simple SDL text rendering
 - Scrolling

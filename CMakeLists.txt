@@ -68,6 +68,9 @@ add_executable(papyrus
     src/CommandProcessor.h
     src/CommandProcessor.cpp
     src/Argparser.h
+    src/StartupOptions.h
+    src/StartupParser.h
+    src/StartupParser.cpp
     src/logger.h
     src/types.h
     src/util.h

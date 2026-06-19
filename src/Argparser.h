@@ -1,122 +1,130 @@
-#include <iostream>
+#pragma once
+
+#include <optional>
 #include <string>
+#include <string_view>
+#include <unordered_map>
+#include <vector>
 
-#include "logger.h"
-
-enum ArgumentType
+struct ArgParseResult
 {
-    POSITIONAL = 0,
-    BOOL_FLAG,
-    VALUE_FLAG
-};
+    std::string executableName;
+    std::unordered_map<std::string, std::optional<std::string>> flags;
+    std::vector<std::string> positional;
 
-struct Argument
-{
-    ArgumentType type;
-    std::string name;
-    std::string value = "";
-
-    Argument(ArgumentType t, std::string n, std::string v = "")
-        : type(t), name(n), value(v) {}
-
-    bool operator==(const Argument &other) const
+    bool hasFlag(std::string_view name) const
     {
-        return (type == other.type) && (name == other.name);
-    }
-    bool operator!=(const Argument &other) const
-    {
-        return !(*this == other);
+        return flags.contains(std::string(name));
     }
 
-    friend std::ostream &operator<<(std::ostream &os, const Argument &arg)
+    std::optional<std::string> getFlagValue(std::string_view name) const
     {
-        std::string typeStr = "unknown";
-        switch (arg.type)
+        const auto it = flags.find(std::string(name));
+        if (it == flags.end())
         {
-        case ArgumentType::BOOL_FLAG:
-            typeStr = "bool flag";
-            break;
-        case ArgumentType::VALUE_FLAG:
-            typeStr = "value flag";
-            break;
-        case ArgumentType::POSITIONAL:
-            typeStr = "positional";
-            break;
+            return std::nullopt;
         }
-        os << "type: " << typeStr << ", name: " << arg.name << ", Value: " << arg.value;
-        return os;
+        return it->second;
+    }
+
+    std::optional<std::string> firstPositional() const
+    {
+        if (positional.empty())
+        {
+            return std::nullopt;
+        }
+        return positional.front();
     }
 };
 
 class ArgParser
 {
-
 public:
-    ArgParser() = default;
-
-    bool hasArgument(const Argument &arg)
+    ArgParseResult parse(int argc, char *argv[]) const
     {
-        for (const Argument &a : mArgs)
-        {
-            if (arg == a)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // arg passed here is the argument you want to have parsed and get its value
-    const std::string getArgumentValue(const Argument &arg) const
-    {
-
-        for (const Argument &a : mArgs)
-        {
-            if (arg == a)
-            {
-                return a.value;
-            }
-        }
-        return "";
-    }
-
-    void parse(int argc, char *argv[])
-    {
+        ArgParseResult result;
 
         if (argc > 0)
         {
-            mExecutableName = argv[0];
+            result.executableName = argv[0];
         }
 
+        bool parseAsPositional = false;
         for (int i = 1; i < argc; ++i)
         {
-            std::string arg = argv[i];
+            const std::string token = argv[i];
 
-            if (arg.starts_with("-"))
+            if (parseAsPositional || token == "-")
             {
-                // handle single dash and double dash the same for now
-                bool isLong = arg.starts_with("--");
-                std::string name = arg.substr(isLong ? 2 : 1);
+                result.positional.push_back(token);
+                continue;
+            }
 
-                // Check if it has a trailing value
-                if (i + 1 < argc && !std::string(argv[i + 1]).starts_with("-"))
-                {
-                    mArgs.push_back(Argument(ArgumentType::VALUE_FLAG, name, argv[i + 1]));
-                    i++;
-                }
-                else
-                {
-                    mArgs.push_back(Argument(ArgumentType::BOOL_FLAG, name));
-                }
-            }
-            else
+            if (token == "--")
             {
-                mArgs.push_back(Argument(ArgumentType::POSITIONAL, "positional", arg));
+                parseAsPositional = true;
+                continue;
             }
+
+            if (token.starts_with("--"))
+            {
+                const std::string raw = token.substr(2);
+                const size_t equalPos = raw.find('=');
+                if (equalPos != std::string::npos)
+                {
+                    const std::string name = raw.substr(0, equalPos);
+                    const std::string value = raw.substr(equalPos + 1);
+                    result.flags[name] = value;
+                    continue;
+                }
+
+                if (i + 1 < argc)
+                {
+                    const std::string next = argv[i + 1];
+                    if (!next.empty() && next[0] != '-')
+                    {
+                        result.flags[raw] = next;
+                        ++i;
+                        continue;
+                    }
+                }
+
+                result.flags[raw] = std::nullopt;
+                continue;
+            }
+
+            if (token.starts_with("-") && token.size() > 1)
+            {
+                const std::string raw = token.substr(1);
+
+                // support short flag bundles like -abc
+                if (raw.size() > 1)
+                {
+                    for (char c : raw)
+                    {
+                        result.flags[std::string(1, c)] = std::nullopt;
+                    }
+                    continue;
+                }
+
+                if (i + 1 < argc)
+                {
+                    const std::string next = argv[i + 1];
+                    if (!next.empty() && next[0] != '-')
+                    {
+                        result.flags[raw] = next;
+                        ++i;
+                        continue;
+                    }
+                }
+
+                result.flags[raw] = std::nullopt;
+                continue;
+            }
+
+            result.positional.push_back(token);
         }
-    }
 
-private:
-    std::string mExecutableName;
-    std::vector<Argument> mArgs;
+        return result;
+    }
 };
