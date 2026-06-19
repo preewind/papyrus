@@ -146,7 +146,9 @@ void Application::update()
         break;
     case Screen::FileBrowser:
         mLayoutManager.update(mRenderer->getSDL_Properties(), false);
-        mRenderer->updateFileBrowser(mFileBrowser, mLayoutManager.getLayoutConfig());
+        mRenderer->clear();
+        mFileBrowserView.render(*mRenderer, mFileBrowser, mTextLayout, mLayoutManager.getLayoutConfig(), mRenderer->getSDL_Properties());
+        mRenderer->present();
         // requests
         if (auto file = mFileBrowser.consumeOpenRequest())
         {

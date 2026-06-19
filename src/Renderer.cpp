@@ -9,7 +9,6 @@
 #include "ITextMeasurer.h"
 #include "SDLRenderBackend.h"
 #include "Editor.h"
-#include "FileBrowser.h"
 #include "SearchSession.h"
 #include "logger.h"
 #include "util.h"
@@ -144,13 +143,6 @@ void Renderer::updateEditor(Editor &editor)
     }
     
     mCursorBlinker.update();
-}
-
-void Renderer::updateFileBrowser(FileBrowser &browser, const LayoutConfig &layoutConfig)
-{
-    clear();
-    mFileBrowserView.render(*this, browser, mTextLayout, layoutConfig, getSDL_Properties());
-    present();
 }
 
 /*

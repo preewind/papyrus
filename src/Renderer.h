@@ -10,13 +10,11 @@
 #include "theme.h"
 #include "CursorBlinker.h"
 #include "TextLayout.h"
-#include "FileBrowserView.h"
 #include "LayoutManager.h"
 
 class Cursor;
 class Editor;
 class Selection;
-class FileBrowser;
 class SearchSession;
 class Terminal;
 class IRenderBackend;
@@ -49,7 +47,6 @@ public:
     void clearClipRect();
     void renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY, uint32_t scrollOffsetX, const LayoutConfig &layoutConfig);
     void updateEditor(Editor &editor);
-    void updateFileBrowser(FileBrowser &browser, const LayoutConfig &layoutConfig);
     const std::string fitTextToWidthFile(const std::string &text, std::string &extension, const LayoutConfig &layoutConfig);
     void present();
 
@@ -65,7 +62,6 @@ public:
 private:
     std::unique_ptr<IRenderBackend> mBackend;
     TextLayout mTextLayout;
-    FileBrowserView mFileBrowserView;
     uint8_t mFontSize = 20;
     CursorBlinker mCursorBlinker;
     Theme mTheme;
