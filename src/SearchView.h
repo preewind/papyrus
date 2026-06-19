@@ -1,18 +1,18 @@
 #pragma once
 
 #include "Editor.h"
-#include "TextLayout.h"
 #include "LayoutManager.h"
+#include "RenderContext.h"
 #include "SearchViewPort.h"
 
-class Renderer;
+#include "TextLayout.h"
 
 class SearchView
 {
 public:
-    void render(Renderer &renderer, const Editor &editor, const TextLayout &textLayout, const SearchLayout &searchLayout, const SearchViewport &viewport);
+    void render(RenderContext &renderContext, const Editor &editor, const TextLayout &textLayout, const SearchLayout &searchLayout, const SearchViewport &viewport);
 
 private:
-    void renderSearchOverlay(Renderer &renderer, const SearchSession &session, const TextLayout &textLayout, const SearchLayout &searchLayout, const SearchViewport &viewport);
-    void renderSearchCursor(Renderer &renderer, const SearchSession &session, const TextLayout &textLayout, const SearchLayout &searchLayout, const SearchViewport &viewport);
+    void renderSearchOverlay(RenderContext &renderContext, const SearchSession &session, const TextLayout &textLayout, const SearchLayout &searchLayout, const SearchViewport &viewport);
+    void renderSearchCursor(RenderContext &renderContext, const SearchSession &session, const TextLayout &textLayout, const SearchLayout &searchLayout, const SearchViewport &viewport);
 };

@@ -1,17 +1,17 @@
 #pragma once
 
 #include "Editor.h"
-#include "TextLayout.h"
 #include "LayoutManager.h"
+#include "RenderContext.h"
 
-class Renderer;
+#include "TextLayout.h"
 
 class TerminalView
 {
 public:
-    void render(Renderer &renderer, const Editor &editor, const TextLayout &textLayout, const TerminalLayout &terminalLayout, const SDL_Properties &sdlProps);
+    void render(RenderContext &renderContext, const Editor &editor, const TextLayout &textLayout, const TerminalLayout &terminalLayout, const SDL_Properties &sdlProps);
 
 private:
-    void renderTerminal(Renderer &renderer, const Editor &editor, const TextLayout &textLayout, const TerminalLayout &terminalLayout, const SDL_Properties &sdlProps);
-    void renderTerminalCursor(Renderer &renderer, const Terminal &terminal, const TextLayout &textLayout, const TerminalLayout &terminalLayout, const SDL_Properties &sdlProps);
+    void renderTerminal(RenderContext &renderContext, const Editor &editor, const TextLayout &textLayout, const TerminalLayout &terminalLayout, const SDL_Properties &sdlProps);
+    void renderTerminalCursor(RenderContext &renderContext, const Terminal &terminal, const TextLayout &textLayout, const TerminalLayout &terminalLayout, const SDL_Properties &sdlProps);
 };

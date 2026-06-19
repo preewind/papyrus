@@ -36,7 +36,7 @@ std::string TextLayout::expandTabs(std::string_view text) const
     return result;
 }
 
-uint32_t TextLayout::virtualColumn(std::string_view line, uint32_t rawCol)
+uint32_t TextLayout::virtualColumn(std::string_view line, uint32_t rawCol) const
 {
     uint32_t virtualCol = 0;
     for (uint32_t i = 0; i < rawCol && i < line.size(); ++i)

@@ -12,7 +12,7 @@ public:
     void setMeasurer(const ITextMeasurer *measurer);
     uint32_t width(const std::string &text) const;
     std::string expandTabs(std::string_view text) const;
-    uint32_t virtualColumn(std::string_view line, uint32_t rawCol);
+    uint32_t virtualColumn(std::string_view line, uint32_t rawCol) const;
     int columnToPixel(std::string_view line, uint32_t col) const;
 
 private:

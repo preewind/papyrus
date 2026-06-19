@@ -34,6 +34,8 @@ public:
     SDL_Renderer *nativeRenderer() const;
 
 private:
+    RenderColor clampAlpha(RenderColor color);
+
     SDL_Renderer *mRenderer = nullptr;
     TTF_Font *mFont = nullptr;
 };

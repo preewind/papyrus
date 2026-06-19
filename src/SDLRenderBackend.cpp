@@ -2,13 +2,10 @@
 
 #include "util.h"
 
-namespace
-{
-RenderColor clampAlpha(RenderColor color)
+RenderColor SDLRenderBackend::clampAlpha(RenderColor color)
 {
     return color;
 }
-} // namespace
 
 SDLRenderBackend::SDLRenderBackend(SDL_Window *window, const std::string &fontPath, uint8_t fontSize)
 {

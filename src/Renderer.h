@@ -9,19 +9,17 @@
 #include "types.h"
 #include "theme.h"
 #include "CursorBlinker.h"
-#include "TextLayout.h"
-#include "LayoutManager.h"
+#include "RenderContext.h"
 
 class Cursor;
 class Editor;
 class Selection;
-class SearchSession;
 class Terminal;
 class IRenderBackend;
 class ITextMeasurer;
 
 
-class Renderer
+class Renderer : public RenderContext
 {
 
 public:
@@ -32,22 +30,18 @@ public:
 
     void clear();
     int getLineHeight() const;
-    const SDL_Properties &getSDL_Properties() const;
-    const Theme &getTheme() const;
+    const SDL_Properties &getSDL_Properties() const override;
+    const Theme &getTheme() const override;
 
     const ITextMeasurer &getTextMeasurer() const;
-    const CursorBlinker &getCursorBlinker() const;
-    RenderColor getColorFromTokenType(const Token &token);
-    void drawText(const std::string &text, int x, int y);
-    void drawText(const std::string &text, int x, int y, RenderColor color);
-    void drawTextTokenized(const std::string &text, uint32_t y, const std::vector<Token> &tokens, uint32_t scrollOffsetX, const LayoutConfig &layoutConfig);
-    void drawRect(int x, int y, int w, int h, RenderColor color);
-    void drawRect(Rect rect, RenderColor color);
-    void pushClipRect(const Rect &rect);
-    void clearClipRect();
-    void renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY, uint32_t scrollOffsetX, const LayoutConfig &layoutConfig);
+    const CursorBlinker &getCursorBlinker() const override;
+    void drawText(const std::string &text, int x, int y) override;
+    void drawText(const std::string &text, int x, int y, RenderColor color) override;
+    void drawRect(int x, int y, int w, int h, RenderColor color) override;
+    void drawRect(Rect rect, RenderColor color) override;
+    void pushClipRect(const Rect &rect) override;
+    void clearClipRect() override;
     void updateEditor(Editor &editor);
-    const std::string fitTextToWidthFile(const std::string &text, std::string &extension, const LayoutConfig &layoutConfig);
     void present();
 
     void onResize(uint32_t w, uint32_t h);
@@ -56,15 +50,10 @@ public:
     void handlePlus();
     void handleMinus();
 
-    int screenY(uint32_t row, uint32_t scrollOffset, uint32_t editorMarginTop) const;
-    int screenYBrowser(uint32_t row, uint32_t scrollOffset, uint32_t margin) const;
-
 private:
     std::unique_ptr<IRenderBackend> mBackend;
-    TextLayout mTextLayout;
     uint8_t mFontSize = 20;
     CursorBlinker mCursorBlinker;
     Theme mTheme;
-    LexerTheme mLexerTheme;
     SDL_Properties mLayout;
 };
