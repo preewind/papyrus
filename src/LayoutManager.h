@@ -1,6 +1,13 @@
 #pragma once
 #include "types.h"
 
+struct LayoutInput
+{
+    uint32_t windowWidth;
+    uint32_t windowHeight;
+    uint32_t lineHeight;
+};
+
 struct LayoutConfig
 {
     uint32_t editorMarginTop = 20;
@@ -42,7 +49,7 @@ struct TerminalLayout
 class LayoutManager{
 
 public:
-    void recalculate(uint32_t windowWidth, uint32_t windowHeight, uint32_t lineHeight, bool terminalVisible);
+    void update(const LayoutInput& input, bool terminalVisible);
 
     const LayoutConfig &getLayoutConfig() const;
     const EditorLayout& getEditorLayout() const;

@@ -32,8 +32,6 @@ Renderer::Renderer(SDL_Window *window)
     // editor layout
     mLayout.lineHeight = getLineHeight();
     SDL_GetWindowSize(window, (int *)&mLayout.totalWindowWidth, (int *)&mLayout.totalWindowHeight);
-
-    mLayoutManager.recalculate(mLayout.totalWindowWidth, mLayout.totalWindowHeight, mLayout.lineHeight, false);
 }
 
 Renderer::~Renderer()
@@ -222,23 +220,28 @@ void Renderer::renderHighlightedRange(const std::string &text, uint32_t row, uin
     drawRect(x, y, w, h, mTheme.selection);
 }
 
+void Renderer::updateLayout(const Editor &editor)
+{
+    LayoutInput input{
+        mLayout.totalWindowWidth,
+        mLayout.totalWindowHeight,
+        mLayout.lineHeight
+    };
+
+    mLayoutManager.update(input, editor.isTerminalVisible());
+}
+
 void Renderer::updateEditor(Editor &editor)
 {
     if (editor.consumeActivity())
     {
         mCursorBlinker.reset();
     }
-    if (editor.isTerminalVisible())
-    {
-        mLayoutManager.recalculate(mLayout.totalWindowWidth, mLayout.totalWindowHeight, mLayout.lineHeight, false);
-        editor.getTerminal().setVisibleRows(((getTerminalLayout().viewport.h - getTerminalLayout().marginTop) / mLayout.lineHeight) - 1);
-        editor.adjustCursor((getEditorLayout().viewport.h - getLayoutConfig().editorMarginTop) / mLayout.lineHeight);
-    }
     
     mCursorBlinker.update();
     clear();
     renderEditor(editor);
-    editor.setVisibleRows(((getEditorLayout().viewport.h - getLayoutConfig().editorMarginTop) / mLayout.lineHeight));
+    editor.updateViewPort(mLayoutManager, mLayout.lineHeight);
     Cursor cursor = editor.getCursor();
     ensureCursorVisibleHorizontally(cursor, editor.getLineString(cursor.row));
     present();

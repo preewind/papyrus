@@ -120,6 +120,7 @@ void Application::update()
             }
         }
         mEditor.update();
+        mRenderer->updateLayout(mEditor);
         mRenderer->updateEditor(mEditor);
         break;
     case Screen::FileBrowser:

@@ -79,6 +79,7 @@ public:
     void clearClipRect();
     void renderEditor(const Editor &editor);
     void renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY);
+    void updateLayout(const Editor& editor);
     void updateEditor(Editor &editor);
     void updateFileBrowser(FileBrowser &browser);
     const std::string fitTextToWidthFile(const std::string &text, std::string &extension);

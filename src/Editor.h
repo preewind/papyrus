@@ -15,6 +15,7 @@
 #include "SyntaxHighlighter.h"
 #include "Terminal.h"
 #include "UndoManager.h"
+#include "LayoutManager.h"
 
 enum class Focus
 {
@@ -106,6 +107,8 @@ public:
     void update();
     void handleRequest(const CommandRequest &request);
     std::optional<CommandRequest> consumeRequest();
+
+    void updateViewPort(const LayoutManager& layout, uint32_t lineHeight);
 
 private:
     Selection mSelection;

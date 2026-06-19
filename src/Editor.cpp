@@ -966,6 +966,16 @@ void Editor::update()
     }
 }
 
+void Editor::updateViewPort(const LayoutManager &layout, uint32_t lineHeight)
+{
+    if (isTerminalVisible())
+    {
+        mTerminal->setVisibleRows(((layout.getTerminalLayout().viewport.h - layout.getTerminalLayout().marginTop) / lineHeight) - 1);
+        adjustCursor((layout.getEditorLayout().viewport.h - layout.getLayoutConfig().editorMarginTop) / lineHeight);
+    }
+    setVisibleRows(((layout.getEditorLayout().viewport.h - layout.getLayoutConfig().editorMarginTop) / lineHeight));
+}
+
 void Editor::handleRequest(const CommandRequest &request)
 {
     switch (request.type)
