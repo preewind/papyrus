@@ -35,22 +35,6 @@ struct EditorLayout2
     uint16_t totalWindowHeight = 0;
 };
 
-struct SearchOverlayLayout
-{
-    uint32_t queryX;
-    uint32_t queryY;
-    uint32_t queryWidth;
-    uint32_t queryHeight;
-    uint32_t matchBoxX;
-    uint32_t matchBoxWidth = 100;
-    uint32_t matchBoxPadding = 10;
-    uint32_t textX;
-    uint32_t textY;
-    uint32_t matchBoxTextX;
-    uint32_t textPadding = 5;
-    uint32_t boxSpacing = 5;
-};
-
 struct ScrollViewport
 {
     int offsetX = 0;
@@ -81,7 +65,7 @@ public:
     void clear();
     int getLineHeight() const;
     const EditorLayout2 &getEditorLayout() const;
-    const SearchOverlayLayout &getSearchLayout() const;
+    const SearchLayout &getSearchLayout() const;
     const TerminalLayout &getTerminalLayout() const;
     const Theme &getTheme() const;
     const TextLayout &getTextLayout() const;
@@ -131,7 +115,7 @@ private:
     LexerTheme mLexerTheme;
     LayoutManager mLayoutManager;
     EditorLayout2 mLayout;
-    SearchOverlayLayout mSearchLayout;
+    //SearchOverlayLayout mSearchLayout;
     int mScrollOffsetX = 0;
     int mScrollOffsetXSearch = 0;
 };

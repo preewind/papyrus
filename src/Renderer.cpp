@@ -35,16 +35,6 @@ Renderer::Renderer(SDL_Window *window)
     mLayout.windowHeight = mLayout.totalWindowHeight;
 
     mLayoutManager.recalculate(mLayout.windowWidth, mLayout.totalWindowHeight, mLayout.lineHeight, false);
-
-    // search layout
-    mSearchLayout.queryX = mLayout.marginLeft + mLayout.windowWidth / 2;
-    mSearchLayout.queryY = mLayout.marginTop + mLayout.lineHeight;
-    mSearchLayout.queryWidth = mLayout.windowWidth - mSearchLayout.queryX - mLayout.marginRight - mSearchLayout.matchBoxWidth;
-    mSearchLayout.queryHeight = 1.5 * mLayout.lineHeight;
-    mSearchLayout.matchBoxX = mSearchLayout.queryX + mSearchLayout.queryWidth + mSearchLayout.boxSpacing;
-    mSearchLayout.textX = mSearchLayout.queryX + mSearchLayout.textPadding;
-    mSearchLayout.textY = mSearchLayout.queryY + (mSearchLayout.queryHeight - mLayout.lineHeight) / 2; // gives you a vertically centered text
-    mSearchLayout.matchBoxTextX = mSearchLayout.matchBoxX + mSearchLayout.textPadding;
 }
 
 Renderer::~Renderer()
@@ -71,9 +61,9 @@ const EditorLayout2 &Renderer::getEditorLayout() const
     return mLayout;
 }
 
-const SearchOverlayLayout &Renderer::getSearchLayout() const
+const SearchLayout &Renderer::getSearchLayout() const
 {
-    return mSearchLayout;
+    return mLayoutManager.getSearchLayout();
 }
 
 const TerminalLayout &Renderer::getTerminalLayout() const
@@ -340,8 +330,7 @@ void Renderer::ensureCursorVisibleHorizontally(const Cursor &cursor, const std::
 void Renderer::ensureCursorVisibleHorizontallySearch(uint32_t cursor, const std::string &line)
 {
     int cursorPixelX = mTextLayout.columnToPixel(line, cursor);
-
-    mSearchScrollPort.visibleWidth = mSearchLayout.queryWidth - mSearchLayout.textPadding * 2;
+    mSearchScrollPort.visibleWidth = getSearchLayout().queryBox.w - getSearchLayout().textPadding * 2;
     mSearchScrollPort.ensureVisible(cursorPixelX, 2);
     mScrollOffsetXSearch = mSearchScrollPort.offsetX;
 }

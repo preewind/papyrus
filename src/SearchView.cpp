@@ -21,14 +21,14 @@ void SearchView::renderSearchOverlay(Renderer &renderer, const SearchSession &se
     const std::string &matchStr = std::to_string(currMatch) + "/" + std::to_string(session.getMatches().size());
     uint32_t matchBoxWidth = textLayout.width(matchStr) + layout.matchBoxPadding;
 
-    renderer.drawRect(layout.queryX, layout.queryY, layout.queryWidth, layout.queryHeight, theme.overlayBackground);
-    renderer.drawRect(layout.matchBoxX, layout.queryY, matchBoxWidth, layout.queryHeight, theme.overlayBackground);
+    renderer.drawRect(layout.queryBox, theme.overlayBackground);
+    renderer.drawRect(layout.matchBox.x, layout.matchBox.y, matchBoxWidth, layout.matchBox.h, theme.overlayBackground);
 
     SDL_Rect searchClipRect{
-        static_cast<int>(layout.queryX + layout.textPadding),
-        static_cast<int>(layout.queryY),
-        static_cast<int>(layout.queryWidth - (layout.textPadding * 2)),
-        static_cast<int>(layout.queryHeight)};
+        static_cast<int>(layout.queryBox.x + layout.textPadding),
+        static_cast<int>(layout.queryBox.y),
+        static_cast<int>(layout.queryBox.w - (layout.textPadding * 2)),
+        static_cast<int>(layout.queryBox.h)};
     renderer.pushClipRect(searchClipRect);
 
     const std::string &query = session.getQuery();
@@ -46,12 +46,12 @@ void SearchView::renderSearchCursor(Renderer &renderer, const SearchSession &ses
     if (renderer.getCursorBlinker().visible())
     {
         uint32_t cursorTextWidth = textLayout.width(session.getQuery().substr(0, session.getCursor()));
-        int cursorX = layout.queryX + layout.textPadding + cursorTextWidth - renderer.getScrollOffsetXSearch();
+        int cursorX = layout.queryBox.x + layout.textPadding + cursorTextWidth - renderer.getScrollOffsetXSearch();
         SDL_Rect searchClipRect{
-            static_cast<int>(layout.queryX + layout.textPadding),
-            static_cast<int>(layout.queryY),
-            static_cast<int>(layout.queryWidth - (layout.textPadding * 2)),
-            static_cast<int>(layout.queryHeight)};
+            static_cast<int>(layout.queryBox.x + layout.textPadding),
+            static_cast<int>(layout.queryBox.y),
+            static_cast<int>(layout.queryBox.w - (layout.textPadding * 2)),
+            static_cast<int>(layout.queryBox.h)};
         renderer.pushClipRect(searchClipRect);
         renderer.drawRect(cursorX, layout.textY, 2, editorLayout.lineHeight, theme.cursor);
         renderer.clearClipRect();
