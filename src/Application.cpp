@@ -26,7 +26,7 @@ Application::Application(int argc, char *argv[])
     mWindow = SDL_CreateWindow("papyrus", 1280, 720, SDL_WINDOW_RESIZABLE);
     CSF(SDL_StartTextInput(mWindow));
 
-    mRenderer = std::make_unique<Renderer>(mWindow);
+    mRenderer = std::make_unique<Renderer>(mWindow, mFontSize);
 
     mTextLayout.setMeasurer(&mRenderer->getTextMeasurer());
 
@@ -80,13 +80,13 @@ void Application::run()
                 case SDLK_PLUS:
                     if (mod & SDL_KMOD_CTRL)
                     {
-                        mRenderer->handlePlus();
+                        increaseFontSize();
                     }
                     break;
                 case SDLK_MINUS:
                     if (mod & SDL_KMOD_CTRL)
                     {
-                        mRenderer->handleMinus();
+                        decreaseFontSize();
                     }
                     break;
                 case SDLK_HASH:
@@ -114,6 +114,7 @@ void Application::update()
     switch (mCurrentScreen)
     {
     case Screen::Editor:
+    {
         if (auto request = mEditor.consumeRequest())
         {
             CommandRequest req = *request;
@@ -129,6 +130,11 @@ void Application::update()
         }
         mRenderer->clear();
         mEditor.update();
+        if (mEditor.consumeActivity())
+        {
+            mCursorBlinker.reset();
+        }
+        mCursorBlinker.update();
         mLayoutManager.update(mRenderer->getSDL_Properties(), mEditor.isTerminalVisible());
 
         mEditor.updateViewPort(mLayoutManager, mLayoutManager.getLayoutInput().lineHeight);
@@ -138,13 +144,15 @@ void Application::update()
             mSearchViewPort.updateHorizontal(mEditor.getSearch(), mTextLayout, mLayoutManager.getSearchLayout());
         }
 
-        mEditorView.render(*mRenderer, mEditor, mEditorViewPort, mTextLayout, mLayoutManager.getLayoutConfig(), mLayoutManager.getEditorLayout());
-        mSearchView.render(*mRenderer, mEditor, mTextLayout, mLayoutManager.getSearchLayout(), mSearchViewPort);
+        bool cursorVisible = mCursorBlinker.visible();
+        mEditorView.render(*mRenderer, mEditor, mEditorViewPort, mTextLayout, mLayoutManager.getLayoutConfig(), mLayoutManager.getEditorLayout(), cursorVisible);
+        mSearchView.render(*mRenderer, mEditor, mTextLayout, mLayoutManager.getSearchLayout(), mSearchViewPort, cursorVisible);
         mTerminalView.render(*mRenderer, mEditor, mTextLayout, mLayoutManager.getTerminalLayout(), mRenderer->getSDL_Properties());
-        mRenderer->updateEditor(mEditor);
         mRenderer->present();
         break;
+    }
     case Screen::FileBrowser:
+    {
         mLayoutManager.update(mRenderer->getSDL_Properties(), false);
         mRenderer->clear();
         mFileBrowserView.render(*mRenderer, mFileBrowser, mTextLayout, mLayoutManager.getLayoutConfig(), mRenderer->getSDL_Properties());
@@ -157,6 +165,7 @@ void Application::update()
             mCurrentScreen = Screen::Editor;
         }
         break;
+    }
     default:
         LOG_ERROR() << "Unknown Screen!";
         break;
@@ -172,4 +181,21 @@ void Application::handleHash(SDL_Keymod mod)
     {
         mEditor.switchFocus();
     }
+}
+
+void Application::increaseFontSize()
+{
+    ++mFontSize;
+    mRenderer->setFontSize(mFontSize);
+}
+
+void Application::decreaseFontSize()
+{
+    if (mFontSize <= 1)
+    {
+        return;
+    }
+
+    --mFontSize;
+    mRenderer->setFontSize(mFontSize);
 }

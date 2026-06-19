@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "CursorBlinker.h"
 #include "Renderer.h"
 #include "Editor.h"
 #include "FileBrowser.h"
@@ -28,6 +29,9 @@ public:
     void handleHash(SDL_Keymod mod);
 
 private:
+    void increaseFontSize();
+    void decreaseFontSize();
+
     SDL_Window *mWindow;
     Editor mEditor;
     LayoutManager mLayoutManager;
@@ -35,6 +39,8 @@ private:
     SearchViewport mSearchViewPort;
     std::unique_ptr<Renderer> mRenderer;
     TextLayout mTextLayout;
+    CursorBlinker mCursorBlinker;
+    uint8_t mFontSize = 20;
     EditorView mEditorView;
     FileBrowserView mFileBrowserView;
     SearchView mSearchView;

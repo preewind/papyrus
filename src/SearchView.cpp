@@ -1,11 +1,11 @@
 #include "SearchView.h"
 
-void SearchView::render(RenderContext &renderContext, const Editor &editor, const TextLayout &textLayout, const SearchLayout &searchLayout, const SearchViewport &viewport)
+void SearchView::render(RenderContext &renderContext, const Editor &editor, const TextLayout &textLayout, const SearchLayout &searchLayout, const SearchViewport &viewport, bool cursorVisible)
 {
     if (editor.isSearchActive())
     {
         renderSearchOverlay(renderContext, editor.getSearch(), textLayout, searchLayout, viewport);
-        renderSearchCursor(renderContext, editor.getSearch(), textLayout, searchLayout, viewport);
+        renderSearchCursor(renderContext, editor.getSearch(), textLayout, searchLayout, viewport, cursorVisible);
     }
 }
 
@@ -32,11 +32,11 @@ void SearchView::renderSearchOverlay(RenderContext &renderContext, const SearchS
     renderContext.drawText(matchStr, searchLayout.matchBoxTextX, searchLayout.textY);
 }
 
-void SearchView::renderSearchCursor(RenderContext &renderContext, const SearchSession &session, const TextLayout &textLayout, const SearchLayout &searchLayout, const SearchViewport &viewport)
+void SearchView::renderSearchCursor(RenderContext &renderContext, const SearchSession &session, const TextLayout &textLayout, const SearchLayout &searchLayout, const SearchViewport &viewport, bool cursorVisible)
 {
     const auto &editorLayout = renderContext.getSDL_Properties();
     const auto &theme = renderContext.getTheme();
-    if (renderContext.getCursorBlinker().visible())
+    if (cursorVisible)
     {
         uint32_t cursorTextWidth = textLayout.width(session.getQuery().substr(0, session.getCursor()));
         int cursorX = searchLayout.queryBox.x + searchLayout.textPadding + cursorTextWidth - viewport.scrollX();

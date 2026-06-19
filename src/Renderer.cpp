@@ -6,9 +6,9 @@
 #include "SDLRenderBackend.h"
 #include "Editor.h"
 
-Renderer::Renderer(SDL_Window *window)
+Renderer::Renderer(SDL_Window *window, uint8_t fontSize)
 {
-    auto backend = std::make_unique<SDLRenderBackend>(window, "assets/JetBrainsMono-Regular.ttf", mFontSize);
+    auto backend = std::make_unique<SDLRenderBackend>(window, "assets/JetBrainsMono-Regular.ttf", fontSize);
     mBackend = std::move(backend);
 
     mLayout.lineHeight = getLineHeight();
@@ -44,11 +44,6 @@ const ITextMeasurer &Renderer::getTextMeasurer() const
     return *mBackend;
 }
 
-const CursorBlinker &Renderer::getCursorBlinker() const
-{
-    return mCursorBlinker;
-}
-
 void Renderer::drawText(const std::string &text, int x, int y)
 {
     drawText(text, x, y, mTheme.text);
@@ -79,16 +74,6 @@ void Renderer::clearClipRect()
     mBackend->clearClipRect();
 }
 
-void Renderer::updateEditor(Editor &editor)
-{
-    if (editor.consumeActivity())
-    {
-        mCursorBlinker.reset();
-    }
-    
-    mCursorBlinker.update();
-}
-
 void Renderer::present()
 {
     mBackend->present();
@@ -100,20 +85,8 @@ void Renderer::onResize(uint32_t w, uint32_t h)
     mLayout.totalWindowHeight = h;
 }
 
-void Renderer::setFontSize()
+void Renderer::setFontSize(uint8_t fontSize)
 {
-    mBackend->setFontSize(mFontSize);
+    mBackend->setFontSize(fontSize);
     mLayout.lineHeight = getLineHeight();
-}
-
-void Renderer::handlePlus()
-{
-    mFontSize++;
-    setFontSize();
-}
-
-void Renderer::handleMinus()
-{
-    mFontSize--;
-    setFontSize();
 }

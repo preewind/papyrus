@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "TerminalView.h"
 #include "Editor.h"
 

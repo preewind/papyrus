@@ -42,7 +42,7 @@ int EditorView::screenY(const SDL_Properties &layout, uint32_t row, uint32_t scr
     return editorMarginTop + (row - scrollOffset) * layout.lineHeight;
 }
 
-void EditorView::render(RenderContext &renderContext, const Editor &editor, const EditorViewport& viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig, const EditorLayout &editorLayout)
+void EditorView::render(RenderContext &renderContext, const Editor &editor, const EditorViewport& viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig, const EditorLayout &editorLayout, bool cursorVisible)
 {
     if (editor.isSearchActive())
     {
@@ -60,7 +60,7 @@ void EditorView::render(RenderContext &renderContext, const Editor &editor, cons
         renderSelection(renderContext, editor, viewport, textLayout, layoutConfig);
     }
 
-    renderCursor(renderContext, editor, viewport, textLayout, layoutConfig);
+    renderCursor(renderContext, editor, viewport, textLayout, layoutConfig, cursorVisible);
     renderText(renderContext, editor, viewport, textLayout, layoutConfig);
 
     renderContext.clearClipRect();
@@ -127,14 +127,14 @@ void EditorView::renderSelection(RenderContext &renderContext, const Editor &edi
     }
 }
 
-void EditorView::renderCursor(RenderContext &renderContext, const Editor &editor, const EditorViewport& viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig)
+void EditorView::renderCursor(RenderContext &renderContext, const Editor &editor, const EditorViewport& viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig, bool cursorVisible)
 {
     const auto &layout = renderContext.getSDL_Properties();
     const auto &theme = renderContext.getTheme();
     Cursor cursor = editor.getCursor();
     std::string text = editor.getLineString(cursor.row);
 
-    if (renderContext.getCursorBlinker().visible())
+    if (cursorVisible)
     {
         int x = layoutConfig.editorMarginLeft + textLayout.columnToPixel(text, cursor.col) - viewport.scrollX();
         int y = screenY(layout, cursor.row, editor.getScrollOffsetY(), layoutConfig.editorMarginTop);
