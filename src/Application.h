@@ -17,10 +17,6 @@
 #include "TerminalView.h"
 #include "StartupOptions.h"
 
-class Renderer;
-class Editor;
-class FileBrowser;
-
 class Application
 {
 
@@ -28,10 +24,10 @@ public:
     Application(int argc, char *argv[]);
     ~Application();
     void run();
-    void update();
     int exitCode() const;
 
 private:
+    void update();
     void printUsage() const;
     void initializeWindowAndRendering();
     void openInitialFileIfProvided(const std::string &filename);
@@ -47,21 +43,26 @@ private:
     void decreaseFontSize();
 
     SDL_Window *mWindow = nullptr;
-    Editor mEditor;
+    std::unique_ptr<IRenderBackend> mRenderBackend;
+    std::unique_ptr<Renderer> mRenderer;
+    Theme mTheme;
+    uint8_t mFontSize = 20;
+
+    // Layout
     LayoutManager mLayoutManager;
     EditorViewport mEditorViewPort;
     SearchViewport mSearchViewPort;
-    std::unique_ptr<IRenderBackend> mRenderBackend;
-    std::unique_ptr<Renderer> mRenderer;
     TextLayout mTextLayout;
-    CursorBlinker mCursorBlinker;
-    uint8_t mFontSize = 20;
-    Theme mTheme;
+
+    Editor mEditor;
+    FileBrowser mFileBrowser;
+
     EditorView mEditorView;
     FileBrowserView mFileBrowserView;
     SearchView mSearchView;
     TerminalView mTerminalView;
-    FileBrowser mFileBrowser;
+
+    CursorBlinker mCursorBlinker;
     Screen mCurrentScreen = Screen::Editor;
     bool mRunning = true;
     int mExitCode = 0;

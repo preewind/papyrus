@@ -6,7 +6,7 @@
 
 Application::Application(int argc, char *argv[])
 {
-    const StartupOptions startup = parseStartupOptions(argc, argv);;
+    const StartupOptions startup = parseStartupOptions(argc, argv);
     if (startup.showHelp)
     {
         printUsage();
@@ -26,16 +26,6 @@ Application::Application(int argc, char *argv[])
 
     initializeWindowAndRendering();
     openInitialFileIfProvided(startup.filename);
-}
-
-void Application::printUsage() const
-{
-    std::cout << startupUsageText();
-}
-
-int Application::exitCode() const
-{
-    return mExitCode;
 }
 
 void Application::initializeWindowAndRendering()
@@ -60,16 +50,6 @@ void Application::openInitialFileIfProvided(const std::string &filename)
     {
         mEditor.loadFile(filename);
         updateWindowTitle(std::format("papyrus [{}]", filename));
-    }
-}
-
-Application::~Application()
-{
-    if (mWindow != nullptr)
-    {
-        CSF(SDL_StopTextInput(mWindow));
-        SDL_DestroyWindow(mWindow);
-        SDL_Quit();
     }
 }
 
@@ -258,4 +238,24 @@ void Application::decreaseFontSize()
 
     --mFontSize;
     mRenderer->setFontSize(mFontSize);
+}
+
+void Application::printUsage() const
+{
+    std::cout << startupUsageText();
+}
+
+int Application::exitCode() const
+{
+    return mExitCode;
+}
+
+Application::~Application()
+{
+    if (mWindow != nullptr)
+    {
+        CSF(SDL_StopTextInput(mWindow));
+        SDL_DestroyWindow(mWindow);
+        SDL_Quit();
+    }
 }
