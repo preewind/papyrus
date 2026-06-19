@@ -3,36 +3,33 @@
 #include "EditorView.h"
 #include "Renderer.h"
 
-void EditorView::render(Renderer &renderer, const Editor &editor, const EditorViewport& viewport, const TextLayout &textLayout)
+void EditorView::render(Renderer &renderer, const Editor &editor, const EditorViewport& viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig, const EditorLayout &editorLayout)
 {
     if (editor.isSearchActive())
     {
         renderSearchMatches(renderer, editor, viewport);
     }
-    const auto &layout = renderer.getEditorLayout();
-    const auto &layoutConfig = renderer.getLayoutConfig();
-    renderLineNumbers(renderer, editor.getLineCount(), editor.getScrollOffsetY(), editor.getVisibleRows(), textLayout);
+    renderLineNumbers(renderer, editor.getLineCount(), editor.getScrollOffsetY(), editor.getVisibleRows(), textLayout, layoutConfig);
     SDL_Rect clipRect{
         (int)layoutConfig.editorMarginLeft,
         0,
-        (int)layout.viewport.w - (int)layoutConfig.editorMarginLeft,
-        (int)layout.viewport.h};
+        (int)editorLayout.viewport.w - (int)layoutConfig.editorMarginLeft,
+        (int)editorLayout.viewport.h};
     renderer.pushClipRect(clipRect);
     if (editor.getSelectionActive())
     {
         renderSelection(renderer, editor, viewport);
     }
 
-    renderCursor(renderer, editor, viewport, textLayout);
-    renderText(renderer, editor, viewport, textLayout);
+    renderCursor(renderer, editor, viewport, textLayout, layoutConfig);
+    renderText(renderer, editor, viewport, textLayout, layoutConfig);
 
     renderer.clearClipRect();
 }
 
-void EditorView::renderLineNumbers(Renderer &renderer, uint32_t numLines, uint32_t scrollOffsetY, uint32_t visibleRows, const TextLayout &textLayout)
+void EditorView::renderLineNumbers(Renderer &renderer, uint32_t numLines, uint32_t scrollOffsetY, uint32_t visibleRows, const TextLayout &textLayout, const LayoutConfig &layoutConfig)
 {
     const auto &theme = renderer.getTheme();
-    const auto &layoutConfig = renderer.getLayoutConfig();
     uint32_t first = scrollOffsetY;
     uint32_t last = std::min(first + visibleRows, numLines);
     for (uint32_t i = first; i < last; ++i)
@@ -90,11 +87,10 @@ void EditorView::renderSelection(Renderer &renderer, const Editor &editor, const
     }
 }
 
-void EditorView::renderCursor(Renderer &renderer, const Editor &editor, const EditorViewport& viewport, const TextLayout &textLayout)
+void EditorView::renderCursor(Renderer &renderer, const Editor &editor, const EditorViewport& viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig)
 {
     const auto &layout = renderer.getSDL_Properties();
     const auto &theme = renderer.getTheme();
-    const auto &layoutConfig = renderer.getLayoutConfig();
     Cursor cursor = editor.getCursor();
     std::string text = editor.getLineString(cursor.row);
 
@@ -107,9 +103,8 @@ void EditorView::renderCursor(Renderer &renderer, const Editor &editor, const Ed
     }
 }
 
-void EditorView::renderText(Renderer &renderer, const Editor &editor, const EditorViewport& viewport, const TextLayout &textLayout)
+void EditorView::renderText(Renderer &renderer, const Editor &editor, const EditorViewport& viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig)
 {
-    const auto &layoutConfig = renderer.getLayoutConfig();
     auto &text = editor.getText();
     int visRows = editor.getVisibleRows();
     int first = editor.getScrollOffsetY();

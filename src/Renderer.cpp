@@ -68,36 +68,9 @@ const SDL_Properties &Renderer::getSDL_Properties() const
     return mLayout;
 }
 
-const EditorLayout &Renderer::getEditorLayout() const
-{
-    return mLayoutManager.getEditorLayout();
-}
-
-const SearchLayout &Renderer::getSearchLayout() const
-{
-    return mLayoutManager.getSearchLayout();
-}
-
-const TerminalLayout &Renderer::getTerminalLayout() const
-{
-    return mLayoutManager.getTerminalLayout();
-}
-
 const Theme &Renderer::getTheme() const
 {
     return mTheme;
-}
-
-const TextLayout &Renderer::getTextLayout() const
-{
-    if (mExternalTextLayout)
-        return *mExternalTextLayout;
-    return mTextLayout;
-}
-
-void Renderer::setTextLayout(TextLayout *textLayout)
-{
-    mExternalTextLayout = textLayout;
 }
 
 TTF_Font *Renderer::getFont() const
@@ -238,7 +211,7 @@ void Renderer::updateEditor(Editor &editor)
 void Renderer::updateFileBrowser(FileBrowser &browser)
 {
     clear();
-    mFileBrowserView.render(*this, browser, mTextLayout);
+    mFileBrowserView.render(*this, browser, mTextLayout, mLayoutManager.getLayoutConfig(), getSDL_Properties());
     present();
 }
 

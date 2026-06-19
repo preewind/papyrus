@@ -29,7 +29,6 @@ Application::Application(int argc, char *argv[])
     mRenderer = std::make_unique<Renderer>(mWindow);
 
     mTextLayout.setFont(mRenderer->getFont());
-    mRenderer->setTextLayout(&mTextLayout);
 
     if (!filename.empty())
     {
@@ -131,9 +130,9 @@ void Application::update()
         mEditor.updateViewPort(mLayoutManager, mLayoutManager.getLayoutInput().lineHeight);
         mEditorViewPort.updateHorizontal(mEditor, mTextLayout, mLayoutManager.getLayoutConfig(), mLayoutManager.getLayoutInput());
 
-        mEditorView.render(*mRenderer, mEditor, mEditorViewPort, mTextLayout);
-        mSearchView.render(*mRenderer, mEditor, mTextLayout);
-        mTerminalView.render(*mRenderer, mEditor, mTextLayout);
+        mEditorView.render(*mRenderer, mEditor, mEditorViewPort, mTextLayout, mLayoutManager.getLayoutConfig(), mLayoutManager.getEditorLayout());
+        mSearchView.render(*mRenderer, mEditor, mTextLayout, mLayoutManager.getSearchLayout());
+        mTerminalView.render(*mRenderer, mEditor, mTextLayout, mLayoutManager.getTerminalLayout(), mRenderer->getSDL_Properties());
         mRenderer->updateEditor(mEditor);
         mRenderer->present();
         break;

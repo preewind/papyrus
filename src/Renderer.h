@@ -10,12 +10,8 @@
 #include "theme.h"
 #include "CursorBlinker.h"
 #include "TextLayout.h"
-#include "EditorView.h"
-#include "SearchView.h"
-#include "TerminalView.h"
 #include "FileBrowserView.h"
 #include "LayoutManager.h"
-#include "EditorViewPort.h"
 
 class Cursor;
 class Editor;
@@ -38,13 +34,8 @@ public:
     int getLineHeight() const;
     const LayoutConfig &getLayoutConfig() const;
     const SDL_Properties &getSDL_Properties() const;
-    const EditorLayout &getEditorLayout() const;
-    const SearchLayout &getSearchLayout() const;
-    const TerminalLayout &getTerminalLayout() const;
     const Theme &getTheme() const;
-    const TextLayout &getTextLayout() const;
 
-    void setTextLayout(TextLayout *textLayout);
     TTF_Font *getFont() const;
     const CursorBlinker &getCursorBlinker() const;
     uint32_t getScrollOffsetXSearch() const;
@@ -64,7 +55,6 @@ public:
 
     void onResize(uint32_t w, uint32_t h);
 
-    // Sync layout state from external LayoutManager (used by Application)
     void setLayoutManager(const LayoutManager &layoutManager);
 
     void setFontSize();
@@ -80,10 +70,6 @@ private:
     SDL_Renderer *mRenderer;
     TTF_Font *mFont;
     TextLayout mTextLayout;
-    TextLayout *mExternalTextLayout = nullptr;
-    EditorView mEditorView;
-    SearchView mSearchView;
-    TerminalView mTerminalView;
     FileBrowserView mFileBrowserView;
     uint8_t mFontSize = 20;
     //ScrollViewport mSearchScrollPort;
