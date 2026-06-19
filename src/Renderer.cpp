@@ -1,27 +1,18 @@
-#include <memory>
-
 #include "Renderer.h"
-#include "IRenderBackend.h"
-#include "ITextMeasurer.h"
-#include "SDLRenderBackend.h"
-#include "Editor.h"
 
-Renderer::Renderer(SDL_Window *window, uint8_t fontSize)
+Renderer::Renderer(IRenderBackend &backend, const Theme &theme, uint32_t windowWidth, uint32_t windowHeight)
 {
-    auto backend = std::make_unique<SDLRenderBackend>(window, "assets/JetBrainsMono-Regular.ttf", fontSize);
-    mBackend = std::move(backend);
+    mBackend = &backend;
+    mTheme = &theme;
 
     mLayout.lineHeight = getLineHeight();
-    SDL_GetWindowSize(window, (int *)&mLayout.totalWindowWidth, (int *)&mLayout.totalWindowHeight);
-}
-
-Renderer::~Renderer()
-{
+    mLayout.totalWindowWidth = windowWidth;
+    mLayout.totalWindowHeight = windowHeight;
 }
 
 void Renderer::clear()
 {
-    mBackend->clear(RenderColor{0, 0, 0, 255});
+    mBackend->clear(mTheme->background);
 }
 
 int Renderer::getLineHeight() const
@@ -36,17 +27,12 @@ const SDL_Properties &Renderer::getSDL_Properties() const
 
 const Theme &Renderer::getTheme() const
 {
-    return mTheme;
-}
-
-const ITextMeasurer &Renderer::getTextMeasurer() const
-{
-    return *mBackend;
+    return *mTheme;
 }
 
 void Renderer::drawText(const std::string &text, int x, int y)
 {
-    drawText(text, x, y, mTheme.text);
+    drawText(text, x, y, mTheme->text);
 }
 
 void Renderer::drawText(const std::string &text, int x, int y, RenderColor color)

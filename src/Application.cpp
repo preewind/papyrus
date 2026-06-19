@@ -1,5 +1,6 @@
 #include "Application.h"
 #include "Argparser.h"
+#include "SDLRenderBackend.h"
 #include "logger.h"
 #include "util.h"
 
@@ -26,9 +27,14 @@ Application::Application(int argc, char *argv[])
     mWindow = SDL_CreateWindow("papyrus", 1280, 720, SDL_WINDOW_RESIZABLE);
     CSF(SDL_StartTextInput(mWindow));
 
-    mRenderer = std::make_unique<Renderer>(mWindow, mFontSize);
+    int windowWidth = 0;
+    int windowHeight = 0;
+    SDL_GetWindowSize(mWindow, &windowWidth, &windowHeight);
 
-    mTextLayout.setMeasurer(&mRenderer->getTextMeasurer());
+    mRenderBackend = std::make_unique<SDLRenderBackend>(mWindow, "assets/JetBrainsMono-Regular.ttf", mFontSize);
+    mRenderer = std::make_unique<Renderer>(*mRenderBackend, mTheme, static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight));
+
+    mTextLayout.setMeasurer(mRenderBackend.get());
 
     if (!filename.empty())
     {

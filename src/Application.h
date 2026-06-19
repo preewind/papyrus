@@ -3,9 +3,10 @@
 #include <memory>
 
 #include "CursorBlinker.h"
-#include "Renderer.h"
 #include "Editor.h"
 #include "FileBrowser.h"
+#include "IRenderBackend.h"
+#include "Renderer.h"
 #include "types.h"
 #include "EditorViewPort.h"
 #include "SearchViewPort.h"
@@ -37,10 +38,12 @@ private:
     LayoutManager mLayoutManager;
     EditorViewport mEditorViewPort;
     SearchViewport mSearchViewPort;
+    std::unique_ptr<IRenderBackend> mRenderBackend;
     std::unique_ptr<Renderer> mRenderer;
     TextLayout mTextLayout;
     CursorBlinker mCursorBlinker;
     uint8_t mFontSize = 20;
+    Theme mTheme;
     EditorView mEditorView;
     FileBrowserView mFileBrowserView;
     SearchView mSearchView;
