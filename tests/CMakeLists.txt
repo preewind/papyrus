@@ -24,3 +24,4 @@ add_simple_test(UndoManagerTests UndoManagerTests.cpp ../src/TextBuffer.cpp ../s
 add_simple_test(TextBufferTests TextBufferTests.cpp ../src/TextBuffer.cpp)
 add_simple_test(ArgParserTests ArgParserTests.cpp)
 add_simple_test(StartupParserTests StartupParserTests.cpp ../src/StartupParser.cpp)
+add_simple_test(EditorCommandHandlerTests EditorCommandHandlerTests.cpp ../src/EditorCommandHandler.cpp)

@@ -76,6 +76,7 @@ public:
 
     bool isSearchActive() const;
     const SearchSession &getSearch() const;
+    void setLanguage(Language language);
     void updateSearchMatches();
 
     void updateTokens();
@@ -105,10 +106,6 @@ public:
     const uint32_t &getVisibleRows() const;
     const uint32_t &getScrollOffsetY() const;
 
-    void update();
-    void handleRequest(const CommandRequest &request);
-    std::optional<CommandRequest> consumeRequest();
-
     void updateViewPort(const LayoutManager& layout, uint32_t lineHeight);
 
 private:
@@ -131,6 +128,4 @@ private:
     Language mLanguage = Language::Cpp;
     std::vector<std::vector<Token>> mTokens;
     SyntaxHighlighter mHighlighter;
-
-    std::optional<CommandRequest> mPendingRequest;
 };

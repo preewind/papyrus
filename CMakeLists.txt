@@ -49,6 +49,8 @@ add_executable(papyrus
     src/Viewport.h
     src/Editor.cpp
     src/Editor.h
+    src/EditorCommandHandler.h
+    src/EditorCommandHandler.cpp
     src/UndoManager.h
     src/UndoManager.cpp
     src/TextBuffer.cpp

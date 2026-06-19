@@ -500,8 +500,8 @@ void Editor::handleF(SDL_Keymod mod)
         }
         else
         {
-            mSearch.reset();
             mSearch->resetCursor();
+            mSearch.reset();
             LOG_DEBUG() << "Search deactivated!";
         }
     }
@@ -809,6 +809,11 @@ const SearchSession &Editor::getSearch() const
     return *mSearch;
 }
 
+void Editor::setLanguage(Language language)
+{
+    mLanguage = language;
+}
+
 void Editor::updateSearchMatches()
 {
     if (!mSearch)
@@ -958,14 +963,6 @@ const uint32_t &Editor::getScrollOffsetY() const
     return mScrollOffsetY;
 }
 
-void Editor::update()
-{
-    if (std::optional<CommandRequest> request = mTerminal->consumeRequest())
-    {
-        handleRequest(*request);
-    }
-}
-
 void Editor::updateViewPort(const LayoutManager &layout, uint32_t lineHeight)
 {
     if (isTerminalVisible())
@@ -974,41 +971,4 @@ void Editor::updateViewPort(const LayoutManager &layout, uint32_t lineHeight)
         adjustCursor((layout.getEditorLayout().viewport.h - layout.getLayoutConfig().editorMarginTop) / lineHeight);
     }
     setVisibleRows(((layout.getEditorLayout().viewport.h - layout.getLayoutConfig().editorMarginTop) / lineHeight));
-}
-
-void Editor::handleRequest(const CommandRequest &request)
-{
-    switch (request.type)
-    {
-    case CommandRequestType::Quit:
-        mPendingRequest = {CommandRequestType::Quit, ""};
-        break;
-    case CommandRequestType::SaveFile:
-        saveFile();
-        break;
-    case CommandRequestType::ChangeLanguage:
-        if (request.request == "cpp")
-        {
-            mLanguage = Language::Cpp;
-        }
-        updateTokens();
-        break;
-
-    case CommandRequestType::OpenFile:
-        loadFile(request.request);
-        break;
-    case CommandRequestType::Error:
-        LOG_ERROR() << "Error: " << request.request;
-        break;
-
-    default:
-        break;
-    }
-}
-
-std::optional<CommandRequest> Editor::consumeRequest()
-{
-    auto res = mPendingRequest;
-    mPendingRequest.reset();
-    return res;
 }

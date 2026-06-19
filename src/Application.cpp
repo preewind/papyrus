@@ -154,23 +154,36 @@ void Application::handleWindowResized()
     mRenderer->onResize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 }
 
-void Application::updateEditorScreen()
+void Application::processEditorCommandRequests()
 {
-    if (auto request = mEditor.consumeRequest())
+    while (auto request = mEditor.getTerminal().consumeRequest())
     {
-        const CommandRequest req = *request;
-        switch (req.type)
+        EditorCommandActions actions{
+            .openFileRequest = [this](const std::filesystem::path &path)
+            { mEditor.loadFile(path); },
+            .saveCurrentFile = [this]()
+            { mEditor.saveFile(); },
+            .setEditorLanguage = [this](Language language)
+            { mEditor.setLanguage(language); },
+            .refreshEditorTokens = [this]()
+            { mEditor.updateTokens(); },
+            .reportEditorError = [](const std::string &message)
+            { LOG_ERROR() << "Error: " << message; }};
+
+        if (auto appRequest = mEditorCommandHandler.handle(*request, actions))
         {
-        case CommandRequestType::Quit:
-            mRunning = false;
-            break;
-        default:
-            break;
+            if (appRequest->type == CommandRequestType::Quit)
+            {
+                mRunning = false;
+            }
         }
     }
+}
 
+void Application::updateEditorScreen()
+{
     mRenderer->clear();
-    mEditor.update();
+    processEditorCommandRequests();
     if (mEditor.consumeActivity())
     {
         mCursorBlinker.reset();
