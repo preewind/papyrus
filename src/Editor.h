@@ -16,6 +16,7 @@
 #include "Terminal.h"
 #include "UndoManager.h"
 #include "LayoutManager.h"
+#include "EditorViewPort.h"
 
 enum class Focus
 {

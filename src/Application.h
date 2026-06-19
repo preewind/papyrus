@@ -6,6 +6,10 @@
 #include "Editor.h"
 #include "FileBrowser.h"
 #include "types.h"
+#include "EditorViewPort.h"
+#include "EditorView.h"
+#include "SearchView.h"
+#include "TerminalView.h"
 
 class Renderer;
 class Editor;
@@ -24,7 +28,13 @@ public:
 private:
     SDL_Window *mWindow;
     Editor mEditor;
+    LayoutManager mLayoutManager;
+    EditorViewport mEditorViewPort;
     std::unique_ptr<Renderer> mRenderer;
+    TextLayout mTextLayout;
+    EditorView mEditorView;
+    SearchView mSearchView;
+    TerminalView mTerminalView;
     FileBrowser mFileBrowser;
     Screen mCurrentScreen = Screen::Editor;
     bool mRunning = true;

@@ -15,6 +15,7 @@
 #include "TerminalView.h"
 #include "FileBrowserView.h"
 #include "LayoutManager.h"
+#include "EditorViewPort.h"
 
 class Cursor;
 class Editor;
@@ -23,30 +24,6 @@ class FileBrowser;
 class SearchSession;
 class Terminal;
 
-struct SDL_Properties
-{
-    uint32_t lineHeight = 0;
-    uint32_t totalWindowWidth = 0;
-    uint32_t totalWindowHeight = 0;
-};
-
-struct ScrollViewport
-{
-    int offsetX = 0;
-    int visibleWidth = 0;
-
-    void ensureVisible(int x, int padding = 0)
-    {
-        if (x < offsetX)
-        {
-            offsetX = x;
-        }
-        else if (x > offsetX + visibleWidth)
-        {
-            offsetX = x - visibleWidth + padding;
-        }
-    }
-};
 
 class Renderer
 {
@@ -66,20 +43,20 @@ public:
     const TerminalLayout &getTerminalLayout() const;
     const Theme &getTheme() const;
     const TextLayout &getTextLayout() const;
+
+    void setTextLayout(TextLayout *textLayout);
+    TTF_Font *getFont() const;
     const CursorBlinker &getCursorBlinker() const;
-    uint32_t getScrollOffsetX() const;
     uint32_t getScrollOffsetXSearch() const;
     SDL_Color getColorFromTokenType(const Token &token);
     void drawText(const std::string &text, int x, int y);
     void drawText(const std::string &text, int x, int y, SDL_Color color);
-    void drawTextTokenized(const std::string &text, uint32_t y, const std::vector<Token> &tokens);
+    void drawTextTokenized(const std::string &text, uint32_t y, const std::vector<Token> &tokens, uint32_t scrollOffsetX);
     void drawRect(int x, int y, int w, int h, SDL_Color color);
     void drawRect(Rect rect, SDL_Color color);
     void pushClipRect(const SDL_Rect &rect);
     void clearClipRect();
-    void renderEditor(const Editor &editor);
-    void renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY);
-    void updateLayout(const Editor& editor);
+    void renderHighlightedRange(const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY, uint32_t scrollOffsetX);
     void updateEditor(Editor &editor);
     void updateFileBrowser(FileBrowser &browser);
     const std::string fitTextToWidthFile(const std::string &text, std::string &extension);
@@ -87,12 +64,14 @@ public:
 
     void onResize(uint32_t w, uint32_t h);
 
+    // Sync layout state from external LayoutManager (used by Application)
+    void setLayoutManager(const LayoutManager &layoutManager);
+
     void setFontSize();
     void handlePlus(SDL_Keymod mod);
     void handleMinus(SDL_Keymod mod);
 
-    void ensureCursorVisibleHorizontally(const Cursor &cursor, const std::string &line);
-    void ensureCursorVisibleHorizontallySearch(uint32_t cursor, const std::string &line);
+    //void ensureCursorVisibleHorizontallySearch(uint32_t cursor, const std::string &line);
 
     int screenY(uint32_t row, uint32_t scrollOffset) const;
     int screenYBrowser(uint32_t row, uint32_t scrollOffset, uint32_t margin) const;
@@ -101,18 +80,17 @@ private:
     SDL_Renderer *mRenderer;
     TTF_Font *mFont;
     TextLayout mTextLayout;
+    TextLayout *mExternalTextLayout = nullptr;
     EditorView mEditorView;
     SearchView mSearchView;
     TerminalView mTerminalView;
     FileBrowserView mFileBrowserView;
     uint8_t mFontSize = 20;
-    ScrollViewport mEditorScrollPort;
-    ScrollViewport mSearchScrollPort;
+    //ScrollViewport mSearchScrollPort;
     CursorBlinker mCursorBlinker;
     Theme mTheme;
     LexerTheme mLexerTheme;
     LayoutManager mLayoutManager;
     SDL_Properties mLayout;
-    int mScrollOffsetX = 0;
     int mScrollOffsetXSearch = 0;
 };

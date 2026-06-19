@@ -49,16 +49,18 @@ struct TerminalLayout
 class LayoutManager{
 
 public:
-    void update(const LayoutInput& input, bool terminalVisible);
+    void update(const SDL_Properties& input, bool terminalVisible);
 
     const LayoutConfig &getLayoutConfig() const;
     const EditorLayout& getEditorLayout() const;
     const SearchLayout& getSearchLayout() const;
     const TerminalLayout& getTerminalLayout() const;
+    const LayoutInput& getLayoutInput() const;
 
 private:
     LayoutConfig mConfig;
     EditorLayout mEditor;
     SearchLayout mSearch;
     TerminalLayout mTerminal;
+    LayoutInput mLayoutInput;
 };

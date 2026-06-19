@@ -28,6 +28,9 @@ Application::Application(int argc, char *argv[])
 
     mRenderer = std::make_unique<Renderer>(mWindow);
 
+    mTextLayout.setFont(mRenderer->getFont());
+    mRenderer->setTextLayout(&mTextLayout);
+
     if (!filename.empty())
     {
         mEditor.loadFile(filename);
@@ -119,9 +122,20 @@ void Application::update()
                 break;
             }
         }
+        mRenderer->clear();
         mEditor.update();
-        mRenderer->updateLayout(mEditor);
+        mLayoutManager.update(mRenderer->getSDL_Properties(), mEditor.isTerminalVisible());
+        
+        mRenderer->setLayoutManager(mLayoutManager);
+
+        mEditor.updateViewPort(mLayoutManager, mLayoutManager.getLayoutInput().lineHeight);
+        mEditorViewPort.updateHorizontal(mEditor, mTextLayout, mLayoutManager.getLayoutConfig(), mLayoutManager.getLayoutInput());
+
+        mEditorView.render(*mRenderer, mEditor, mEditorViewPort, mTextLayout);
+        mSearchView.render(*mRenderer, mEditor, mTextLayout);
+        mTerminalView.render(*mRenderer, mEditor, mTextLayout);
         mRenderer->updateEditor(mEditor);
+        mRenderer->present();
         break;
     case Screen::FileBrowser:
         mRenderer->updateFileBrowser(mFileBrowser);
