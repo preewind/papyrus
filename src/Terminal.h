@@ -16,16 +16,9 @@ class Terminal
 
 public:
     void handleKey(const SDL_Event &event);
-    void handleTextInput(const std::string &text);
-    void handleBackSpace();
-    void handleDelete();
     void handleReturn();
     void handleUp(SDL_Keymod mod);
     void handleDown(SDL_Keymod mod);
-    void handleRight();
-    void handleLeft();
-    void handleHome();
-    void handleEnd();
     std::string getInput() const;
     TextBuffer getOutput() const;
     uint32_t getCursor() const;

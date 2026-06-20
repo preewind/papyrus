@@ -47,21 +47,6 @@ std::string SearchSession::getQuery() const
     return mQuery.getText();
 }
 
-void SearchSession::addToQuery(const std::string &text)
-{
-    mQuery.insert(text);
-}
-
-void SearchSession::addToCursor(uint32_t size)
-{
-    mQuery.addToCursor(size);
-}
-
-void SearchSession::resetCursor()
-{
-    mQuery.moveHome();
-}
-
 uint32_t SearchSession::getCursor() const
 {
     return mQuery.getCursor();

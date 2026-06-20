@@ -438,7 +438,6 @@ void Editor::handleF(SDL_Keymod mod)
         }
         else
         {
-            mSearch->resetCursor();
             mSearch.reset();
             LOG_DEBUG() << "Search deactivated!";
         }

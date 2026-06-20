@@ -1,7 +1,6 @@
 #include <sstream>
 
 #include "Terminal.h"
-#include "logger.h"
 #include "util.h"
 
 void Terminal::handleKey(const SDL_Event &event)
@@ -26,21 +25,6 @@ void Terminal::handleKey(const SDL_Event &event)
         }
     }
     mInput.handleKey(event);
-}
-
-void Terminal::handleTextInput(const std::string &text)
-{
-    mInput.insert(text);
-}
-
-void Terminal::handleBackSpace()
-{
-    mInput.backspace();
-}
-
-void Terminal::handleDelete()
-{
-    mInput.del();
 }
 
 void Terminal::handleReturn()
@@ -91,7 +75,7 @@ void Terminal::handleUp(SDL_Keymod mod)
             mHistoryIndex++;
             mInput.clear();
             uint32_t targetIndex = mCmdHistory.size() - mHistoryIndex;
-            handleTextInput(mCmdHistory[targetIndex]);
+            mInput.insert(mCmdHistory[targetIndex]);
         }
     }
 }
@@ -115,35 +99,15 @@ void Terminal::handleDown(SDL_Keymod mod)
             mHistoryIndex--;
             if (mHistoryIndex == 0)
             {
-                handleTextInput(mSaveInput);
+                mInput.insert(mSaveInput);
             }
             else
             {
                 uint32_t targetIndex = mCmdHistory.size() - mHistoryIndex;
-                handleTextInput(mCmdHistory[targetIndex]);
+                mInput.insert(mCmdHistory[targetIndex]);
             }
         }
     }
-}
-
-void Terminal::handleRight()
-{
-    mInput.moveRight();
-}
-
-void Terminal::handleLeft()
-{
-    mInput.moveLeft();
-}
-
-void Terminal::handleHome()
-{
-    mInput.moveHome();
-}
-
-void Terminal::handleEnd()
-{
-    mInput.moveEnd();
 }
 
 std::string Terminal::getInput() const

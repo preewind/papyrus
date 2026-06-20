@@ -131,12 +131,10 @@ TEST(TextInput, UndoRevertsLastInsert)
 {
     TextInput input;
     input.insert("hello");
-    EXPECT_TRUE(input.canUndo());
 
     input.handleKey(makeKeyDown(SDLK_Z, SDL_KMOD_CTRL));
 
     EXPECT_EQ(input.getText(), "");
-    EXPECT_FALSE(input.canUndo());
 }
 
 TEST(TextInput, RedoReappliesInsert)
@@ -145,7 +143,6 @@ TEST(TextInput, RedoReappliesInsert)
     input.insert("hello");
     input.handleKey(makeKeyDown(SDLK_Z, SDL_KMOD_CTRL));
 
-    EXPECT_TRUE(input.canRedo());
     input.handleKey(makeKeyDown(SDLK_Y, SDL_KMOD_CTRL));
 
     EXPECT_EQ(input.getText(), "hello");
@@ -157,10 +154,9 @@ TEST(TextInput, NewMutationClearsRedoStack)
     TextInput input;
     input.insert("hello");
     input.undo();
-    EXPECT_TRUE(input.canRedo());
 
     input.insert("world");
-    EXPECT_FALSE(input.canRedo());
+    input.redo();
     EXPECT_EQ(input.getText(), "world");
 }
 
@@ -183,5 +179,6 @@ TEST(TextInput, ClearResetsUndoStack)
     input.clear();
 
     EXPECT_EQ(input.getText(), "");
-    EXPECT_FALSE(input.canUndo());
+    input.undo();
+    EXPECT_EQ(input.getText(), "");
 }

@@ -204,15 +204,6 @@ void TextInput::clear()
     mRedoStack.clear();
 }
 
-void TextInput::setText(const std::string &text)
-{
-    mText = text;
-    mCursor = mText.size();
-    clearSelection();
-    mUndoStack.clear();
-    mRedoStack.clear();
-}
-
 const std::string &TextInput::getText() const
 {
     return mText;
@@ -260,16 +251,6 @@ TextSelection TextInput::getSelection() const
     return mSelection;
 }
 
-std::string TextInput::getSelectedText() const
-{
-    if (!hasSelection())
-    {
-        return std::string();
-    }
-    TextSelection normalized = mSelection.normalized();
-    return mText.substr(normalized.begin, normalized.end - normalized.begin);
-}
-
 void TextInput::saveSnapshot()
 {
     mUndoStack.push_back({mText, mCursor});
@@ -302,14 +283,4 @@ void TextInput::redo()
     mText = snapshot.text;
     mCursor = snapshot.cursor;
     clearSelection();
-}
-
-bool TextInput::canUndo() const
-{
-    return !mUndoStack.empty();
-}
-
-bool TextInput::canRedo() const
-{
-    return !mRedoStack.empty();
 }

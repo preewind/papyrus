@@ -12,6 +12,7 @@
 #include "TextBuffer.h"
 #include "types.h"
 #include "SearchSession.h"
+#include "SearchEngine.h"
 #include "SyntaxHighlighter.h"
 #include "Terminal.h"
 #include "UndoManager.h"
@@ -96,7 +97,6 @@ public:
     void beginSelection();
     void updateSelection();
     const std::string getSelectedText() const;
-    void handleSearchEvent(const SDL_Event &event);
 
     Cursor getCursor() const;
     const std::string &getLineString(int i) const;
@@ -108,6 +108,8 @@ public:
     void updateViewPort(const LayoutManager& layout, uint32_t lineHeight);
 
 private:
+    void handleSearchEvent(const SDL_Event &event);
+
     Selection mSelection;
     Cursor mCursor;
     TextBuffer mBuffer;

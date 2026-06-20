@@ -41,7 +41,6 @@ public:
     void setCursor(uint32_t cursor);
     void addToCursor(uint32_t amount);
     void clear();
-    void setText(const std::string &text);
 
     const std::string &getText() const;
     uint32_t getCursor() const;
@@ -51,12 +50,9 @@ public:
     void clearSelection();
     bool hasSelection() const;
     TextSelection getSelection() const;
-    std::string getSelectedText() const;
 
     void undo();
     void redo();
-    bool canUndo() const;
-    bool canRedo() const;
 
 private:
     struct Snapshot
