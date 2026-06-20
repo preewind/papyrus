@@ -1,55 +1,26 @@
 #include "SearchSession.h"
 
-std::string SearchSession::getQuery() const
-{
-    return mQuery.getLine(0);
-}
+#include <SDL3/SDL_keycode.h>
 
-void SearchSession::addToQuery(const std::string &text)
+Cursor SearchSession::handleKey(const SDL_Event &event, Cursor editorCursor)
 {
-    mQuery.insert(0, mCursor, text);
-    mCursor += text.size();
-}
-
-void SearchSession::handleBackSpace()
-{
-    if (mCursor > 0)
+    if (event.type == SDL_EVENT_KEY_DOWN)
     {
-        mQuery.erase(0, mCursor - 1);
-        mCursor--;
+        switch (event.key.key)
+        {
+        case SDLK_UP:
+            return cycleUp(editorCursor);
+        case SDLK_DOWN:
+            return cycleDown(editorCursor);
+        default:
+            break;
+        }
     }
+    mQuery.handleKey(event);
+    return editorCursor;
 }
 
-void SearchSession::handleDelete()
-{
-    if (mCursor < mQuery.getLineSize(0))
-    {
-        mQuery.erase(0, mCursor);
-    }
-}
-
-void SearchSession::handleLeft()
-{
-    if (mCursor > 0)
-    {
-        mCursor--;
-    }
-}
-
-void SearchSession::handleRight()
-{
-    if (mCursor < mQuery.getLineSize(0))
-    {
-        mCursor++;
-    }
-}
-
-void SearchSession::handleEnd()
-{
-    mCursor = mQuery.getLineSize(0);
-}
-
-Cursor SearchSession::handleUp(Cursor &cursor)
+Cursor SearchSession::cycleUp(Cursor editorCursor)
 {
     if (hasMatches())
     {
@@ -57,10 +28,10 @@ Cursor SearchSession::handleUp(Cursor &cursor)
         SearchMatch match = mMatches[mCurrentMatch];
         return {match.row, match.col};
     }
-    return cursor;
+    return editorCursor;
 }
 
-Cursor SearchSession::handleDown(Cursor &cursor)
+Cursor SearchSession::cycleDown(Cursor editorCursor)
 {
     if (hasMatches())
     {
@@ -68,22 +39,32 @@ Cursor SearchSession::handleDown(Cursor &cursor)
         SearchMatch match = mMatches[mCurrentMatch];
         return {match.row, match.col};
     }
-    return cursor;
+    return editorCursor;
+}
+
+std::string SearchSession::getQuery() const
+{
+    return mQuery.getText();
+}
+
+void SearchSession::addToQuery(const std::string &text)
+{
+    mQuery.insert(text);
 }
 
 void SearchSession::addToCursor(uint32_t size)
 {
-    mCursor += size;
+    mQuery.addToCursor(size);
 }
 
 void SearchSession::resetCursor()
 {
-    mCursor = 0;
+    mQuery.moveHome();
 }
 
 uint32_t SearchSession::getCursor() const
 {
-    return mCursor;
+    return mQuery.getCursor();
 }
 
 void SearchSession::setMatches(const std::vector<SearchMatch> &matches)
@@ -104,4 +85,14 @@ uint32_t SearchSession::getCurrentMatchIndex() const
 bool SearchSession::hasMatches() const
 {
     return mMatches.size() > 0;
+}
+
+bool SearchSession::hasSelection() const
+{
+    return mQuery.hasSelection();
+}
+
+TextSelection SearchSession::getSelection() const
+{
+    return mQuery.getSelection();
 }

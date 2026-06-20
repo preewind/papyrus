@@ -55,6 +55,8 @@ add_executable(papyrus
     src/UndoManager.cpp
     src/TextBuffer.cpp
     src/TextBuffer.h
+    src/TextInput.h
+    src/TextInput.cpp
     src/FileBrowser.h
     src/FileBrowser.cpp
     src/SearchSession.h

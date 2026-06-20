@@ -7,6 +7,7 @@
 #include <SDL3/SDL_events.h>
 
 #include "TextBuffer.h"
+#include "TextInput.h"
 #include "CommandProcessor.h"
 #include "types.h"
 
@@ -32,13 +33,14 @@ public:
     uint32_t getVisibleRows() const;
     void setVisibleRows(uint32_t rows);
     std::optional<CommandRequest> consumeRequest();
+    bool hasSelection() const;
+    TextSelection getSelection() const;
 
 private:
-    TextBuffer mInput;
+    TextInput mInput;
     std::vector<std::string> mCmdHistory;
     std::string mSaveInput = "";
     uint32_t mHistoryIndex = 0;
-    uint32_t mCursor = 0;
     uint32_t mScrollOffset = 0;
     uint32_t mVisibleRows = 0;
     CommandProcessor mProcessor;

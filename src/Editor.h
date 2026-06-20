@@ -96,6 +96,7 @@ public:
     void beginSelection();
     void updateSelection();
     const std::string getSelectedText() const;
+    void handleSearchEvent(const SDL_Event &event);
 
     Cursor getCursor() const;
     const std::string &getLineString(int i) const;

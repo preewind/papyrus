@@ -30,16 +30,48 @@ void Editor::handlePaneKeyHandler(const SDL_Event &event)
     }
 }
 
+void Editor::handleSearchEvent(const SDL_Event &event)
+{
+    std::string prevQuery = mSearch->getQuery();
+    mCursor = mSearch->handleKey(event, mCursor);
+    if (mSearch->getQuery() != prevQuery)
+    {
+        updateSearchMatches();
+        LOG_DEBUG() << "Search: " << mSearch->getQuery();
+    }
+    markActivity();
+}
+
 void Editor::handleKey(const SDL_Event &event)
 {
     if (event.type == SDL_EVENT_TEXT_INPUT)
     {
-        handleTextInput(event.text.text);
+        if (isSearchActive())
+        {
+            handleSearchEvent(event);
+        }
+        else
+        {
+            handleTextInput(event.text.text);
+        }
     }
-    if (event.type == SDL_EVENT_KEY_DOWN)
+    else if (event.type == SDL_EVENT_KEY_DOWN)
     {
         SDL_Keycode key = event.key.key;
         SDL_Keymod mod = event.key.mod;
+
+        if (key == SDLK_F)
+        {
+            handleF(mod);
+            return;
+        }
+
+        if (isSearchActive())
+        {
+            handleSearchEvent(event);
+            return;
+        }
+
         switch (key)
         {
         case SDLK_BACKSPACE:
@@ -81,9 +113,6 @@ void Editor::handleKey(const SDL_Event &event)
         case SDLK_C:
             handleC(mod);
             break;
-        case SDLK_F:
-            handleF(mod);
-            break;
         case SDLK_S:
             handleS(mod);
             break;
@@ -115,34 +144,17 @@ void Editor::handleKey(const SDL_Event &event)
 
 void Editor::handleTextInput(const std::string &text)
 {
-    if (isSearchActive())
-    {
-        mSearch->addToQuery(text);
-        updateSearchMatches();
-        LOG_DEBUG() << "Search: " << mSearch->getQuery();
-    }
-    else
-    {
-        insertText(mCursor, text);
-        mCursor.col += text.size();
-        clearSelection();
-        updateTokens();
-    }
+    insertText(mCursor, text);
+    mCursor.col += text.size();
+    clearSelection();
+    updateTokens();
     markActivity();
 }
 
 void Editor::handleBackSpace(SDL_Keymod mod)
 {
-    if (isSearchActive())
-    {
-        mSearch->handleBackSpace();
-        updateSearchMatches();
-    }
-    else
-    {
-        if (mSelectionActive)
+    if (mSelectionActive)
         {
-            // mBuffer.eraseRangeMultiRow(mSelection.normalized());
             Selection normSel = mSelection.normalized();
             Position targetPos = normSel.begin;
             std::string textToDelete = mBuffer.getTextSlice(normSel.begin, normSel.end);
@@ -157,7 +169,6 @@ void Editor::handleBackSpace(SDL_Keymod mod)
                 // delete word left to cursor
                 Range leftWord = findWordLeftOfIndex(mBuffer.getLine(mCursor.row).substr(0, mCursor.col));
                 deleteText({mCursor.row, leftWord.start}, mBuffer.getLine(mCursor.row).substr(leftWord.start, leftWord.end - leftWord.start));
-                // mBuffer.eraseRange(mCursor.row, leftWord);
                 mCursor.col = leftWord.start;
             }
             else
@@ -182,7 +193,6 @@ void Editor::handleBackSpace(SDL_Keymod mod)
         }
         clearSelection();
         updateTokens();
-    }
     markActivity();
 }
 void Editor::handleReturn()
@@ -200,15 +210,8 @@ void Editor::handleReturn()
 
 void Editor::handleDelete(SDL_Keymod mod)
 {
-    if (isSearchActive())
-    {
-        mSearch->handleDelete();
-        updateSearchMatches();
-    }
-    else
-    {
-        bool shiftHeld = mod & SDL_KMOD_SHIFT;
-        bool ctrlHeld = mod & SDL_KMOD_CTRL;
+    bool shiftHeld = mod & SDL_KMOD_SHIFT;
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
 
         // shift + del deletes entire line
         if (shiftHeld)
@@ -221,16 +224,12 @@ void Editor::handleDelete(SDL_Keymod mod)
             }
             deleteText(targetPos, textToDelete);
             mCursor = targetPos;
-            // mBuffer.eraseRange(mCursor.row, 0, mBuffer.getLineSize(mCursor.row));
-            // mBuffer.mergeWithNext(mCursor.row);
-            // moveCursorToBeginCol();
         }
         else if (ctrlHeld)
         {
             // delete word right to cursor
             Range rightWord = findWordRightOfIndex(mBuffer.getLine(mCursor.row).substr(mCursor.col, mBuffer.getLineSize(mCursor.row)));
             deleteText({mCursor.row, mCursor.col + rightWord.start}, mBuffer.getLine(mCursor.row).substr(mCursor.col + rightWord.start, rightWord.end - rightWord.start));
-            // mBuffer.eraseRange(mCursor.row, mCursor.col + rightWord.start, mCursor.col + rightWord.end);
         }
         else
         {
@@ -240,195 +239,150 @@ void Editor::handleDelete(SDL_Keymod mod)
             {
                 targetPos = mCursor;
                 textToDelete = mBuffer.getLine(mCursor.row).substr(mCursor.col, 1);
-                // mBuffer.erase(mCursor.row, mCursor.col);
             }
             else if (mCursor.col == mBuffer.getLineSize(mCursor.row) && mCursor.row < mBuffer.getLineCount() - 1)
             {
                 targetPos = {mCursor.row, mBuffer.getLineSize(mCursor.row)};
                 textToDelete = "\n";
-                // mBuffer.mergeWithNext(mCursor.row);
             }
             deleteText(targetPos, textToDelete);
         }
 
         clearSelection();
         updateTokens();
-    }
     markActivity();
 }
 
 void Editor::handleLeft(SDL_Keymod mod)
 {
-    if (isSearchActive())
+    bool shiftHeld = mod & SDL_KMOD_SHIFT;
+    if (shiftHeld && !mSelectionActive)
     {
-        mSearch->handleLeft();
+        beginSelection();
+    }
+    moveCursorLeft(mod);
+
+    if (shiftHeld)
+    {
+        updateSelection();
     }
     else
     {
-        bool shiftHeld = mod & SDL_KMOD_SHIFT;
-        if (shiftHeld && !mSelectionActive)
-        {
-            beginSelection();
-        }
-        moveCursorLeft(mod);
-
-        if (shiftHeld)
-        {
-            updateSelection();
-        }
-        else
-        {
-            clearSelection();
-        }
+        clearSelection();
     }
     markActivity();
 }
 
 void Editor::handleRight(SDL_Keymod mod)
 {
-    if (isSearchActive())
+    bool shiftHeld = mod & SDL_KMOD_SHIFT;
+    if (shiftHeld && !mSelectionActive)
     {
-        mSearch->handleRight();
+        beginSelection();
+    }
+    moveCursorRight(mod);
+
+    if (shiftHeld)
+    {
+        updateSelection();
     }
     else
     {
-        bool shiftHeld = mod & SDL_KMOD_SHIFT;
-        if (shiftHeld && !mSelectionActive)
-        {
-            beginSelection();
-        }
-        moveCursorRight(mod);
-
-        if (shiftHeld)
-        {
-            updateSelection();
-        }
-        else
-        {
-            clearSelection();
-        }
+        clearSelection();
     }
     markActivity();
 }
 
 void Editor::handleUp(SDL_Keymod mod)
 {
-    if (isSearchActive())
+    bool shiftHeld = mod & SDL_KMOD_SHIFT;
+    if (shiftHeld && !mSelectionActive)
     {
-        mCursor = mSearch->handleUp(mCursor);
+        beginSelection();
+    }
+    moveCursorUp();
+
+    if (shiftHeld)
+    {
+        updateSelection();
     }
     else
     {
-        bool shiftHeld = mod & SDL_KMOD_SHIFT;
-        if (shiftHeld && !mSelectionActive)
-        {
-            beginSelection();
-        }
-        moveCursorUp();
-
-        if (shiftHeld)
-        {
-            updateSelection();
-        }
-        else
-        {
-            clearSelection();
-        }
+        clearSelection();
     }
     markActivity();
 }
 
 void Editor::handleDown(SDL_Keymod mod)
 {
-    if (isSearchActive())
+    bool shiftHeld = mod & SDL_KMOD_SHIFT;
+    if (shiftHeld && !mSelectionActive)
     {
-        mCursor = mSearch->handleDown(mCursor);
+        beginSelection();
+    }
+    moveCursorDown();
+
+    if (shiftHeld)
+    {
+        updateSelection();
     }
     else
     {
-        bool shiftHeld = mod & SDL_KMOD_SHIFT;
-        if (shiftHeld && !mSelectionActive)
-        {
-            beginSelection();
-        }
-        moveCursorDown();
-
-        if (shiftHeld)
-        {
-            updateSelection();
-        }
-        else
-        {
-            clearSelection();
-        }
+        clearSelection();
     }
     markActivity();
 }
 
 void Editor::handleHome(SDL_Keymod mod)
 {
-    if (isSearchActive())
+    bool shiftHeld = mod & SDL_KMOD_SHIFT;
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+
+    if (shiftHeld && !mSelectionActive)
     {
-        mSearch->resetCursor();
+        beginSelection();
+    }
+    if (ctrlHeld)
+    {
+        moveCursorToFirstRow();
+    }
+
+    moveCursorToBeginCol();
+
+    if (shiftHeld)
+    {
+        updateSelection();
     }
     else
     {
-        bool shiftHeld = mod & SDL_KMOD_SHIFT;
-        bool ctrlHeld = mod & SDL_KMOD_CTRL;
-
-        if (shiftHeld && !mSelectionActive)
-        {
-            beginSelection();
-        }
-        if (ctrlHeld)
-        {
-            moveCursorToFirstRow();
-        }
-
-        moveCursorToBeginCol();
-
-        if (shiftHeld)
-        {
-            updateSelection();
-        }
-        else
-        {
-            clearSelection();
-        }
+        clearSelection();
     }
     markActivity();
 }
 
 void Editor::handleEnd(SDL_Keymod mod)
 {
-    if (isSearchActive())
+    bool shiftHeld = mod & SDL_KMOD_SHIFT;
+    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+
+    if (shiftHeld && !mSelectionActive)
     {
-        mSearch->handleEnd();
+        beginSelection();
+    }
+    if (ctrlHeld)
+    {
+        moveCursorToLastRow();
+    }
+
+    moveCursorToEndCol();
+
+    if (shiftHeld)
+    {
+        updateSelection();
     }
     else
     {
-        bool shiftHeld = mod & SDL_KMOD_SHIFT;
-        bool ctrlHeld = mod & SDL_KMOD_CTRL;
-
-        if (shiftHeld && !mSelectionActive)
-        {
-            beginSelection();
-        }
-        if (ctrlHeld)
-        {
-            moveCursorToLastRow();
-        }
-
-        moveCursorToEndCol();
-
-        if (shiftHeld)
-        {
-            updateSelection();
-        }
-        else
-        {
-            clearSelection();
-        }
+        clearSelection();
     }
     markActivity();
 }
@@ -541,8 +495,6 @@ void Editor::handleX(SDL_Keymod mod)
         Position targetPos = normSel.begin;
         deleteText(targetPos, text);
         mCursor = targetPos;
-        // mBuffer.eraseRangeMultiRow(mSelection.normalized());
-        // mCursor = mSelection.normalized().begin;
         clearSelection();
         updateTokens();
     }
@@ -551,7 +503,7 @@ void Editor::handleX(SDL_Keymod mod)
 void Editor::handleY(SDL_Keymod mod)
 {
     bool ctrlHeld = mod & SDL_KMOD_CTRL;
-    if (ctrlHeld && mUndoManager.canRedo())
+    if (ctrlHeld && !isSearchActive() && mUndoManager.canRedo())
     {
         mCursor = mUndoManager.redo(mBuffer);
         updateTokens();
@@ -562,7 +514,7 @@ void Editor::handleY(SDL_Keymod mod)
 void Editor::handleZ(SDL_Keymod mod)
 {
     bool ctrlHeld = mod & SDL_KMOD_CTRL;
-    if (ctrlHeld && mUndoManager.canUndo())
+    if (ctrlHeld && !isSearchActive() && mUndoManager.canUndo())
     {
         mCursor = mUndoManager.undo(mBuffer);
         updateTokens();
