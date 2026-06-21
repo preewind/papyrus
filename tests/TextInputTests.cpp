@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <SDL3/SDL_clipboard.h>
 #include <SDL3/SDL_keycode.h>
 #include <SDL3/SDL_events.h>
 
@@ -181,4 +182,60 @@ TEST(TextInput, ClearResetsUndoStack)
     EXPECT_EQ(input.getText(), "");
     input.undo();
     EXPECT_EQ(input.getText(), "");
+}
+
+TEST(TextInput, CtrlCCopiesSelectedText)
+{
+    TextInput input;
+    input.insert("abcdef");
+
+    input.setCursor(1);
+    input.beginSelection();
+    input.setCursor(4);
+    input.updateSelection();
+
+    if (!SDL_SetClipboardText(""))
+    {
+        GTEST_SKIP() << "Clipboard not available in this environment";
+    }
+
+    EXPECT_TRUE(input.handleKey(makeKeyDown(SDLK_C, SDL_KMOD_CTRL)));
+    EXPECT_EQ(std::string(SDL_GetClipboardText()), "bcd");
+}
+
+TEST(TextInput, CtrlXCutsSelectionAndCopiesText)
+{
+    TextInput input;
+    input.insert("abcdef");
+
+    input.setCursor(1);
+    input.beginSelection();
+    input.setCursor(4);
+    input.updateSelection();
+
+    if (!SDL_SetClipboardText(""))
+    {
+        GTEST_SKIP() << "Clipboard not available in this environment";
+    }
+
+    EXPECT_TRUE(input.handleKey(makeKeyDown(SDLK_X, SDL_KMOD_CTRL)));
+    EXPECT_EQ(std::string(SDL_GetClipboardText()), "bcd");
+    EXPECT_EQ(input.getText(), "aef");
+    EXPECT_EQ(input.getCursor(), 1u);
+}
+
+TEST(TextInput, CtrlVPastesClipboardTextAtCursor)
+{
+    TextInput input;
+    input.insert("ab");
+    input.setCursor(1);
+
+    if (!SDL_SetClipboardText("XYZ"))
+    {
+        GTEST_SKIP() << "Clipboard not available in this environment";
+    }
+
+    EXPECT_TRUE(input.handleKey(makeKeyDown(SDLK_V, SDL_KMOD_CTRL)));
+    EXPECT_EQ(input.getText(), "aXYZb");
+    EXPECT_EQ(input.getCursor(), 4u);
 }

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include <SDL3/SDL_clipboard.h>
 #include <SDL3/SDL_keycode.h>
 
 bool TextInput::handleKey(const SDL_Event &event)
@@ -87,6 +88,27 @@ bool TextInput::handleKey(const SDL_Event &event)
         if (ctrlHeld)
         {
             redo();
+            return true;
+        }
+        return false;
+    case SDLK_C:
+        if (ctrlHeld)
+        {
+            copySelectionToClipboard();
+            return true;
+        }
+        return false;
+    case SDLK_X:
+        if (ctrlHeld)
+        {
+            cutSelectionToClipboard();
+            return true;
+        }
+        return false;
+    case SDLK_V:
+        if (ctrlHeld)
+        {
+            pasteClipboardText();
             return true;
         }
         return false;
@@ -249,6 +271,47 @@ bool TextInput::hasSelection() const
 TextSelection TextInput::getSelection() const
 {
     return mSelection;
+}
+
+std::string TextInput::selectedText() const
+{
+    if (!hasSelection())
+    {
+        return std::string();
+    }
+
+    TextSelection normalized = mSelection.normalized();
+    return mText.substr(normalized.begin, normalized.end - normalized.begin);
+}
+
+void TextInput::copySelectionToClipboard()
+{
+    if (!hasSelection())
+    {
+        return;
+    }
+
+    SDL_SetClipboardText(selectedText().c_str());
+}
+
+void TextInput::cutSelectionToClipboard()
+{
+    if (!hasSelection())
+    {
+        return;
+    }
+
+    SDL_SetClipboardText(selectedText().c_str());
+    del();
+}
+
+void TextInput::pasteClipboardText()
+{
+    std::string text = SDL_GetClipboardText();
+    if (!text.empty())
+    {
+        insert(text);
+    }
 }
 
 void TextInput::saveSnapshot()

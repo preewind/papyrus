@@ -61,6 +61,11 @@ private:
         uint32_t cursor;
     };
 
+    std::string selectedText() const;
+    void copySelectionToClipboard();
+    void cutSelectionToClipboard();
+    void pasteClipboardText();
+
     void saveSnapshot();
 
     std::string mText;
