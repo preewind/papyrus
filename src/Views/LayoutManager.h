@@ -45,6 +45,22 @@ struct TerminalLayout
     uint32_t marginLeft = 10;
 };
 
+struct FileBrowserLayout
+{
+    Rect listViewport;
+    uint32_t lineHeight = 0;
+    uint32_t visibleRows = 0;
+
+    uint32_t pathTextX = 0;
+    uint32_t pathTextY = 0;
+    uint32_t statusTextX = 0;
+    uint32_t statusTextY = 0;
+
+    uint32_t legendAnchorRightX = 0;
+    uint32_t legendY = 0;
+    uint32_t legendMarkerSize = 0;
+};
+
 
 class LayoutManager{
 
@@ -55,6 +71,7 @@ public:
     const EditorLayout& getEditorLayout() const;
     const SearchLayout& getSearchLayout() const;
     const TerminalLayout& getTerminalLayout() const;
+    const FileBrowserLayout &getFileBrowserLayout() const;
     const LayoutInput& getLayoutInput() const;
 
 private:
@@ -62,5 +79,6 @@ private:
     EditorLayout mEditor;
     SearchLayout mSearch;
     TerminalLayout mTerminal;
+    FileBrowserLayout mFileBrowser;
     LayoutInput mLayoutInput;
 };

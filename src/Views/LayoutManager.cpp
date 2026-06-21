@@ -1,4 +1,5 @@
 
+#include <algorithm>
 
 #include "LayoutManager.h"
 
@@ -33,6 +34,40 @@ void LayoutManager::update(const SDL_Properties& input, bool terminalVisible)
     mSearch.textY = searchQueryBoxY + (searchQueryHeight - input.lineHeight) / 2; // gives you a vertically centered text
     mSearch.matchBoxTextX =searchMatchBoxX + mSearch.textPadding;
 
+    // file browser layout
+    mFileBrowser.lineHeight = input.lineHeight;
+    mFileBrowser.pathTextX = mConfig.editorMarginLeft;
+    mFileBrowser.pathTextY = mConfig.editorMarginTop;
+    mFileBrowser.statusTextX = mConfig.editorMarginLeft;
+    mFileBrowser.statusTextY = mConfig.editorMarginTop + input.lineHeight;
+
+    uint32_t fileListTop = mConfig.editorMarginTop + (input.lineHeight * 2);
+    uint32_t listWidth = 0;
+    if (input.totalWindowWidth > mConfig.editorMarginLeft + mConfig.editorMarginRight)
+    {
+        listWidth = input.totalWindowWidth - mConfig.editorMarginLeft - mConfig.editorMarginRight;
+    }
+
+    uint32_t listHeight = 0;
+    if (input.totalWindowHeight > fileListTop)
+    {
+        listHeight = input.totalWindowHeight - fileListTop;
+    }
+
+    mFileBrowser.listViewport = {mConfig.editorMarginLeft, fileListTop, listWidth, listHeight};
+    mFileBrowser.visibleRows = (input.lineHeight > 0) ? (listHeight / input.lineHeight) : 0;
+
+    if (input.totalWindowWidth > mConfig.editorMarginRight)
+    {
+        mFileBrowser.legendAnchorRightX = input.totalWindowWidth - mConfig.editorMarginRight;
+    }
+    else
+    {
+        mFileBrowser.legendAnchorRightX = 0;
+    }
+    mFileBrowser.legendY = mConfig.editorMarginTop;
+    mFileBrowser.legendMarkerSize = std::max(8u, input.lineHeight / 2);
+
 }
 
 const LayoutConfig &LayoutManager::getLayoutConfig() const
@@ -53,6 +88,11 @@ const SearchLayout &LayoutManager::getSearchLayout() const
 const TerminalLayout &LayoutManager::getTerminalLayout() const
 {
     return mTerminal;
+}
+
+const FileBrowserLayout &LayoutManager::getFileBrowserLayout() const
+{
+    return mFileBrowser;
 }
 
 const LayoutInput &LayoutManager::getLayoutInput() const

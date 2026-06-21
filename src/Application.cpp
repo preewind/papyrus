@@ -210,7 +210,7 @@ void Application::updateFileBrowserScreen()
 {
     mLayoutManager.update(mRenderer->getSDL_Properties(), false);
     mRenderer->clear();
-    mFileBrowserView.render(*mRenderer, mFileBrowser, mTextLayout, mLayoutManager.getLayoutConfig(), mRenderer->getSDL_Properties());
+    mFileBrowserView.render(*mRenderer, mFileBrowser, mTextLayout, mLayoutManager.getFileBrowserLayout());
     mRenderer->present();
 
     if (auto file = mFileBrowser.consumeOpenRequest())
