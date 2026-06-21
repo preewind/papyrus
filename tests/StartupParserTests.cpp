@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../src/StartupParser.h"
+#include "StartupParser.h"
 
 #include <string>
 #include <vector>

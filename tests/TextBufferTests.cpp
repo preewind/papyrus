@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/TextBuffer.h"
+#include "TextBuffer.h"
 
 TEST(TextBuffer, InsertFormattedSingleLine)
 {

@@ -9,6 +9,14 @@ function(add_simple_test testName src)
 
     target_include_directories(papyrus_${testName} PRIVATE
         ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/Core
+        ${CMAKE_SOURCE_DIR}/src/Editor
+        ${CMAKE_SOURCE_DIR}/src/FileBrowser
+        ${CMAKE_SOURCE_DIR}/src/Rendering
+        ${CMAKE_SOURCE_DIR}/src/Search
+        ${CMAKE_SOURCE_DIR}/src/Syntax
+        ${CMAKE_SOURCE_DIR}/src/Terminal
+        ${CMAKE_SOURCE_DIR}/src/Views
     )
 
     target_link_libraries(papyrus_${testName} PRIVATE
@@ -20,9 +28,9 @@ function(add_simple_test testName src)
 endfunction()
 
 # Tests
-add_simple_test(UndoManagerTests UndoManagerTests.cpp ../src/TextBuffer.cpp ../src/UndoManager.cpp)
-add_simple_test(TextBufferTests TextBufferTests.cpp ../src/TextBuffer.cpp)
-add_simple_test(TextInputTests TextInputTests.cpp ../src/TextInput.cpp)
+add_simple_test(UndoManagerTests UndoManagerTests.cpp ../src/Editor/TextBuffer.cpp ../src/Editor/UndoManager.cpp)
+add_simple_test(TextBufferTests TextBufferTests.cpp ../src/Editor/TextBuffer.cpp)
+add_simple_test(TextInputTests TextInputTests.cpp ../src/Editor/TextInput.cpp)
 add_simple_test(ArgParserTests ArgParserTests.cpp)
-add_simple_test(StartupParserTests StartupParserTests.cpp ../src/StartupParser.cpp)
-add_simple_test(EditorCommandHandlerTests EditorCommandHandlerTests.cpp ../src/EditorCommandHandler.cpp)
+add_simple_test(StartupParserTests StartupParserTests.cpp ../src/Core/StartupParser.cpp)
+add_simple_test(EditorCommandHandlerTests EditorCommandHandlerTests.cpp ../src/Editor/EditorCommandHandler.cpp)

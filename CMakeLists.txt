@@ -21,65 +21,18 @@ add_executable(papyrus
     src/main.cpp
     src/Application.h
     src/Application.cpp
-    src/Renderer.cpp
-    src/Renderer.h
-    src/RenderTypes.h
-    src/ITextMeasurer.h
-    src/IRenderBackend.h
-    src/SDLRenderBackend.h
-    src/SDLRenderBackend.cpp
-    src/CursorBlinker.h
-    src/CursorBlinker.cpp
-    src/TextLayout.h
-    src/TextLayout.cpp
-    src/LayoutManager.h
-    src/LayoutManager.cpp
-    src/EditorView.h
-    src/EditorView.cpp
-    src/SearchView.h
-    src/SearchView.cpp
-    src/TerminalView.h
-    src/TerminalView.cpp
-    src/FileBrowserView.h
-    src/FileBrowserView.cpp
-    src/EditorViewPort.h
-    src/EditorViewPort.cpp
-    src/SearchViewPort.h
-    src/SearchViewPort.cpp
-    src/Viewport.h
-    src/Editor.cpp
-    src/Editor.h
-    src/EditorCommandHandler.h
-    src/EditorCommandHandler.cpp
-    src/UndoManager.h
-    src/UndoManager.cpp
-    src/TextBuffer.cpp
-    src/TextBuffer.h
-    src/TextInput.h
-    src/TextInput.cpp
-    src/FileBrowser.h
-    src/FileBrowser.cpp
-    src/SearchSession.h
-    src/SearchSession.cpp
-    src/SearchEngine.h
-    src/SearchEngine.cpp
-    src/SyntaxHighlighter.h
-    src/SyntaxHighlighter.cpp
-    src/CppLexer.h
-    src/CppLexer.cpp
-    src/Terminal.h
-    src/Terminal.cpp
-    src/CommandProcessor.h
-    src/CommandProcessor.cpp
-    src/Argparser.h
-    src/StartupOptions.h
-    src/StartupParser.h
-    src/StartupParser.cpp
-    src/logger.h
-    src/types.h
-    src/util.h
-    src/theme.h
 )
+
+target_include_directories(papyrus PRIVATE src)
+
+add_subdirectory(src/Rendering)
+add_subdirectory(src/Views)
+add_subdirectory(src/Editor)
+add_subdirectory(src/FileBrowser)
+add_subdirectory(src/Search)
+add_subdirectory(src/Syntax)
+add_subdirectory(src/Terminal)
+add_subdirectory(src/Core)
 
 target_link_libraries(papyrus
     PRIVATE

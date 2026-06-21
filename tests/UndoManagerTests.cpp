@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "../src/TextBuffer.h"
-#include "../src/UndoManager.h"
-#include "../src/types.h"
+#include "TextBuffer.h"
+#include "UndoManager.h"
+#include "types.h"
 
 TEST(UndoManager, SingleLineDeleteUndoRedo)
 {

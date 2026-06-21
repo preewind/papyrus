@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../src/Argparser.h"
+#include "Argparser.h"
 
 #include <optional>
 #include <string>
