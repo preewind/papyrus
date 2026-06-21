@@ -14,6 +14,7 @@ struct Theme
     RenderColor lineNumbers{66, 67, 68, 255};
     RenderColor overlayBackground{34, 35, 36, 255};
     RenderColor fileBrowserDir = {255, 255, 0, 255};
+    RenderColor fileBrowserUnsupported{220, 80, 80, 255};
 };
 
 struct LexerTheme
