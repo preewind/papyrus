@@ -90,7 +90,7 @@ CommandResult CommandProcessor::buildCommand(const std::vector<std::string> &arg
 CommandResult CommandProcessor::flexCommand(const std::vector<std::string> &args)
 {
     (void)args;
-    return executeShell("wc -l src/*cpp");
+    return executeShell("find src -type f -name '*.cpp' -print0 | xargs -0 wc -l");
 }
 
 CommandResult CommandProcessor::quitCommand(const std::vector<std::string> &args)
