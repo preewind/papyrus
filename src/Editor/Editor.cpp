@@ -658,14 +658,14 @@ void Editor::adjustCursor(uint32_t visibleRows)
     }
 }
 
-void Editor::loadFile(const std::filesystem::path &path)
+bool Editor::loadFile(const std::filesystem::path &path)
 {
     std::ifstream file{path};
 
     if (!file.is_open())
     {
-        std::cerr << "ERROR: Could not open file " << path << "\n";
-        return;
+        LOG_ERROR() << "ERROR: Could not open file " << path << "\n";
+        return false;
     }
     if (path.extension() == ".cpp" || path.extension() == ".h")
     {
@@ -689,6 +689,7 @@ void Editor::loadFile(const std::filesystem::path &path)
     mCursor.row = 0;
     mCursor.col = 0;
     LOG_INFO() << path << " was loaded!";
+    return true;
 }
 
 void Editor::saveFileAs(const std::filesystem::path &path)

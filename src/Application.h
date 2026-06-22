@@ -35,7 +35,6 @@ private:
     void processEvents();
     void handleEvent(const SDL_Event &event);
     void handleGlobalKeyDown(const SDL_KeyboardEvent &keyEvent);
-    void handleWindowResized();
     void handleHash(SDL_Keymod mod);
     void processEditorCommandRequests();
     void updateEditorScreen();

@@ -4,6 +4,9 @@
 #include "logger.h"
 #include "util.h"
 
+#define WINDOW_WIDTH 1280
+#define WINDOW_HEIGHT 720
+
 Application::Application(int argc, char *argv[])
 {
     const StartupOptions startup = parseStartupOptions(argc, argv);
@@ -17,7 +20,7 @@ Application::Application(int argc, char *argv[])
 
     if (!startup.valid)
     {
-        std::cerr << "Error: " << startup.errorMessage << "\n\n";
+        LOG_ERROR() << "Error: " << startup.errorMessage << "\n\n";
         printUsage();
         mRunning = false;
         mExitCode = startup.exitCode;
@@ -30,8 +33,8 @@ Application::Application(int argc, char *argv[])
 
 void Application::initializeWindowAndRendering()
 {
-    SDL_Init(SDL_INIT_VIDEO);
-    mWindow = SDL_CreateWindow("papyrus", 1280, 720, SDL_WINDOW_RESIZABLE);
+    CSF(SDL_Init(SDL_INIT_VIDEO));
+    mWindow = SDL_CreateWindow("papyrus", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE);
     CSP(mWindow);
     CSF(SDL_StartTextInput(mWindow));
     int windowWidth = 0;
@@ -46,9 +49,8 @@ void Application::initializeWindowAndRendering()
 
 void Application::openInitialFileIfProvided(const std::string &filename)
 {
-    if (!filename.empty())
+    if (!filename.empty() && mEditor.loadFile(filename))
     {
-        mEditor.loadFile(filename);
         updateWindowTitle(std::format("papyrus [{}]", filename));
     }
 }
@@ -102,9 +104,9 @@ void Application::handleEvent(const SDL_Event &event)
     {
         handleGlobalKeyDown(event.key);
     }
-    else if (event.type == SDL_EVENT_WINDOW_RESIZED)
+    else if (event.type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED)
     {
-        handleWindowResized();
+        mRenderer->onResize(event.window.data1, event.window.data2);
     }
     else if (event.type == SDL_EVENT_QUIT)
     {
@@ -144,14 +146,6 @@ void Application::handleGlobalKeyDown(const SDL_KeyboardEvent &keyEvent)
         handleHash(mod);
         break;
     }
-}
-
-void Application::handleWindowResized()
-{
-    int width = 0;
-    int height = 0;
-    SDL_GetWindowSize(mWindow, &width, &height);
-    mRenderer->onResize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 }
 
 void Application::processEditorCommandRequests()
@@ -223,7 +217,7 @@ void Application::updateFileBrowserScreen()
 
 void Application::updateWindowTitle(const std::string &title)
 {
-    SDL_SetWindowTitle(mWindow, title.c_str());
+    CSF(SDL_SetWindowTitle(mWindow, title.c_str()));
 }
 
 void Application::handleHash(SDL_Keymod mod)
@@ -239,13 +233,16 @@ void Application::handleHash(SDL_Keymod mod)
 
 void Application::increaseFontSize()
 {
+    if(mFontSize > 150){
+        return;
+    }
     ++mFontSize;
     mRenderer->setFontSize(mFontSize);
 }
 
 void Application::decreaseFontSize()
 {
-    if (mFontSize <= 1)
+    if (mFontSize <= 10)
     {
         return;
     }
@@ -256,7 +253,7 @@ void Application::decreaseFontSize()
 
 void Application::printUsage() const
 {
-    std::cout << startupUsageText();
+    LOG_INFO() << startupUsageText();
 }
 
 int Application::exitCode() const

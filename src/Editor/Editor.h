@@ -70,7 +70,7 @@ public:
 
     void adjustCursor(uint32_t visibleRows);
 
-    void loadFile(const std::filesystem::path &path);
+    bool loadFile(const std::filesystem::path &path);
     void saveFileAs(const std::filesystem::path &path);
     void saveFile();
 
