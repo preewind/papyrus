@@ -44,7 +44,7 @@ public:
     {
         ArgParseResult result;
 
-        if (argc > 0)
+        if (argc > 0 && argv[0])
         {
             result.executableName = argv[0];
         }
@@ -52,6 +52,11 @@ public:
         bool parseAsPositional = false;
         for (int i = 1; i < argc; ++i)
         {
+            if (!argv[i])
+            {
+                continue;
+            }
+
             const std::string token = argv[i];
 
             if (parseAsPositional || token == "-")

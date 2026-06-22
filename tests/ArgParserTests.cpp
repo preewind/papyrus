@@ -159,3 +159,102 @@ TEST(ArgParser, MissingFlagValueReturnsNullopt)
 
     EXPECT_EQ(result.getFlagValue("does-not-exist"), std::nullopt);
 }
+
+TEST(ArgParser, TrailingFlagWithMissingValue)
+{
+    ArgParser parser;
+    std::vector<std::string> args = {"papyrus", "-o"};
+    std::vector<char *> argv = makeArgv(args);
+
+    const ArgParseResult result = parser.parse(static_cast<int>(argv.size()), argv.data());
+
+    EXPECT_TRUE(result.hasFlag("o"));
+    EXPECT_EQ(result.getFlagValue("o"), std::nullopt);
+}
+
+TEST(ArgParser, TrailingLongFlagWithMissingValue)
+{
+    ArgParser parser;
+    std::vector<std::string> args = {"papyrus", "--theme"};
+    std::vector<char *> argv = makeArgv(args);
+
+    const ArgParseResult result = parser.parse(static_cast<int>(argv.size()), argv.data());
+
+    EXPECT_TRUE(result.hasFlag("theme"));
+    EXPECT_EQ(result.getFlagValue("theme"), std::nullopt);
+}
+
+TEST(ArgParser, LongFlagWithEmptyEqualsValue)
+{
+    ArgParser parser;
+    std::vector<std::string> args = {"papyrus", "--theme="};
+    std::vector<char *> argv = makeArgv(args);
+
+    const ArgParseResult result = parser.parse(static_cast<int>(argv.size()), argv.data());
+
+    EXPECT_TRUE(result.hasFlag("theme"));
+    EXPECT_EQ(result.getFlagValue("theme"), std::optional<std::string>(""));
+}
+
+TEST(ArgParser, HandlesNullPointersInArgv)
+{
+    ArgParser parser;
+    // Constructing a manual argv array containing an explicit inner nullptr
+    std::string exec = "papyrus";
+    std::string pos = "file.txt";
+    std::vector<char *> argv = { exec.data(), nullptr, pos.data() };
+
+    const ArgParseResult result = parser.parse(static_cast<int>(argv.size()), argv.data());
+
+    EXPECT_EQ(result.executableName, "papyrus");
+    ASSERT_EQ(result.positional.size(), 1u);
+    EXPECT_EQ(result.positional[0], "file.txt");
+}
+
+TEST(ArgParser, HandlesZeroArgc)
+{
+    ArgParser parser;
+    const ArgParseResult result = parser.parse(0, nullptr);
+
+    EXPECT_TRUE(result.executableName.empty());
+    EXPECT_TRUE(result.flags.empty());
+    EXPECT_TRUE(result.positional.empty());
+}
+
+TEST(ArgParser, ParsesEmptyStringsAsPositional)
+{
+    ArgParser parser;
+    std::vector<std::string> args = {"papyrus", "", "file.txt"};
+    std::vector<char *> argv = makeArgv(args);
+
+    const ArgParseResult result = parser.parse(static_cast<int>(argv.size()), argv.data());
+
+    ASSERT_EQ(result.positional.size(), 2u);
+    EXPECT_EQ(result.positional[0], "");
+    EXPECT_EQ(result.positional[1], "file.txt");
+}
+
+TEST(ArgParser, TripleDashFlag)
+{
+    ArgParser parser;
+    std::vector<std::string> args = {"papyrus", "---"};
+    std::vector<char *> argv = makeArgv(args);
+
+    const ArgParseResult result = parser.parse(static_cast<int>(argv.size()), argv.data());
+
+    // token.substr(2) results in "-"
+    EXPECT_TRUE(result.hasFlag("-"));
+    EXPECT_EQ(result.getFlagValue("-"), std::nullopt);
+}
+
+TEST(ArgParser, DuplicateFlagsOverwrite)
+{
+    ArgParser parser;
+    std::vector<std::string> args = {"papyrus", "-v", "1", "-v", "2"};
+    std::vector<char *> argv = makeArgv(args);
+
+    const ArgParseResult result = parser.parse(static_cast<int>(argv.size()), argv.data());
+
+    EXPECT_TRUE(result.hasFlag("v"));
+    EXPECT_EQ(result.getFlagValue("v"), std::optional<std::string>("2"));
+}

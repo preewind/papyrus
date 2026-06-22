@@ -33,6 +33,7 @@ add_simple_test(UndoManagerTests UndoManagerTests.cpp ../src/Editor/TextBuffer.c
 add_simple_test(TextBufferTests TextBufferTests.cpp ../src/Editor/TextBuffer.cpp)
 add_simple_test(TextInputTests TextInputTests.cpp ../src/Editor/TextInput.cpp)
 add_simple_test(ArgParserTests ArgParserTests.cpp)
+add_simple_test(LoggerTests LoggerTests.cpp)
 add_simple_test(StartupParserTests StartupParserTests.cpp ../src/Core/StartupParser.cpp)
 add_simple_test(EditorCommandHandlerTests EditorCommandHandlerTests.cpp ../src/Editor/EditorCommandHandler.cpp)
 add_simple_test(ApplicationTests

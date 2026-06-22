@@ -3,8 +3,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-#include <chrono>
-#include <iomanip>
+#include <format>
 #include <filesystem>
 
 enum class LogLevel
@@ -19,7 +18,7 @@ class Logger
 {
 public:
     Logger(LogLevel level, const std::string &file, const std::string &func, int line)
-        : mLevel(level)
+        : mLevel(level), mOutput(getSinkForLevel(level))
     {
         std::filesystem::path path{file};
         std::string cleanPath;
@@ -31,30 +30,41 @@ public:
         {
             cleanPath = path.filename().string();
         }
-        std::cout << "[" << levelToString(level) << "] "
+        mOutput << "[" << levelToString(level) << "] "
                   << "[" << cleanPath << ":" << func << ":" << line << "]: ";
     }
 
-    // This destructor runs at the very end of the macro statement,
-    // appending a final newline and flushing the stream cleanly.
     ~Logger()
     {
-        std::cout << mStream.str() << "\n";
+        mOutput << "\n";
     }
 
-    // Overload so we can chain variables into our log
     template <typename T>
     Logger &operator<<(const T &message)
     {
-        mStream << message;
+        mOutput << message;
         return *this;
     }
 
 private:
     LogLevel mLevel;
-    std::stringstream mStream;
+    std::ostream &mOutput;
 
-    std::string levelToString(LogLevel level)
+    static std::ostream &getSinkForLevel(LogLevel level)
+    {
+        switch (level)
+        {
+        case LogLevel::ERROR:
+            return std::cerr;
+        case LogLevel::WARNING:
+        case LogLevel::INFO:
+        case LogLevel::DEBUG:
+        default:
+            return std::cout;
+        }
+    }
+
+    const std::string levelToString(LogLevel level) const
     {
         switch (level)
         {
