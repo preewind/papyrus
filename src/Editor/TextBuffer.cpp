@@ -1,32 +1,17 @@
+#include <algorithm>
 #include <stdexcept>
 #include <string>
-#include <iostream>
 
 #include "TextBuffer.h"
 #include "logger.h"
 #include "util.h"
 
-TextBuffer::TextBuffer(const std::string &text)
-{
-    mLines.push_back(text);
-}
-
 TextBuffer::TextBuffer(const std::vector<std::string> &buffer)
 {
     mLines = buffer;
-}
-
-void TextBuffer::insert(size_t row, size_t col, const std::string &text)
-{
-    if (row == 0 && mLines.size() == 0)
-    {
-        mLines.resize(1);
+    if(mLines.empty()){
+        mLines.push_back("");
     }
-    else if (mLines.size() <= row)
-    {
-        mLines.resize(row + 1);
-    }
-    mLines[row].insert(col, text);
 }
 
 /**
@@ -51,14 +36,15 @@ Position TextBuffer::insertFormatted(size_t row, size_t col, const std::string &
         mLines.resize(row + 1);
     }
 
-    std::string prefix = mLines[row].substr(0, col);
-    std::string suffix = mLines[row].substr(col);
+    const size_t safeCol = std::min(col, mLines[row].size());
+    std::string prefix = mLines[row].substr(0, safeCol);
+    std::string suffix = mLines[row].substr(safeCol);
 
     // insert one line
     if (lines.size() == 1)
     {
         mLines[row] = prefix + lines.front() + suffix;
-        return {row, col + lines[0].size()};
+        return {row, safeCol + lines[0].size()};
     }
 
     // first line in multiline case
@@ -78,7 +64,8 @@ Position TextBuffer::insertFormatted(size_t row, size_t col, const std::string &
 
 void TextBuffer::insertLine(size_t row, const std::string &text)
 {
-    mLines.insert(mLines.begin() + row, text);
+    const size_t safeRow = std::min(row, mLines.size());
+    mLines.insert(mLines.begin() + safeRow, text);
 }
 
 void TextBuffer::addLine(const std::string &text)
@@ -86,51 +73,45 @@ void TextBuffer::addLine(const std::string &text)
     mLines.push_back(text);
 }
 
-void TextBuffer::erase(size_t row, size_t col)
-{
-    if (row >= mLines.size())
-        return;
-    if (col >= mLines[row].size())
-        return;
-
-    if (!mLines[row].empty())
-    {
-        mLines[row].erase(col, 1);
-    }
-}
-
 void TextBuffer::eraseRange(size_t row, size_t begin_col, size_t end_col)
 {
     if (row >= mLines.size())
-        return;
-
-    if (end_col > mLines[row].size())
-        return;
-    if (begin_col > mLines[row].size())
-        return;
-    if (end_col < begin_col)
-        return;
-
-    if (!mLines[row].empty())
     {
-        mLines[row].erase(begin_col, end_col - begin_col);
+        LOG_WARN() << "eraseRange: row out of bounds (row=" << row << ", lineCount=" << mLines.size() << ")";
+        return;
     }
-}
 
-void TextBuffer::eraseRange(size_t row, Range range)
-{
-    eraseRange(row, range.start, range.end);
-}
+    const size_t lineSize = mLines[row].size();
+    if (begin_col > lineSize || end_col > lineSize || end_col < begin_col)
+    {
+        LOG_WARN() << "eraseRange: invalid column range (row=" << row << ", begin=" << begin_col
+                   << ", end=" << end_col << ", lineSize=" << lineSize << ")";
+        return;
+    }
 
-void TextBuffer::eraseRange(Position pos, uint32_t length)
-{
-    eraseRange(pos.row, pos.col, pos.col + length);
+    if (begin_col == end_col)
+        return;
+
+    mLines[row].erase(begin_col, end_col - begin_col);
 }
 
 void TextBuffer::eraseRangeMultiRow(size_t begin_row, size_t begin_col, size_t end_row, size_t end_col)
 {
     if (begin_row >= mLines.size() || end_row >= mLines.size() || begin_row > end_row)
     {
+        LOG_WARN() << "eraseRangeMultiRow: invalid row range (beginRow=" << begin_row
+                   << ", endRow=" << end_row << ", lineCount=" << mLines.size() << ")";
+        return;
+    }
+
+    const size_t beginLineSize = mLines[begin_row].size();
+    const size_t endLineSize = mLines[end_row].size();
+    if (begin_col > beginLineSize || end_col > endLineSize)
+    {
+        LOG_WARN() << "eraseRangeMultiRow: invalid column range (beginRow=" << begin_row
+                   << ", beginCol=" << begin_col << ", beginLineSize=" << beginLineSize
+                   << ", endRow=" << end_row << ", endCol=" << end_col
+                   << ", endLineSize=" << endLineSize << ")";
         return;
     }
 
@@ -158,11 +139,6 @@ void TextBuffer::eraseRangeMultiRow(size_t begin_row, size_t begin_col, size_t e
     mLines.erase(mLines.begin() + begin_row + 1, mLines.begin() + end_row + 1);
 }
 
-void TextBuffer::eraseRangeMultiRow(const Selection &selection)
-{
-    eraseRangeMultiRow(selection.begin.row, selection.begin.col, selection.end.row, selection.end.col);
-}
-
 /**
  * @brief Deletes a continuous block of text starting from a position, spanning across multiple lines if needed.
  * * It counts characters sequentially. If the length to delete is longer than the current line,
@@ -175,8 +151,11 @@ void TextBuffer::eraseRangeSmart(Position start, uint32_t length)
     if (length == 0)
         return;
 
+    if (start.row >= mLines.size())
+        return;
+
     size_t curRow = start.row;
-    size_t curCol = start.col;
+    size_t curCol = std::min(start.col, mLines[curRow].size());
 
     size_t endRow = curRow;
     size_t endCol = curCol;
@@ -184,7 +163,13 @@ void TextBuffer::eraseRangeSmart(Position start, uint32_t length)
     // advance coordinates by 'length' characters to find the end boundary
     while (length > 0 && endRow < mLines.size())
     {
-        size_t availableInLine = mLines[endRow].size() - endCol;
+        const size_t lineSize = mLines[endRow].size();
+        if (endCol > lineSize)
+        {
+            endCol = lineSize;
+        }
+
+        size_t availableInLine = lineSize - endCol;
 
         if (length <= availableInLine)
         {
@@ -199,41 +184,23 @@ void TextBuffer::eraseRangeSmart(Position start, uint32_t length)
             endCol = 0;
         }
     }
+
+    if (endRow >= mLines.size())
+    {
+        endRow = mLines.size() - 1;
+        endCol = mLines[endRow].size();
+    }
+
     eraseRangeMultiRow(curRow, curCol, endRow, endCol);
-}
-
-void TextBuffer::clear()
-{
-    mLines.clear();
-}
-
-void TextBuffer::splitLine(size_t row, size_t col)
-{
-    if (col > mLines[row].size())
-        return;
-
-    std::string secondPart = mLines[row].substr(col);
-    mLines[row].resize(col);
-    mLines.insert(mLines.begin() + row + 1, std::move(secondPart));
-}
-
-void TextBuffer::splitLine(const Cursor &cursor)
-{
-    splitLine(cursor.row, cursor.col);
-}
-
-void TextBuffer::mergeWithNext(size_t row)
-{
-    if (row >= mLines.size() || row + 1 >= mLines.size())
-        return;
-    mLines[row] += std::move(mLines[row + 1]);
-    mLines.erase(mLines.begin() + row + 1);
 }
 
 void TextBuffer::setLines(const std::vector<std::string> &lines)
 {
     mLines.clear();
     mLines = lines;
+    if(mLines.empty()){
+        mLines.push_back("");
+    }
 }
 
 const std::string &TextBuffer::getLine(size_t row) const
@@ -264,39 +231,53 @@ const std::vector<std::string> &TextBuffer::getText() const
     return mLines;
 }
 
-std::string TextBuffer::getTextSlice(Position &start, Position &end) const
+std::string TextBuffer::getTextSlice(const Position &start, const Position &end) const
 {
+    if (start > end)
+    {
+        return "";
+    }
+
+    if (start.row >= mLines.size() || end.row >= mLines.size())
+    {
+        return "";
+    }
+
     std::string result = "";
     for (size_t row = start.row; row <= end.row; row++)
     {
+        const std::string &line = mLines[row];
+        const size_t lineSize = line.size();
 
-        int beginCol, endCol;
+        size_t beginCol = 0;
+        size_t endCol = lineSize;
+
         if (row == start.row)
         {
-
-            beginCol = start.col;
+            beginCol = std::min(start.col, lineSize);
             // if only one line selected
             if (start.row == end.row)
             {
-                endCol = end.col;
-            }
-            else
-            {
-                endCol = getLineSize(row);
+                endCol = std::min(end.col, lineSize);
             }
         }
         // in between line -> should be fully selected
         else if (row < end.row)
         {
             beginCol = 0;
-            endCol = getLineSize(row);
+            endCol = lineSize;
         }
         else
         {
             beginCol = 0;
-            endCol = end.col;
+            endCol = std::min(end.col, lineSize);
         }
-        const std::string &line = getLine(row);
+
+        if (endCol < beginCol)
+        {
+            return "";
+        }
+
         result += line.substr(beginCol, endCol - beginCol);
         if (row < end.row)
         {

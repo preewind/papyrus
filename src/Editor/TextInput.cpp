@@ -39,7 +39,10 @@ bool TextInput::handleKey(const SDL_Event &event)
             clearSelection();
         }
         moveLeft();
-        if (shiftHeld) updateSelection();
+        if (shiftHeld)
+        {
+            updateSelection();
+        }
         return true;
     case SDLK_RIGHT:
         if (shiftHeld)
@@ -51,7 +54,10 @@ bool TextInput::handleKey(const SDL_Event &event)
             clearSelection();
         }
         moveRight();
-        if (shiftHeld) updateSelection();
+        if (shiftHeld)
+        {
+            updateSelection();
+        }
         return true;
     case SDLK_HOME:
         if (shiftHeld)
@@ -63,7 +69,10 @@ bool TextInput::handleKey(const SDL_Event &event)
             clearSelection();
         }
         moveHome();
-        if (shiftHeld) updateSelection();
+        if (shiftHeld)
+        {
+            updateSelection();
+        }
         return true;
     case SDLK_END:
         if (shiftHeld)
@@ -75,7 +84,10 @@ bool TextInput::handleKey(const SDL_Event &event)
             clearSelection();
         }
         moveEnd();
-        if (shiftHeld) updateSelection();
+        if (shiftHeld)
+        {
+            updateSelection();
+        }
         return true;
     case SDLK_Z:
         if (ctrlHeld)
