@@ -13,10 +13,10 @@ class SearchSession
 public:
     Cursor handleKey(const SDL_Event &event, Cursor editorCursor);
 
-    std::string getQuery() const;
+    const std::string& getQuery() const;
     uint32_t getCursor() const;
     void setMatches(const std::vector<SearchMatch> &matches);
-    std::vector<SearchMatch> getMatches() const;
+    const std::vector<SearchMatch>& getMatches() const;
     uint32_t getCurrentMatchIndex() const;
     bool hasMatches() const;
     bool hasSelection() const;

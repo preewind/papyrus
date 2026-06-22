@@ -42,7 +42,7 @@ Cursor SearchSession::cycleDown(Cursor editorCursor)
     return editorCursor;
 }
 
-std::string SearchSession::getQuery() const
+const std::string& SearchSession::getQuery() const
 {
     return mQuery.getText();
 }
@@ -54,10 +54,11 @@ uint32_t SearchSession::getCursor() const
 
 void SearchSession::setMatches(const std::vector<SearchMatch> &matches)
 {
-    mMatches = matches;
+    mMatches = std::move(matches);
+    mCurrentMatch = 0;
 }
 
-std::vector<SearchMatch> SearchSession::getMatches() const
+const std::vector<SearchMatch>& SearchSession::getMatches() const
 {
     return mMatches;
 }
@@ -69,7 +70,7 @@ uint32_t SearchSession::getCurrentMatchIndex() const
 
 bool SearchSession::hasMatches() const
 {
-    return mMatches.size() > 0;
+    return !mMatches.empty();
 }
 
 bool SearchSession::hasSelection() const

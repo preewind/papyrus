@@ -180,7 +180,7 @@ void EditorView::renderSearchMatches(RenderContext &renderContext, const Editor 
     {
         return;
     }
-    for (SearchMatch &match : editor.getSearch().getMatches())
+    for (const SearchMatch &match : editor.getSearch().getMatches())
     {
         const std::string &line = editor.getLineString(match.row);
         renderHighlightedRange(renderContext, textLayout, line, match.row, match.col, match.length, viewport.scrollY(), viewport.scrollX(), layoutConfig);

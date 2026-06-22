@@ -2,7 +2,7 @@
 #include "TextBuffer.h"
 #include "logger.h"
 
-std::vector<SearchMatch> SearchEngine::find(const TextBuffer &buffer, const std::string &query)
+std::vector<SearchMatch> SearchEngine::find(const TextBuffer &buffer, const std::string &query) const
 {
     std::vector<SearchMatch> matches;
     if (query.empty())
