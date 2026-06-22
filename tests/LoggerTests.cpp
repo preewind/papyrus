@@ -76,15 +76,12 @@ TEST(LoggerTests, PathParsingExtractsParentAndFileName)
     std::stringstream buffer;
     {
         StreamRedirector redirect(std::cout, buffer);
-        
-        // Directly testing the Logger constructor to control the file path string
         Logger(LogLevel::DEBUG, "src/core/Engine.cpp", "Init", 42) << "Booting engine";
     }
 
     const std::string output = buffer.str();
 
     EXPECT_NE(output.find("[DEBUG]"), std::string::npos);
-    // Verifies your cleanPath logic evaluates to "core/Engine.cpp"
     EXPECT_NE(output.find("[core/Engine.cpp:Init:42]"), std::string::npos);
 }
 
@@ -94,12 +91,9 @@ TEST(LoggerTests, PathParsingHandlesFlatFileName)
     {
         StreamRedirector redirect(std::cout, buffer);
         
-        // Directly testing the constructor with no parent directory paths
         Logger(LogLevel::INFO, "main.cpp", "main", 1) << "Entry point";
     }
 
     const std::string output = buffer.str();
-
-    // Verifies your cleanPath logic handles paths without a parent correctly
     EXPECT_NE(output.find("[main.cpp:main:1]"), std::string::npos);
 }

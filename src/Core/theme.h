@@ -19,11 +19,11 @@ struct Theme
 
 struct LexerTheme
 {
-    RenderColor Punctuation = {255, 255, 0, 255};
-    RenderColor Comment = {139, 148, 158, 255};
-    RenderColor String = {165, 214, 255, 255};
-    RenderColor Keyword = {255, 123, 114, 255};
-    RenderColor Preprocessor = {197, 134, 192, 255};
-    RenderColor IncludeLib = {165, 214, 255, 255};
+    RenderColor punctuation = {255, 255, 0, 255};
+    RenderColor comment = {139, 148, 158, 255};
+    RenderColor string = {165, 214, 255, 255};
+    RenderColor keyword = {255, 123, 114, 255};
+    RenderColor preprocessor = {197, 134, 192, 255};
+    RenderColor includeLib = {165, 214, 255, 255};
     RenderColor Default = {255, 255, 255, 255};
 };

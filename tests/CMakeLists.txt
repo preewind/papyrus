@@ -34,6 +34,9 @@ add_simple_test(TextBufferTests TextBufferTests.cpp ../src/Editor/TextBuffer.cpp
 add_simple_test(TextInputTests TextInputTests.cpp ../src/Editor/TextInput.cpp)
 add_simple_test(ArgParserTests ArgParserTests.cpp)
 add_simple_test(LoggerTests LoggerTests.cpp)
+add_simple_test(UtilTests UtilTests.cpp)
+add_simple_test(ThemeTests ThemeTests.cpp)
+add_simple_test(TypesTests TypesTests.cpp)
 add_simple_test(StartupParserTests StartupParserTests.cpp ../src/Core/StartupParser.cpp)
 add_simple_test(EditorCommandHandlerTests EditorCommandHandlerTests.cpp ../src/Editor/EditorCommandHandler.cpp)
 add_simple_test(ApplicationTests

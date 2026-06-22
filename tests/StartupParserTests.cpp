@@ -112,6 +112,15 @@ TEST(StartupParser, RejectsHelpFlagWithValueAsNextToken)
     EXPECT_EQ(options.errorMessage, "Option '-h' does not take a value");
 }
 
+TEST(StartupParser, RejectsLongHelpFlagWithValueAsNextToken)
+{
+    const StartupOptions options = parseFrom({"papyrus", "--help", "true"});
+
+    EXPECT_FALSE(options.valid);
+    EXPECT_EQ(options.exitCode, 2);
+    EXPECT_EQ(options.errorMessage, "Option '--help' does not take a value");
+}
+
 TEST(StartupParser, RejectsUnknownOptionInShortBundle)
 {
     const StartupOptions options = parseFrom({"papyrus", "-xh"});
@@ -119,6 +128,25 @@ TEST(StartupParser, RejectsUnknownOptionInShortBundle)
     EXPECT_FALSE(options.valid);
     EXPECT_EQ(options.exitCode, 2);
     EXPECT_EQ(options.errorMessage, "Unknown option '-x'");
+}
+
+TEST(StartupParser, DoubleDashAllowsSinglePositionalFilename)
+{
+    const StartupOptions options = parseFrom({"papyrus", "--", "notes.txt"});
+
+    EXPECT_TRUE(options.valid);
+    EXPECT_FALSE(options.showHelp);
+    EXPECT_EQ(options.exitCode, 0);
+    EXPECT_EQ(options.filename, "notes.txt");
+}
+
+TEST(StartupParser, DoubleDashWithTwoPositionalsIsRejected)
+{
+    const StartupOptions options = parseFrom({"papyrus", "--", "a.txt", "b.txt"});
+
+    EXPECT_FALSE(options.valid);
+    EXPECT_EQ(options.exitCode, 2);
+    EXPECT_EQ(options.errorMessage, "Only one filename positional argument is supported");
 }
 
 TEST(StartupParser, UsageTextContainsSynopsisAndHelp)

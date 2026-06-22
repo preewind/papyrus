@@ -10,17 +10,17 @@ RenderColor EditorView::getColorFromTokenType(const Token &token) const
     case TokenType::CloseCurly:
     case TokenType::OpenParen:
     case TokenType::CloseParen:
-        return mLexerTheme.Punctuation;
+        return mLexerTheme.punctuation;
     case TokenType::Comment:
-        return mLexerTheme.Comment;
+        return mLexerTheme.comment;
     case TokenType::String:
-        return mLexerTheme.String;
+        return mLexerTheme.string;
     case TokenType::Keyword:
-        return mLexerTheme.Keyword;
+        return mLexerTheme.keyword;
     case TokenType::Preprocessor:
-        return mLexerTheme.Preprocessor;
+        return mLexerTheme.preprocessor;
     case TokenType::IncludeLib:
-        return mLexerTheme.IncludeLib;
+        return mLexerTheme.includeLib;
     default:
         return mLexerTheme.Default;
     }

@@ -24,16 +24,15 @@
     Macro to check the validity of an SDL pointer, throws an error if not null
     csp = check sdl pointer
 */
-#define CSP(x)                                                                                     \
-    do                                                                                             \
-    {                                                                                              \
-        if ((x) == nullptr)                                                                        \
-        {                                                                                          \
-            throw std::runtime_error(                                                              \
-                std::string("SDL pointer error in ") + __FILE__ + ":" + std::to_string(__LINE__) + \
-                "\nCall: " + #x +                                                                  \
-                "\nSDL_GetError: " + SDL_GetError());                                              \
-        }                                                                                          \
+#define CSP(x)                                                                                                \
+    do                                                                                                        \
+    {                                                                                                         \
+        if ((x) == nullptr)                                                                                   \
+        {                                                                                                     \
+            LOG_ERROR() << std::string("SDL pointer error in ") + __FILE__ + ":" + std::to_string(__LINE__) + \
+                               "\nCall: " + #x +                                                              \
+                               "\nSDL_GetError: " + SDL_GetError();                                           \
+        }                                                                                                     \
     } while (0)
 
 #include <iostream>
@@ -72,8 +71,6 @@ inline std::vector<std::string> splitByNewline(const std::string &input)
     return result;
 }
 
-#include <SDL3/SDL_pixels.h>
-
 constexpr uint8_t hexCharToInt(char c)
 {
     if (c >= '0' && c <= '9')
@@ -82,9 +79,10 @@ constexpr uint8_t hexCharToInt(char c)
         return c - 'a' + 10;
     if (c >= 'A' && c <= 'F')
         return c - 'A' + 10;
-    return 0;
+    LOG_ERROR() << "Invalid color!";
+    exit(1);
 }
-
+#include <SDL3/SDL_pixels.h>
 constexpr SDL_Color hexToSDLColor(std::string_view hex)
 {
     if (!hex.empty() && hex[0] == '#')
