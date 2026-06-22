@@ -3,7 +3,7 @@
 #include "TerminalView.h"
 #include "Editor.h"
 
-void TerminalView::render(RenderContext &renderContext, const Editor &editor, const TextLayout &textLayout, const TerminalLayout &terminalLayout, const SDL_Properties &sdlProps)
+void TerminalView::render(RenderContext &renderContext, const Editor &editor, const TextLayout &textLayout, const TerminalLayout &terminalLayout, const Window_Properties &sdlProps)
 {
     if (editor.isTerminalVisible())
     {
@@ -11,7 +11,7 @@ void TerminalView::render(RenderContext &renderContext, const Editor &editor, co
     }
 }
 
-void TerminalView::renderTerminal(RenderContext &renderContext, const Editor &editor, const TextLayout &textLayout, const TerminalLayout &terminalLayout, const SDL_Properties &sdlProps)
+void TerminalView::renderTerminal(RenderContext &renderContext, const Editor &editor, const TextLayout &textLayout, const TerminalLayout &terminalLayout, const Window_Properties &sdlProps)
 {
     const auto &theme = renderContext.getTheme();
     renderContext.drawRect(terminalLayout.viewport, theme.terminalBackground);
@@ -34,7 +34,7 @@ void TerminalView::renderTerminal(RenderContext &renderContext, const Editor &ed
     renderContext.drawText(text, terminalLayout.viewport.x + terminalLayout.marginLeft, sdlProps.totalWindowHeight - terminalLayout.marginTop - sdlProps.lineHeight);
 }
 
-void TerminalView::renderTerminalCursor(RenderContext &renderContext, const Terminal &terminal, const TextLayout &textLayout, const TerminalLayout &terminalLayout, const SDL_Properties &sdlProps)
+void TerminalView::renderTerminalCursor(RenderContext &renderContext, const Terminal &terminal, const TextLayout &textLayout, const TerminalLayout &terminalLayout, const Window_Properties &sdlProps)
 {
     const auto &theme = renderContext.getTheme();
     const std::string &text = std::filesystem::current_path().string() + "$ " + terminal.getInput();
@@ -42,7 +42,7 @@ void TerminalView::renderTerminalCursor(RenderContext &renderContext, const Term
     renderContext.drawRect(terminalLayout.viewport.x + terminalLayout.marginLeft + cursorTextWidth, sdlProps.totalWindowHeight - terminalLayout.marginTop - sdlProps.lineHeight, 12, sdlProps.lineHeight, theme.terminalCursor);
 }
 
-void TerminalView::renderTerminalSelection(RenderContext &renderContext, const Terminal &terminal, const TextLayout &textLayout, const TerminalLayout &terminalLayout, const SDL_Properties &sdlProps)
+void TerminalView::renderTerminalSelection(RenderContext &renderContext, const Terminal &terminal, const TextLayout &textLayout, const TerminalLayout &terminalLayout, const Window_Properties &sdlProps)
 {
     if (!terminal.hasSelection())
     {

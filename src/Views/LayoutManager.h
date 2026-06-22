@@ -65,7 +65,7 @@ struct FileBrowserLayout
 class LayoutManager{
 
 public:
-    void update(const SDL_Properties& input, bool terminalVisible);
+    void update(const Window_Properties& input, bool terminalVisible);
 
     const LayoutConfig &getLayoutConfig() const;
     const EditorLayout& getEditorLayout() const;

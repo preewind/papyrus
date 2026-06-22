@@ -18,7 +18,7 @@ public:
 
     void clear();
     int getLineHeight() const;
-    const SDL_Properties &getSDL_Properties() const override;
+    const Window_Properties &getWindowProperties() const override;
     const Theme &getTheme() const override;
 
     void drawText(const std::string &text, int x, int y) override;
@@ -36,5 +36,5 @@ public:
 private:
     IRenderBackend *mBackend = nullptr;
     const Theme *mTheme = nullptr;
-    SDL_Properties mLayout;
+    Window_Properties mLayout;
 };

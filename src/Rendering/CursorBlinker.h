@@ -1,7 +1,5 @@
 #pragma once
 
-#pragma once
-
 #include <SDL3/SDL_stdinc.h>
 
 class CursorBlinker

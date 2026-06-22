@@ -28,7 +28,7 @@ RenderColor EditorView::getColorFromTokenType(const Token &token) const
 
 void EditorView::renderHighlightedRange(RenderContext &renderContext, const TextLayout &textLayout, const std::string &text, uint32_t row, uint32_t col, uint32_t length, uint32_t scrollOffsetY, uint32_t scrollOffsetX, const LayoutConfig &layoutConfig)
 {
-    const auto &layout = renderContext.getSDL_Properties();
+    const auto &layout = renderContext.getWindowProperties();
     const auto &theme = renderContext.getTheme();
     std::string selectedText = textLayout.expandTabs(text.substr(col, length));
     int x = layoutConfig.editorMarginLeft + textLayout.columnToPixel(text, col) - scrollOffsetX;
@@ -37,7 +37,7 @@ void EditorView::renderHighlightedRange(RenderContext &renderContext, const Text
     renderContext.drawRect(x, y, w, layout.lineHeight, theme.selection);
 }
 
-int EditorView::screenY(const SDL_Properties &layout, uint32_t row, uint32_t scrollOffset, uint32_t editorMarginTop) const
+int EditorView::screenY(const Window_Properties &layout, uint32_t row, uint32_t scrollOffset, uint32_t editorMarginTop) const
 {
     return editorMarginTop + (row - scrollOffset) * layout.lineHeight;
 }
@@ -68,7 +68,7 @@ void EditorView::render(RenderContext &renderContext, const Editor &editor, cons
 
 void EditorView::renderLineNumbers(RenderContext &renderContext, uint32_t numLines, uint32_t scrollOffsetY, uint32_t visibleRows, const TextLayout &textLayout, const LayoutConfig &layoutConfig)
 {
-    const auto &layout = renderContext.getSDL_Properties();
+    const auto &layout = renderContext.getWindowProperties();
     const auto &theme = renderContext.getTheme();
     uint32_t first = scrollOffsetY;
     uint32_t last = std::min(first + visibleRows, numLines);
@@ -129,7 +129,7 @@ void EditorView::renderSelection(RenderContext &renderContext, const Editor &edi
 
 void EditorView::renderCursor(RenderContext &renderContext, const Editor &editor, const EditorViewport& viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig, bool cursorVisible)
 {
-    const auto &layout = renderContext.getSDL_Properties();
+    const auto &layout = renderContext.getWindowProperties();
     const auto &theme = renderContext.getTheme();
     Cursor cursor = editor.getCursor();
     std::string text = editor.getLineString(cursor.row);
@@ -157,7 +157,7 @@ void EditorView::renderText(RenderContext &renderContext, const Editor &editor, 
         if (tokens.size() > 0)
         {
             std::string expandedLine = textLayout.expandTabs(text[i]);
-            int y = screenY(renderContext.getSDL_Properties(), i, first, layoutConfig.editorMarginTop);
+            int y = screenY(renderContext.getWindowProperties(), i, first, layoutConfig.editorMarginTop);
             for (const Token &token : tokens[i])
             {
                 uint32_t virtualCol = textLayout.virtualColumn(text[i], token.col);
@@ -169,7 +169,7 @@ void EditorView::renderText(RenderContext &renderContext, const Editor &editor, 
         }
         else
         {
-            renderContext.drawText(textLayout.expandTabs(text[i]), layoutConfig.editorMarginLeft - viewport.scrollX(), screenY(renderContext.getSDL_Properties(), i, first, layoutConfig.editorMarginTop));
+            renderContext.drawText(textLayout.expandTabs(text[i]), layoutConfig.editorMarginLeft - viewport.scrollX(), screenY(renderContext.getWindowProperties(), i, first, layoutConfig.editorMarginTop));
         }
     }
 }

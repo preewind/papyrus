@@ -20,7 +20,7 @@ int Renderer::getLineHeight() const
     return mBackend->lineHeight();
 }
 
-const SDL_Properties &Renderer::getSDL_Properties() const
+const Window_Properties &Renderer::getWindowProperties() const
 {
     return mLayout;
 }

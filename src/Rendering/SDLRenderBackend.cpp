@@ -2,11 +2,6 @@
 
 #include "util.h"
 
-RenderColor SDLRenderBackend::clampAlpha(RenderColor color)
-{
-    return color;
-}
-
 SDLRenderBackend::SDLRenderBackend(SDL_Window *window, const std::string &fontPath, uint8_t fontSize)
 {
     mRenderer = SDL_CreateRenderer(window, nullptr);
@@ -41,8 +36,7 @@ void SDLRenderBackend::setVSync(bool enabled)
 
 void SDLRenderBackend::clear(const RenderColor &color)
 {
-    RenderColor c = clampAlpha(color);
-    CSF(SDL_SetRenderDrawColor(mRenderer, c.r, c.g, c.b, c.a));
+    CSF(SDL_SetRenderDrawColor(mRenderer, color.r, color.g, color.b, color.a));
     CSF(SDL_RenderClear(mRenderer));
 }
 

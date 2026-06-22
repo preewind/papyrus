@@ -183,7 +183,7 @@ void Application::updateEditorScreen()
         mCursorBlinker.reset();
     }
     mCursorBlinker.update();
-    mLayoutManager.update(mRenderer->getSDL_Properties(), mEditor.isTerminalVisible());
+    mLayoutManager.update(mRenderer->getWindowProperties(), mEditor.isTerminalVisible());
 
     mEditor.updateViewPort(mLayoutManager, mLayoutManager.getLayoutInput().lineHeight);
     mEditorViewPort.updateHorizontal(mEditor, mTextLayout, mLayoutManager.getLayoutConfig(), mLayoutManager.getLayoutInput());
@@ -196,13 +196,13 @@ void Application::updateEditorScreen()
     const bool cursorVisible = mCursorBlinker.visible();
     mEditorView.render(*mRenderer, mEditor, mEditorViewPort, mTextLayout, mLayoutManager.getLayoutConfig(), mLayoutManager.getEditorLayout(), cursorVisible);
     mSearchView.render(*mRenderer, mEditor, mTextLayout, mLayoutManager.getSearchLayout(), mSearchViewPort, cursorVisible);
-    mTerminalView.render(*mRenderer, mEditor, mTextLayout, mLayoutManager.getTerminalLayout(), mRenderer->getSDL_Properties());
+    mTerminalView.render(*mRenderer, mEditor, mTextLayout, mLayoutManager.getTerminalLayout(), mRenderer->getWindowProperties());
     mRenderer->present();
 }
 
 void Application::updateFileBrowserScreen()
 {
-    mLayoutManager.update(mRenderer->getSDL_Properties(), false);
+    mLayoutManager.update(mRenderer->getWindowProperties(), false);
     mRenderer->clear();
     mFileBrowserView.render(*mRenderer, mFileBrowser, mTextLayout, mLayoutManager.getFileBrowserLayout());
     mRenderer->present();

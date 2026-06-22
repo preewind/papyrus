@@ -68,7 +68,7 @@ void SearchView::renderSearchSelection(RenderContext &renderContext, const Searc
 
 void SearchView::renderSearchCursor(RenderContext &renderContext, const SearchSession &session, const TextLayout &textLayout, const SearchLayout &searchLayout, const SearchViewport &viewport, bool cursorVisible)
 {
-    const auto &editorLayout = renderContext.getSDL_Properties();
+    const auto &editorLayout = renderContext.getWindowProperties();
     const auto &theme = renderContext.getTheme();
     if (cursorVisible)
     {

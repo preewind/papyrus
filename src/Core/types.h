@@ -197,7 +197,7 @@ struct Rect
     Rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h) : x(x), y(y), w(w), h(h) {}
 };
 
-struct SDL_Properties
+struct Window_Properties
 {
     uint32_t lineHeight = 0;
     uint32_t totalWindowWidth = 0;

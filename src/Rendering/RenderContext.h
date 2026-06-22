@@ -10,7 +10,7 @@ class RenderContext
 public:
     virtual ~RenderContext() = default;
 
-    virtual const SDL_Properties &getSDL_Properties() const = 0;
+    virtual const Window_Properties &getWindowProperties() const = 0;
     virtual const Theme &getTheme() const = 0;
 
     virtual void drawText(const std::string &text, int x, int y) = 0;

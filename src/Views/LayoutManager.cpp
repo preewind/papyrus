@@ -3,7 +3,7 @@
 
 #include "LayoutManager.h"
 
-void LayoutManager::update(const SDL_Properties& input, bool terminalVisible)
+void LayoutManager::update(const Window_Properties& input, bool terminalVisible)
 {
     mLayoutInput.windowHeight = input.totalWindowHeight;
     mLayoutInput.windowWidth = input.totalWindowWidth;
