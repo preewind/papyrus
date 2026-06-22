@@ -13,12 +13,12 @@ class FileBrowser
 public:
     FileBrowser() = default;
     void updateCurrentDirFiles();
-    std::vector<std::filesystem::path> getCurrentDirFiles();
+    const std::vector<std::filesystem::path>& getCurrentDirFiles();
     std::vector<std::string> getCurrentDirFilesToRender();
-    std::vector<bool> getCurrentDirFilesOpenable();
-    const std::filesystem::path getCurrentDir() const;
+    const std::vector<bool>& getCurrentDirFilesOpenable();
+    const std::filesystem::path& getCurrentDir() const;
     uint32_t getSelectedIndex() const;
-    const std::filesystem::path getSelectedIndexPath() const;
+    std::filesystem::path getSelectedIndexPath() const;
     std::optional<std::filesystem::path> consumeOpenRequest();
     const std::string &getStatusMessage() const;
     bool hasStatusError() const;

@@ -100,10 +100,10 @@ void FileBrowser::updateCurrentDirFiles()
     }
 }
 
-std::vector<std::filesystem::path> FileBrowser::getCurrentDirFiles()
+const std::vector<std::filesystem::path>& FileBrowser::getCurrentDirFiles()
 {
     // TODO smarter recalculation
-    if (mCurrentDirFiles.size() == 0)
+    if (mCurrentDirFiles.empty())
     {
         updateCurrentDirFiles();
     }
@@ -112,7 +112,7 @@ std::vector<std::filesystem::path> FileBrowser::getCurrentDirFiles()
 
 std::vector<std::string> FileBrowser::getCurrentDirFilesToRender()
 {
-    if (mCurrentDirFiles.size() == 0)
+    if (mCurrentDirFiles.empty())
     {
         updateCurrentDirFiles();
     }
@@ -134,7 +134,7 @@ std::vector<std::string> FileBrowser::getCurrentDirFilesToRender()
     return fileStrings;
 }
 
-std::vector<bool> FileBrowser::getCurrentDirFilesOpenable()
+const std::vector<bool>& FileBrowser::getCurrentDirFilesOpenable()
 {
     if (mCurrentDirFilesOpenable.size() != mCurrentDirFiles.size())
     {
@@ -143,7 +143,7 @@ std::vector<bool> FileBrowser::getCurrentDirFilesOpenable()
     return mCurrentDirFilesOpenable;
 }
 
-const std::filesystem::path FileBrowser::getCurrentDir() const
+const std::filesystem::path& FileBrowser::getCurrentDir() const
 {
     return mCurrentDir;
 }
@@ -153,10 +153,10 @@ uint32_t FileBrowser::getSelectedIndex() const
     return mSelectedIndex;
 }
 
-const std::filesystem::path FileBrowser::getSelectedIndexPath() const
+std::filesystem::path FileBrowser::getSelectedIndexPath() const
 {
-    if (mCurrentDirFiles.size() == 0)
-        return "";
+    if (mCurrentDirFiles.empty())
+        return std::string("");
     return mCurrentDirFiles[mSelectedIndex];
 }
 
