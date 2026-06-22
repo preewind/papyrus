@@ -19,5 +19,5 @@ struct EditorCommandActions
 class EditorCommandHandler
 {
 public:
-    std::optional<CommandRequest> handle(const CommandRequest &request, EditorCommandActions &actions) const;
+    std::optional<CommandRequest> handle(const CommandRequest &request, const EditorCommandActions &actions) const;
 };

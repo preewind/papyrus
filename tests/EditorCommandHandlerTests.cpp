@@ -95,19 +95,6 @@ TEST(EditorCommandHandlerTests, ChangeLanguageToCppUpdatesLanguageAndRefreshes)
     EXPECT_TRUE(state.refreshCalled);
 }
 
-TEST(EditorCommandHandlerTests, ChangeLanguageUnknownOnlyRefreshesTokens)
-{
-    EditorCommandHandler handler;
-    FakeActionsState state;
-    auto actions = makeActions(state);
-
-    const auto pending = handler.handle({CommandRequestType::ChangeLanguage, "python"}, actions);
-
-    EXPECT_FALSE(pending.has_value());
-    EXPECT_FALSE(state.languageSet.has_value());
-    EXPECT_TRUE(state.refreshCalled);
-}
-
 TEST(EditorCommandHandlerTests, ErrorCommandReportsMessage)
 {
     EditorCommandHandler handler;

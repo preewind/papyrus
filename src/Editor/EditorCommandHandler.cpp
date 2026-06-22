@@ -1,6 +1,6 @@
 #include "EditorCommandHandler.h"
 
-std::optional<CommandRequest> EditorCommandHandler::handle(const CommandRequest &request, EditorCommandActions &actions) const
+std::optional<CommandRequest> EditorCommandHandler::handle(const CommandRequest &request, const EditorCommandActions &actions) const
 {
     switch (request.type)
     {
@@ -13,8 +13,8 @@ std::optional<CommandRequest> EditorCommandHandler::handle(const CommandRequest 
         if (request.request == "cpp")
         {
             actions.setEditorLanguage(Language::Cpp);
+            actions.refreshEditorTokens();
         }
-        actions.refreshEditorTokens();
         return std::nullopt;
     case CommandRequestType::OpenFile:
         actions.openFileRequest(request.request);
@@ -23,6 +23,7 @@ std::optional<CommandRequest> EditorCommandHandler::handle(const CommandRequest 
         actions.reportEditorError(request.request);
         return std::nullopt;
     default:
+        actions.reportEditorError("Invalid command!");
         return std::nullopt;
     }
 }

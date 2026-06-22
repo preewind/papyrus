@@ -80,7 +80,7 @@ public:
     void updateSearchMatches();
 
     void updateTokens();
-    std::vector<std::vector<Token>> getTokens() const;
+    const std::vector<std::vector<Token>>& getTokens() const;
 
     void markActivity();
     bool consumeActivity();
@@ -120,7 +120,7 @@ private:
     std::optional<SearchSession> mSearch;
     SearchEngine mSearchEngine;
     std::filesystem::path mCurrentFilePath;
-    bool mActivity;
+    bool mActivity = true;
     bool mSelectionActive = false;
     uint32_t mVisibleRows = 0;
     uint32_t mVisibleTextWidth = 0;

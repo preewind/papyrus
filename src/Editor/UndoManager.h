@@ -77,6 +77,7 @@ public:
     void push(std::unique_ptr<EditAction> action);
     Position undo(TextBuffer &buffer);
     Position redo(TextBuffer &buffer);
+    void clear();
 
     bool canUndo() const { return !mUndoStack.empty(); }
     bool canRedo() const { return !mRedoStack.empty(); }

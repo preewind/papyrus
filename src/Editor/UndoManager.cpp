@@ -129,3 +129,9 @@ Position UndoManager::redo(TextBuffer &buffer)
     mUndoStack.push_back(std::move(action));
     return newCursorPos;
 }
+
+void UndoManager::clear()
+{
+    mRedoStack.clear();
+    mUndoStack.clear();
+}

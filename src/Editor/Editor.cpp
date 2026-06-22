@@ -397,13 +397,14 @@ void Editor::handleComma(SDL_Keymod mod)
         insertText({mCursor.row, mBuffer.getLine(mCursor.row).size()}, ";");
         moveCursorToEndCol();
         updateTokens();
+        markActivity();
     }
 }
 
 void Editor::handleA(SDL_Keymod mod)
 {
     bool ctrlHeld = mod & SDL_KMOD_CTRL;
-    if (ctrlHeld && !mSelectionActive)
+    if (ctrlHeld)
     {
         mSelectionActive = true;
         mSelection.begin = {0, 0};
@@ -421,7 +422,7 @@ void Editor::handleC(SDL_Keymod mod)
     {
         const std::string &text = getSelectedText();
         LOG_DEBUG() << text;
-        SDL_SetClipboardText(text.c_str());
+        CSF(SDL_SetClipboardText(text.c_str()));
     }
 }
 
@@ -479,6 +480,7 @@ void Editor::handleV(SDL_Keymod mod)
         mUndoManager.push(std::move(action));
 
         updateTokens();
+        markActivity();
     }
 }
 
@@ -486,7 +488,7 @@ void Editor::handleX(SDL_Keymod mod)
 {
     bool ctrlHeld = mod & SDL_KMOD_CTRL;
 
-    if (ctrlHeld)
+    if (ctrlHeld && mSelectionActive)
     {
         const std::string &text = getSelectedText();
         SDL_SetClipboardText(text.c_str());
@@ -496,6 +498,7 @@ void Editor::handleX(SDL_Keymod mod)
         mCursor = targetPos;
         clearSelection();
         updateTokens();
+        markActivity();
     }
 }
 
@@ -689,6 +692,7 @@ bool Editor::loadFile(const std::filesystem::path &path)
     mCursor.row = 0;
     mCursor.col = 0;
     LOG_INFO() << path << " was loaded!";
+    mUndoManager.clear();
     return true;
 }
 
@@ -698,7 +702,7 @@ void Editor::saveFileAs(const std::filesystem::path &path)
 
     if (!file.is_open())
     {
-        std::cerr << "ERROR: Could not open file " << path << "\n";
+        LOG_ERROR() << "Could not open file " << path << "\n";
         return;
     }
 
@@ -752,11 +756,10 @@ void Editor::updateSearchMatches()
 
 void Editor::updateTokens()
 {
-    mTokens.clear();
     mTokens = mHighlighter.tokenize(mBuffer, mLanguage);
 }
 
-std::vector<std::vector<Token>> Editor::getTokens() const
+const std::vector<std::vector<Token>>& Editor::getTokens() const
 {
     return mTokens;
 }
