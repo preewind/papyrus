@@ -1,5 +1,4 @@
 #include "CommandProcessor.h"
-#include "logger.h"
 
 CommandProcessor::CommandProcessor()
 {
@@ -23,7 +22,7 @@ CommandProcessor::CommandProcessor()
     {
         return saveCommand(args);
     };
-    mCommands["cL"] = [this](const auto &args)
+    mCommands["cl"] = [this](const auto &args)
     {
         return changeLanguageCommand(args);
     };
@@ -102,6 +101,10 @@ CommandResult CommandProcessor::quitCommand(const std::vector<std::string> &args
 
 CommandResult CommandProcessor::openFileCommand(const std::vector<std::string> &args)
 {
+    if(args.empty()){
+        mPendingRequest = {CommandRequestType::Error, "No argument passed to open file!"};
+        return {false, {"No argument passed to open a file!"}};
+    }
     mPendingRequest = {CommandRequestType::OpenFile, args[0]};
     return {true, {"Opened file"}};
 }
@@ -115,7 +118,6 @@ CommandResult CommandProcessor::saveCommand(const std::vector<std::string> &args
 
 CommandResult CommandProcessor::changeLanguageCommand(const std::vector<std::string> &args)
 {
-    CommandRequest result;
     if (!args.empty())
     {
         mPendingRequest = {CommandRequestType::ChangeLanguage, args[0]};
@@ -137,7 +139,7 @@ std::optional<CommandRequest> CommandProcessor::consumeRequest()
     return result;
 }
 
-TextBuffer CommandProcessor::getOutput() const
+const TextBuffer& CommandProcessor::getOutput() const
 {
     std::lock_guard<std::mutex> lock(mOutputMutex);
     return mOutput;

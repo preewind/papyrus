@@ -41,4 +41,5 @@ add_simple_test(StartupParserTests StartupParserTests.cpp ../src/Core/StartupPar
 add_simple_test(EditorCommandHandlerTests EditorCommandHandlerTests.cpp ../src/Editor/EditorCommandHandler.cpp)
 add_simple_test(SearchTests SearchTests.cpp ../src/Search/SearchEngine.cpp ../src/Search/SearchSession.cpp ../src/Editor/TextInput.cpp ../src/Editor/TextBuffer.cpp)
 add_simple_test(FileBrowserTests FileBrowserTests.cpp ../src/FileBrowser/FileBrowser.cpp)
+add_simple_test(TerminalTests TerminalTests.cpp ../src/Terminal/Terminal.cpp ../src/Terminal/CommandProcessor.cpp ../src/Editor/TextInput.cpp ../src/Editor/TextBuffer.cpp)
 add_simple_test(SyntaxTests SyntaxTests.cpp ../src/Syntax/CppLexer.cpp ../src/Syntax/SyntaxHighlighter.cpp ../src/Editor/TextBuffer.cpp)

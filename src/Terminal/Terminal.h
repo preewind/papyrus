@@ -19,8 +19,8 @@ public:
     void handleReturn();
     void handleUp(SDL_Keymod mod);
     void handleDown(SDL_Keymod mod);
-    std::string getInput() const;
-    TextBuffer getOutput() const;
+    const std::string& getInput() const;
+    const TextBuffer& getOutput() const;
     uint32_t getCursor() const;
     uint32_t getScrollOffset() const;
     uint32_t getVisibleRows() const;
@@ -32,7 +32,7 @@ public:
 private:
     TextInput mInput;
     std::vector<std::string> mCmdHistory;
-    std::string mSaveInput = "";
+    std::string mSaveInput;
     uint32_t mHistoryIndex = 0;
     uint32_t mScrollOffset = 0;
     uint32_t mVisibleRows = 0;

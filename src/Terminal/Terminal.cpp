@@ -110,12 +110,12 @@ void Terminal::handleDown(SDL_Keymod mod)
     }
 }
 
-std::string Terminal::getInput() const
+const std::string& Terminal::getInput() const
 {
     return mInput.getText();
 }
 
-TextBuffer Terminal::getOutput() const
+const TextBuffer& Terminal::getOutput() const
 {
     return mProcessor.getOutput();
 }
