@@ -74,6 +74,7 @@ public:
     bool loadFile(const std::filesystem::path &path);
     void saveFileAs(const std::filesystem::path &path);
     void saveFile();
+    const std::filesystem::path &getCurrentFilePath() const;
 
     bool isSearchActive() const;
     const SearchSession &getSearch() const;

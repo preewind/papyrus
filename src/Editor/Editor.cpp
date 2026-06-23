@@ -757,6 +757,11 @@ void Editor::saveFile()
     saveFileAs(mCurrentFilePath);
 }
 
+const std::filesystem::path &Editor::getCurrentFilePath() const
+{
+    return mCurrentFilePath;
+}
+
 bool Editor::isSearchActive() const
 {
     return mSearch.has_value();

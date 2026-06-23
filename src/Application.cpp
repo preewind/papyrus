@@ -52,7 +52,7 @@ void Application::openInitialFileIfProvided(const std::string &filename)
 {
     if (!filename.empty() && mEditor.loadFile(filename))
     {
-        updateWindowTitle(std::format("papyrus [{}]", filename));
+        syncWindowTitleWithEditorFile();
     }
 }
 
@@ -171,6 +171,7 @@ void Application::registerCommands()
             if (args.empty())
                 return CommandResult{false, "Usage: open <file>"};
             mEditor.loadFile(args[0]);
+            
             return CommandResult{true, "Opened: " + args[0]};
         }
     });
@@ -230,10 +231,29 @@ void Application::processTerminalInputResponses()
     mEditor.processTerminalInputResponses();
 }
 
+void Application::syncWindowTitleWithEditorFile()
+{
+    const std::filesystem::path &currentFilePath = mEditor.getCurrentFilePath();
+    if (currentFilePath == mDisplayedEditorFilePath)
+    {
+        return;
+    }
+
+    mDisplayedEditorFilePath = currentFilePath;
+    if (currentFilePath.empty())
+    {
+        updateWindowTitle("papyrus");
+        return;
+    }
+
+    updateWindowTitle(std::format("papyrus [{}]", currentFilePath.filename().string()));
+}
+
 void Application::updateEditorScreen()
 {
     mRenderer->clear();
     processTerminalInputResponses();
+    syncWindowTitleWithEditorFile();
     if (mEditor.consumeActivity())
     {
         mCursorBlinker.reset();
@@ -266,7 +286,7 @@ void Application::updateFileBrowserScreen()
     if (auto file = mFileBrowser.consumeOpenRequest())
     {
         mEditor.loadFile(*file);
-        updateWindowTitle(std::format("papyrus [{}]", file->filename().string()));
+        syncWindowTitleWithEditorFile();
         mCurrentScreen = Screen::Editor;
     }
 }

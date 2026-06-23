@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <filesystem>
 
 #include "CursorBlinker.h"
 #include "Editor.h"
@@ -37,6 +38,7 @@ private:
     void handleHash(SDL_Keymod mod);
     void registerCommands();
     void processTerminalInputResponses();
+    void syncWindowTitleWithEditorFile();
     void updateEditorScreen();
     void updateFileBrowserScreen();
     void updateWindowTitle(const std::string &title);
@@ -67,4 +69,5 @@ private:
     Screen mCurrentScreen = Screen::Editor;
     bool mRunning = true;
     int mExitCode = 0;
+    std::filesystem::path mDisplayedEditorFilePath;
 };
