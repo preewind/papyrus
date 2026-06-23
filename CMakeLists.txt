@@ -33,6 +33,7 @@ add_subdirectory(src/Search)
 add_subdirectory(src/Syntax)
 add_subdirectory(src/Terminal)
 add_subdirectory(src/Core)
+add_subdirectory(src/Screensaver)
 
 target_link_libraries(papyrus
     PRIVATE

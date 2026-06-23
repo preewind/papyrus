@@ -10,7 +10,8 @@
 enum class Screen
 {
     Editor,
-    FileBrowser
+    FileBrowser,
+    Screensaver
 };
 
 struct SearchMatch

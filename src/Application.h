@@ -17,6 +17,8 @@
 #include "SearchView.h"
 #include "TerminalView.h"
 #include "StartupOptions.h"
+#include "Screensaver.h"
+#include "ScreensaverView.h"
 
 class Application
 {
@@ -41,6 +43,7 @@ private:
     void syncWindowTitleWithEditorFile();
     void updateEditorScreen();
     void updateFileBrowserScreen();
+    void updateScreenSaverScreen();
     void updateWindowTitle(const std::string &title);
     void increaseFontSize();
     void decreaseFontSize();
@@ -59,9 +62,11 @@ private:
 
     Editor mEditor;
     FileBrowser mFileBrowser;
+    Screensaver mScreensaver;
 
     EditorView mEditorView;
     FileBrowserView mFileBrowserView;
+    ScreensaverView mScreensaverView;
     SearchView mSearchView;
     TerminalView mTerminalView;
 

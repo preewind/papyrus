@@ -75,6 +75,9 @@ void Application::update()
     case Screen::FileBrowser:
         updateFileBrowserScreen();
         break;
+    case Screen::Screensaver:
+        updateScreenSaverScreen();
+        break;
     default:
         LOG_ERROR() << "Unknown Screen!";
         break;
@@ -127,6 +130,9 @@ void Application::handleGlobalKeyDown(const SDL_KeyboardEvent &keyEvent)
         break;
     case SDLK_F4:
         mCurrentScreen = Screen::Editor;
+        break;
+    case SDLK_F5:
+        mCurrentScreen = Screen::Screensaver;
         break;
     case SDLK_T:
         mEditor.handleT(mod);
@@ -289,6 +295,15 @@ void Application::updateFileBrowserScreen()
         syncWindowTitleWithEditorFile();
         mCurrentScreen = Screen::Editor;
     }
+}
+
+void Application::updateScreenSaverScreen()
+{
+    mScreensaver.updateScreensaver();
+    mRenderer->clear();
+    mScreensaverView.render(*mRenderer, mScreensaver, mRenderer->getWindowProperties());
+    mRenderer->present();
+
 }
 
 void Application::updateWindowTitle(const std::string &title)
