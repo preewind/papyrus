@@ -16,7 +16,6 @@
 #include "SearchView.h"
 #include "TerminalView.h"
 #include "StartupOptions.h"
-#include "EditorCommandHandler.h"
 
 class Application
 {
@@ -36,7 +35,8 @@ private:
     void handleEvent(const SDL_Event &event);
     void handleGlobalKeyDown(const SDL_KeyboardEvent &keyEvent);
     void handleHash(SDL_Keymod mod);
-    void processEditorCommandRequests();
+    void registerCommands();
+    void processTerminalInputResponses();
     void updateEditorScreen();
     void updateFileBrowserScreen();
     void updateWindowTitle(const std::string &title);
@@ -56,7 +56,6 @@ private:
     TextLayout mTextLayout;
 
     Editor mEditor;
-    EditorCommandHandler mEditorCommandHandler;
     FileBrowser mFileBrowser;
 
     EditorView mEditorView;

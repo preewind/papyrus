@@ -1,5 +1,4 @@
 #include <fstream>
-#include <iostream>
 #include <optional>
 
 #include <SDL3/SDL_clipboard.h>
@@ -14,9 +13,7 @@ Editor::Editor()
     mTerminal = std::make_unique<Terminal>();
 }
 
-Editor::~Editor()
-{
-}
+Editor::~Editor() = default;
 
 void Editor::handlePaneKeyHandler(const SDL_Event &event)
 {
@@ -461,8 +458,7 @@ void Editor::handleT(SDL_Keymod mod)
 
     if (ctrlHeld)
     {
-        mTerminalVisible = !mTerminalVisible;
-        mFocus = mTerminalVisible ? Focus::Terminal : Focus::Editor;
+        setTerminalVisible(!mTerminalVisible);
     }
 }
 
@@ -717,11 +713,47 @@ void Editor::saveFileAs(const std::filesystem::path &path)
             file << "\n";
         }
     }
+    mCurrentFilePath = path;
     LOG_INFO() << path << " was saved!";
 }
 
 void Editor::saveFile()
 {
+    // If no file is currently loaded, request a filename from the terminal
+    if (mCurrentFilePath.empty())
+    {
+        TerminalInputRequest request{
+            .type = TerminalInputType::Filename,
+            .prompt = "Enter filename to save: ",
+            .defaultValue = "",
+            .options = {}
+        };
+
+        const bool actionStarted = mTerminalActionRouter.beginAction(
+            *mTerminal,
+            "save_as_filename",
+            request,
+            [this](const TerminalInputResponse &response)
+            {
+                if (response.success && !response.userInput.empty())
+                {
+                    saveFileAs(response.userInput);
+                }
+
+                // Hide terminal after one-off editor-initiated prompt.
+                setTerminalVisible(false);
+            });
+
+        if (!actionStarted)
+        {
+            return;
+        }
+
+        // Auto-show terminal if not visible
+        setTerminalVisible(true);
+        return;
+    }
+    
     saveFileAs(mCurrentFilePath);
 }
 
@@ -783,6 +815,17 @@ bool Editor::consumeActivity()
 bool Editor::isTerminalVisible() const
 {
     return mTerminalVisible;
+}
+
+void Editor::setTerminalVisible(bool visible)
+{
+    mTerminalVisible = visible;
+    mFocus = mTerminalVisible ? Focus::Terminal : Focus::Editor;
+}
+
+void Editor::registerCommand(CommandDefinition def)
+{
+    mTerminal->registerCommand(std::move(def));
 }
 
 void Editor::switchFocus()
@@ -881,6 +924,19 @@ void Editor::setVisibleRows(uint32_t rows)
 const uint32_t &Editor::getVisibleRows() const
 {
     return mVisibleRows;
+}
+
+void Editor::processTerminalInputResponses()
+{
+    if (!mTerminalActionRouter.hasPendingAction())
+    {
+        return;
+    }
+
+    if (auto response = mTerminal->consumeInputResponse())
+    {
+        mTerminalActionRouter.dispatchResponse(*response);
+    }
 }
 
 

@@ -28,6 +28,7 @@ Application::Application(int argc, char *argv[])
     }
 
     initializeWindowAndRendering();
+    registerCommands();
     openInitialFileIfProvided(startup.filename);
 }
 
@@ -148,36 +149,91 @@ void Application::handleGlobalKeyDown(const SDL_KeyboardEvent &keyEvent)
     }
 }
 
-void Application::processEditorCommandRequests()
+void Application::registerCommands()
 {
-    while (auto request = mEditor.getTerminal().consumeRequest())
-    {
-        EditorCommandActions actions{
-            .openFileRequest = [this](const std::filesystem::path &path)
-            { mEditor.loadFile(path); },
-            .saveCurrentFile = [this]()
-            { mEditor.saveFile(); },
-            .setEditorLanguage = [this](Language language)
-            { mEditor.setLanguage(language); },
-            .refreshEditorTokens = [this]()
-            { mEditor.updateTokens(); },
-            .reportEditorError = [](const std::string &message)
-            { LOG_ERROR() << "Error: " << message; }};
-
-        if (auto appRequest = mEditorCommandHandler.handle(*request, actions))
+    mEditor.registerCommand({
+        .name = "quit",
+        .description = "Exit the editor",
+        .usage = "",
+        .handler = [this](const std::vector<std::string> &)
         {
-            if (appRequest->type == CommandRequestType::Quit)
-            {
-                mRunning = false;
-            }
+            mRunning = false;
+            return CommandResult{true, "Quit!"};
         }
-    }
+    });
+
+    mEditor.registerCommand({
+        .name = "open",
+        .description = "Open a file in the editor",
+        .usage = "<file>",
+        .handler = [this](const std::vector<std::string> &args)
+        {
+            if (args.empty())
+                return CommandResult{false, "Usage: open <file>"};
+            mEditor.loadFile(args[0]);
+            return CommandResult{true, "Opened: " + args[0]};
+        }
+    });
+
+    mEditor.registerCommand({
+        .name = "save",
+        .description = "Save the current file (prompts for name if unsaved)",
+        .usage = "",
+        .handler = [this](const std::vector<std::string> &)
+        {
+            mEditor.saveFile();
+            return CommandResult{true, ""};
+        }
+    });
+
+    mEditor.registerCommand({
+        .name = "cl",
+        .description = "Change syntax highlighting language",
+        .usage = "<cpp|text>",
+        .handler = [this](const std::vector<std::string> &args)
+        {
+            if (args.empty())
+                return CommandResult{false, "Usage: cl <cpp|text>"};
+            if (args[0] == "cpp")
+            {
+                mEditor.setLanguage(Language::Cpp);
+                mEditor.updateTokens();
+                return CommandResult{true, "Language set to C++"};
+            }
+            if (args[0] == "text")
+            {
+                mEditor.setLanguage(Language::PlainText);
+                mEditor.updateTokens();
+                return CommandResult{true, "Language set to Plain Text"};
+            }
+            return CommandResult{false, "Unknown language '" + args[0] + "' (use: cpp, text)"};
+        }
+    });
+
+    mEditor.registerCommand({
+        .name = "build",
+        .description = "Build the project",
+        .usage = "",
+        .shellScript = "./run.sh -r"
+    });
+
+    mEditor.registerCommand({
+        .name = "flex",
+        .description = "Show line counts for all source files",
+        .usage = "",
+        .shellScript = "find src -type f -name '*.cpp' -print0 | xargs -0 wc -l"
+    });
+}
+
+void Application::processTerminalInputResponses()
+{
+    mEditor.processTerminalInputResponses();
 }
 
 void Application::updateEditorScreen()
 {
     mRenderer->clear();
-    processEditorCommandRequests();
+    processTerminalInputResponses();
     if (mEditor.consumeActivity())
     {
         mCursorBlinker.reset();

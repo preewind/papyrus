@@ -1,4 +1,5 @@
 #include <sstream>
+#include <filesystem>
 
 #include "Terminal.h"
 #include "util.h"
@@ -20,6 +21,20 @@ void Terminal::handleKey(const SDL_Event &event)
         case SDLK_DOWN:
             handleDown(mod);
             return;
+        case SDLK_ESCAPE:
+            // Cancel input request if in AwaitingInput mode
+            if (mInputMode == TerminalInputMode::AwaitingInput && mPendingInputRequest)
+            {
+                mPendingInputResponse = TerminalInputResponse{
+                    .success = false,
+                    .userInput = "",
+                    .selectedIndex = 0
+                };
+                mInputMode = TerminalInputMode::Normal;
+                mPendingInputRequest.reset();
+                mInput.clear();
+            }
+            return;
         default:
             break;
         }
@@ -29,6 +44,45 @@ void Terminal::handleKey(const SDL_Event &event)
 
 void Terminal::handleReturn()
 {
+    // Handle terminal input request (editor-initiated input)
+    if (mInputMode == TerminalInputMode::AwaitingInput)
+    {
+        if (!mPendingInputRequest)
+            return;
+            
+        std::string userInput = mInput.getText();
+        
+        // Handle different input types
+        if (mPendingInputRequest->type == TerminalInputType::SelectFromList)
+        {
+            // User selected an option via arrow keys and Enter
+            if (mSelectListIndex < mPendingInputRequest->options.size())
+            {
+                mPendingInputResponse = TerminalInputResponse{
+                    .success = true,
+                    .userInput = mPendingInputRequest->options[mSelectListIndex],
+                    .selectedIndex = mSelectListIndex
+                };
+            }
+        }
+        else
+        {
+            // For Filename, Confirmation, TextInput types
+            mPendingInputResponse = TerminalInputResponse{
+                .success = !userInput.empty(),
+                .userInput = userInput,
+                .selectedIndex = 0
+            };
+        }
+        
+        mInputMode = TerminalInputMode::Normal;
+        mPendingInputRequest.reset();
+        mInput.clear();
+        mCmdHistory.push_back(userInput);
+        mHistoryIndex = 0;
+        return;
+    }
+    
     if (mInput.getText().empty())
         return;
     std::string trimmedInput = trim(mInput.getText());
@@ -57,18 +111,29 @@ void Terminal::handleReturn()
 
 void Terminal::handleUp(SDL_Keymod mod)
 {
-    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+    const bool ctrlHeld = mod & SDL_KMOD_CTRL;
 
     if (ctrlHeld)
     {
-        if (mScrollOffset < mProcessor.getOutput().getText().size() - 1 - mVisibleRows)
+        const auto &outputLines = mProcessor.getOutput().getText();
+        uint32_t outputRows = 0;
+        for (const std::string &line : outputLines)
+        {
+            if (!line.empty())
+            {
+                outputRows++;
+            }
+        }
+        const uint32_t maxOffset = outputRows > mVisibleRows ? outputRows - mVisibleRows : 0;
+
+        if (mScrollOffset < maxOffset)
         {
             mScrollOffset++;
         }
     }
     else
     {
-        if (mCmdHistory.size() > 0 && mHistoryIndex < mCmdHistory.size())
+        if (!mCmdHistory.empty() && mHistoryIndex < mCmdHistory.size())
         {
             if (mHistoryIndex == 0 && !mInput.getText().empty())
                 mSaveInput = mInput.getText();
@@ -82,7 +147,7 @@ void Terminal::handleUp(SDL_Keymod mod)
 
 void Terminal::handleDown(SDL_Keymod mod)
 {
-    bool ctrlHeld = mod & SDL_KMOD_CTRL;
+    const bool ctrlHeld = mod & SDL_KMOD_CTRL;
 
     if (ctrlHeld)
     {
@@ -93,7 +158,7 @@ void Terminal::handleDown(SDL_Keymod mod)
     }
     else
     {
-        if (mCmdHistory.size() > 0 && mHistoryIndex > 0)
+        if (!mCmdHistory.empty() && mHistoryIndex > 0)
         {
             mInput.clear();
             mHistoryIndex--;
@@ -140,11 +205,6 @@ void Terminal::setVisibleRows(uint32_t rows)
     mVisibleRows = rows;
 }
 
-std::optional<CommandRequest> Terminal::consumeRequest()
-{
-    return mProcessor.consumeRequest();
-}
-
 bool Terminal::hasSelection() const
 {
     return mInput.hasSelection();
@@ -153,4 +213,42 @@ bool Terminal::hasSelection() const
 TextSelection Terminal::getSelection() const
 {
     return mInput.getSelection();
+}
+
+std::string Terminal::getPromptPrefix() const
+{
+    if (mInputMode == TerminalInputMode::AwaitingInput && mPendingInputRequest)
+    {
+        return mPendingInputRequest->prompt;
+    }
+    return std::filesystem::current_path().string() + "$ ";
+}
+
+void Terminal::requestInput(const TerminalInputRequest &request)
+{
+    mPendingInputRequest = request;
+    mInputMode = TerminalInputMode::AwaitingInput;
+    mInput.clear();
+    if (!request.defaultValue.empty())
+    {
+        mInput.insert(request.defaultValue);
+    }
+    mSelectListIndex = 0;
+}
+
+std::optional<TerminalInputResponse> Terminal::consumeInputResponse()
+{
+    auto response = mPendingInputResponse;
+    mPendingInputResponse.reset();
+    return response;
+}
+
+TerminalInputMode Terminal::getInputMode() const
+{
+    return mInputMode;
+}
+
+void Terminal::registerCommand(CommandDefinition def)
+{
+    mProcessor.registerCommand(std::move(def));
 }
