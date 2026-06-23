@@ -16,7 +16,5 @@ public:
     uint32_t scrollY() const;
 
 private:
-    ScrollViewport mHorizontal;
-    uint32_t mScrollOffsetY = 0;
-    uint32_t mVisibleRows = 0;
+    ScrollViewport mViewport;
 };

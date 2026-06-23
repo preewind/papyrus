@@ -7,31 +7,23 @@ void EditorViewport::updateHorizontal(const Editor &editor, const TextLayout &te
     std::string line = editor.getLineString(cursor.row);
 
     int cursorPixelX = textLayout.columnToPixel(line, cursor.col);
-    mHorizontal.visibleWidth = input.windowWidth - layout.editorMarginLeft - layout.lineNumberWidth;
-    mHorizontal.ensureVisible(cursorPixelX, 20);
+    mViewport.visibleWidth = input.windowWidth - layout.editorMarginLeft - layout.lineNumberWidth;
+    mViewport.ensureVisible(cursorPixelX, 20);
 }
 
 void EditorViewport::updateVertical(const Editor &editor, uint32_t visibleRows)
 {
-    mVisibleRows = visibleRows;
+    mViewport.visibleRows = visibleRows;
     Cursor cursor = editor.getCursor();
-
-    if (cursor.row < mScrollOffsetY)
-    {
-        mScrollOffsetY = cursor.row;
-    }
-    else if (cursor.row >= mScrollOffsetY + mVisibleRows)
-    {
-        mScrollOffsetY = cursor.row - mVisibleRows + 1;
-    }
+    mViewport.ensureVisibleRow(cursor.row);
 }
 
 int EditorViewport::scrollX() const
 {
-    return mHorizontal.offsetX;
+    return mViewport.offsetX;
 }
 
 uint32_t EditorViewport::scrollY() const
 {
-    return mScrollOffsetY;
+    return mViewport.offsetY;
 }
