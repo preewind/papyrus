@@ -3,7 +3,7 @@
 #include "CppLexer.h"
 #include "logger.h"
 
-std::vector<std::vector<Token>> CppLexer::tokenize(const TextBuffer &buffer)
+std::vector<std::vector<Token>> CppLexer::tokenize(const TextBuffer &buffer) const
 {
 
     LOG_DEBUG() << "Hello from Cpp lexer!";
@@ -22,7 +22,7 @@ std::vector<std::vector<Token>> CppLexer::tokenize(const TextBuffer &buffer)
         uint32_t i = 0;
         while (i < line.size())
         {
-            char c = line[i];
+            uint8_t c = line[i];
 
             if (std::isspace(c))
             {
@@ -49,7 +49,7 @@ std::vector<std::vector<Token>> CppLexer::tokenize(const TextBuffer &buffer)
                 tokens.push_back(Token{.col = start, .length = i - start, .type = TokenType::Preprocessor});
                 continue;
             }
-            // keywords / identfiers
+            // keywords / identifiers
             if (std::isalpha(c) || c == '_')
             {
                 ++i;
@@ -57,7 +57,7 @@ std::vector<std::vector<Token>> CppLexer::tokenize(const TextBuffer &buffer)
                 {
                     ++i;
                 }
-                const std::string &word = line.substr(start, i - start);
+                const std::string word = line.substr(start, i - start);
 
                 TokenType type = importantKeywords.contains(word) ? TokenType::Keyword : TokenType::Normal;
                 tokens.push_back(Token{.col = start, .length = i - start, .type = type});

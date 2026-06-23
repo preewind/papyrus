@@ -10,7 +10,9 @@
 class CppLexer
 {
 public:
-    std::vector<std::vector<Token>> tokenize(const TextBuffer &buffer);
+    std::vector<std::vector<Token>> tokenize(const TextBuffer &buffer) const;
+
+private:
     const std::unordered_set<std::string> importantKeywords = {
         "int", "float", "double", "char", "void", "if", "else", "for", "while", "return",
         "class", "struct", "enum", "union", "namespace", "template", "typename",

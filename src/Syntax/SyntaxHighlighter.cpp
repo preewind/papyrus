@@ -1,16 +1,17 @@
 #include "SyntaxHighlighter.h"
+#include "logger.h"
 
-std::vector<std::vector<Token>> SyntaxHighlighter::tokenize(const TextBuffer &buffer, Language language)
+std::vector<std::vector<Token>> SyntaxHighlighter::tokenize(const TextBuffer &buffer, const Language& language) const
 {
-    std::vector<std::vector<Token>> tokens;
     switch (language)
     {
     case Language::Cpp:
-        tokens = mCppLexer.tokenize(buffer);
+        return mCppLexer.tokenize(buffer);
         break;
 
     default:
+        LOG_ERROR() << "This language is currently not supported!, TODO: add default lexer";
         break;
     }
-    return tokens;
+    return std::vector<std::vector<Token>>();
 }
