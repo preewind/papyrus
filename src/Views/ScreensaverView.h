@@ -5,7 +5,7 @@
 
 class ScreensaverView {
 public:
-    void render(RenderContext &renderContext, const Screensaver& screensaver, const Window_Properties &windowProps);
+    void render(RenderContext &renderContext, const Screensaver& screensaver);
 private:
-    void renderLogo(RenderContext &renderContext, const Screensaver& screensaver, const Window_Properties &windowProps);
+    void renderLogo(RenderContext &renderContext, const Screensaver& screensaver);
 };

@@ -1,16 +1,15 @@
 #include "ScreensaverView.h"
 
-void ScreensaverView::render(RenderContext &renderContext, const Screensaver &screensaver, const Window_Properties &windowProps)
+void ScreensaverView::render(RenderContext &renderContext, const Screensaver &screensaver)
 {
-    if(screensaver.isInactive()){
-        renderLogo(renderContext, screensaver, windowProps);
+    if (screensaver.isInactive())
+    {
+        renderLogo(renderContext, screensaver);
     }
 }
 
-void ScreensaverView::renderLogo(RenderContext &renderContext, const Screensaver &screensaver, const Window_Properties &windowProps)
+void ScreensaverView::renderLogo(RenderContext &renderContext, const Screensaver &screensaver)
 {
-    (void)screensaver;
-    uint32_t size = 50;
-    Rect logo{windowProps.totalWindowWidth / 2 - size / 2, windowProps.totalWindowHeight / 2 - size / 2, size, size};
-    renderContext.drawRect(logo, {255, 0, 0, 255});
+    const Logo &logo = screensaver.getLogo();
+    renderContext.drawRect(logo.x, logo.y, logo.w, logo.h, {255, 0, 0, 255});
 }

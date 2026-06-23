@@ -299,9 +299,9 @@ void Application::updateFileBrowserScreen()
 
 void Application::updateScreenSaverScreen()
 {
-    mScreensaver.updateScreensaver();
+    mScreensaver.updateScreensaver(mRenderer->getWindowProperties());
     mRenderer->clear();
-    mScreensaverView.render(*mRenderer, mScreensaver, mRenderer->getWindowProperties());
+    mScreensaverView.render(*mRenderer, mScreensaver);
     mRenderer->present();
 
 }
