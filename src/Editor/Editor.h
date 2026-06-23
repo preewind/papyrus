@@ -15,6 +15,7 @@
 #include "SearchEngine.h"
 #include "SyntaxHighlighter.h"
 #include "Terminal.h"
+#include "TerminalActionRouter.h"
 #include "UndoManager.h"
 #include "LayoutManager.h"
 #include "EditorViewPort.h"
@@ -73,6 +74,7 @@ public:
     bool loadFile(const std::filesystem::path &path);
     void saveFileAs(const std::filesystem::path &path);
     void saveFile();
+    const std::filesystem::path &getCurrentFilePath() const;
 
     bool isSearchActive() const;
     const SearchSession &getSearch() const;
@@ -86,7 +88,9 @@ public:
     bool consumeActivity();
 
     bool isTerminalVisible() const;
+    void setTerminalVisible(bool visible);
     void switchFocus();
+    void registerCommand(CommandDefinition def);
     const Terminal &getTerminalConst() const;
     Terminal &getTerminal();
 
@@ -106,6 +110,7 @@ public:
     const uint32_t &getVisibleRows() const;
 
     void updateViewPort(const LayoutManager& layout, uint32_t lineHeight);
+    void processTerminalInputResponses();
 
 private:
     void handleSearchEvent(const SDL_Event &event);
@@ -124,6 +129,7 @@ private:
     bool mSelectionActive = false;
     uint32_t mVisibleRows = 0;
     uint32_t mVisibleTextWidth = 0;
+    TerminalActionRouter mTerminalActionRouter;
 
     Language mLanguage = Language::Cpp;
     std::vector<std::vector<Token>> mTokens;

@@ -3,15 +3,14 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <iostream>
+#include <vector>
 
 #include "logger.h"
 
 enum class Screen
 {
     Editor,
-    FileBrowser,
-    Settings,
-    Terminal
+    FileBrowser
 };
 
 struct SearchMatch
@@ -166,25 +165,33 @@ enum class Language
     Cpp
 };
 
-enum class CommandRequestType
-{
-    OpenFile,
-    SaveFile,
-    Quit,
-    ChangeLanguage,
-    Error
-};
-
-struct CommandRequest
-{
-    CommandRequestType type;
-    std::string request;
-};
-
 struct CommandResult
 {
     bool success;
     std::string message;
+};
+
+enum class TerminalInputType
+{
+    Filename,
+    Confirmation,
+    TextInput,
+    SelectFromList
+};
+
+struct TerminalInputRequest
+{
+    TerminalInputType type;
+    std::string prompt;
+    std::string defaultValue;
+    std::vector<std::string> options; // For SelectFromList type
+};
+
+struct TerminalInputResponse
+{
+    bool success;
+    std::string userInput;
+    size_t selectedIndex = 0; // For SelectFromList type
 };
 
 struct Rect

@@ -11,6 +11,12 @@
 #include "CommandProcessor.h"
 #include "types.h"
 
+enum class TerminalInputMode
+{
+    Normal,
+    AwaitingInput
+};
+
 class Terminal
 {
 
@@ -19,15 +25,19 @@ public:
     void handleReturn();
     void handleUp(SDL_Keymod mod);
     void handleDown(SDL_Keymod mod);
-    const std::string& getInput() const;
-    const TextBuffer& getOutput() const;
+    const std::string &getInput() const;
+    const TextBuffer &getOutput() const;
     uint32_t getCursor() const;
     uint32_t getScrollOffset() const;
     uint32_t getVisibleRows() const;
     void setVisibleRows(uint32_t rows);
-    std::optional<CommandRequest> consumeRequest();
     bool hasSelection() const;
     TextSelection getSelection() const;
+    std::string getPromptPrefix() const;
+    void registerCommand(CommandDefinition def);
+    void requestInput(const TerminalInputRequest &request);
+    std::optional<TerminalInputResponse> consumeInputResponse();
+    TerminalInputMode getInputMode() const;
 
 private:
     TextInput mInput;
@@ -37,4 +47,10 @@ private:
     uint32_t mScrollOffset = 0;
     uint32_t mVisibleRows = 0;
     CommandProcessor mProcessor;
+    
+    // Input request/response state
+    std::optional<TerminalInputRequest> mPendingInputRequest;
+    std::optional<TerminalInputResponse> mPendingInputResponse;
+    TerminalInputMode mInputMode = TerminalInputMode::Normal;
+    size_t mSelectListIndex = 0;
 };

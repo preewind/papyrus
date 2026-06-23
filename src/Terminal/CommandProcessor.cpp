@@ -1,53 +1,62 @@
+#include <sstream>
+#include <thread>
+
 #include "CommandProcessor.h"
 
-CommandProcessor::CommandProcessor()
+void CommandProcessor::registerCommand(CommandDefinition def)
 {
-    mCommands["build"] = [this](const auto &args)
-    {
-        return buildCommand(args);
-    };
-    mCommands["flex"] = [this](const auto &args)
-    {
-        return flexCommand(args);
-    };
-    mCommands["quit"] = [this](const auto &args)
-    {
-        return quitCommand(args);
-    };
-    mCommands["open"] = [this](const auto &args)
-    {
-        return openFileCommand(args);
-    };
-    mCommands["save"] = [this](const auto &args)
-    {
-        return saveCommand(args);
-    };
-    mCommands["cl"] = [this](const auto &args)
-    {
-        return changeLanguageCommand(args);
-    };
+    mRegistry.registerCommand(std::move(def));
 }
 
 CommandResult CommandProcessor::executeCommand(const std::string &name, const std::vector<std::string> &args)
 {
-    CommandResult result;
+    // Shell passthrough: !command
     if (name.starts_with("!"))
     {
-        result = executeShell(name.substr(1));
-        mOutput.addLine(result.message);
+        auto result = executeShell(name.substr(1));
+        addOutputLine(result.message);
         return result;
     }
 
-    auto it = mCommands.find(name);
-    if (it == mCommands.end())
+    // Built-in help: always available, auto-generated from registry
+    if (name == "help")
     {
-        mOutput.addLine("Unknown command");
-        return {
-            false,
-            {"Unknown command"}};
+        const std::string helpText = mRegistry.buildHelpText();
+        std::istringstream ss(helpText);
+        std::string line;
+        while (std::getline(ss, line))
+        {
+            addOutputLine(line);
+        }
+        return {true, ""};
     }
-    result = it->second(args);
-    mOutput.addLine(result.message);
+
+    const CommandDefinition *def = mRegistry.find(name);
+    if (!def)
+    {
+        const std::string msg = "Unknown command: " + name + " (type 'help' for a list)";
+        addOutputLine(msg);
+        return {false, msg};
+    }
+
+    CommandResult result;
+    if (!def->shellScript.empty())
+    {
+        result = executeShell(def->shellScript);
+    }
+    else if (def->handler)
+    {
+        result = def->handler(args);
+    }
+    else
+    {
+        result = {false, "Command '" + name + "' has no handler"};
+    }
+
+    if (!result.message.empty())
+    {
+        addOutputLine(result.message);
+    }
     return result;
 }
 
@@ -77,69 +86,15 @@ CommandResult CommandProcessor::executeShell(const std::string &commandLine)
                     pclose(pipe); })
         .detach();
 
-    return {true, std::string("Executed Command: " + commandLine)};
+    return {true, "Executed: " + commandLine};
 }
 
-CommandResult CommandProcessor::buildCommand(const std::vector<std::string> &args)
+void CommandProcessor::addOutputLine(const std::string &line)
 {
-    (void)args;
-    return executeShell("./run.sh -r");
+    mOutput.addLine(line);
 }
 
-CommandResult CommandProcessor::flexCommand(const std::vector<std::string> &args)
-{
-    (void)args;
-    return executeShell("find src -type f -name '*.cpp' -print0 | xargs -0 wc -l");
-}
-
-CommandResult CommandProcessor::quitCommand(const std::vector<std::string> &args)
-{
-    (void)args;
-    mPendingRequest = {CommandRequestType::Quit, ""};
-    return {true, {"Quit!"}};
-}
-
-CommandResult CommandProcessor::openFileCommand(const std::vector<std::string> &args)
-{
-    if(args.empty()){
-        mPendingRequest = {CommandRequestType::Error, "No argument passed to open file!"};
-        return {false, {"No argument passed to open a file!"}};
-    }
-    mPendingRequest = {CommandRequestType::OpenFile, args[0]};
-    return {true, {"Opened file"}};
-}
-
-CommandResult CommandProcessor::saveCommand(const std::vector<std::string> &args)
-{
-    (void)args;
-    mPendingRequest = {CommandRequestType::SaveFile, ""};
-    return {true, {"Saved current file!"}};
-}
-
-CommandResult CommandProcessor::changeLanguageCommand(const std::vector<std::string> &args)
-{
-    if (!args.empty())
-    {
-        mPendingRequest = {CommandRequestType::ChangeLanguage, args[0]};
-        return {true, {std::string("Changed language to " + args[0])}};
-    }
-    else
-    {
-        mPendingRequest = {CommandRequestType::Error, "No language provided!"};
-        return {false, {"No language provided!"}};
-    }
-
-    return {false, {"Something went wrong while changing language!"}};
-}
-
-std::optional<CommandRequest> CommandProcessor::consumeRequest()
-{
-    std::optional<CommandRequest> result = mPendingRequest;
-    mPendingRequest.reset();
-    return result;
-}
-
-const TextBuffer& CommandProcessor::getOutput() const
+const TextBuffer &CommandProcessor::getOutput() const
 {
     std::lock_guard<std::mutex> lock(mOutputMutex);
     return mOutput;

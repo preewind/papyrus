@@ -1,6 +1,5 @@
 target_sources(papyrus PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Editor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/EditorCommandHandler.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/UndoManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TextBuffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TextInput.cpp
