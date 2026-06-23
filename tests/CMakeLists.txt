@@ -43,3 +43,47 @@ add_simple_test(SearchTests SearchTests.cpp ../src/Search/SearchEngine.cpp ../sr
 add_simple_test(FileBrowserTests FileBrowserTests.cpp ../src/FileBrowser/FileBrowser.cpp)
 add_simple_test(TerminalTests TerminalTests.cpp ../src/Terminal/Terminal.cpp ../src/Terminal/CommandProcessor.cpp ../src/Editor/TextInput.cpp ../src/Editor/TextBuffer.cpp)
 add_simple_test(SyntaxTests SyntaxTests.cpp ../src/Syntax/CppLexer.cpp ../src/Syntax/SyntaxHighlighter.cpp ../src/Editor/TextBuffer.cpp)
+
+set(VIEWS_EDITOR_STACK_SOURCES
+    ../src/Editor/Editor.cpp
+    ../src/Editor/TextBuffer.cpp
+    ../src/Editor/TextInput.cpp
+    ../src/Editor/UndoManager.cpp
+    ../src/Views/LayoutManager.cpp
+    ../src/Terminal/Terminal.cpp
+    ../src/Terminal/CommandProcessor.cpp
+    ../src/Search/SearchSession.cpp
+    ../src/Search/SearchEngine.cpp
+    ../src/Syntax/SyntaxHighlighter.cpp
+    ../src/Syntax/CppLexer.cpp
+)
+
+add_simple_test(EditorViewTests
+    EditorViewTests.cpp
+    ../src/Views/EditorView.cpp
+    ../src/Views/EditorViewPort.cpp
+    ../src/Views/TextLayout.cpp
+    ${VIEWS_EDITOR_STACK_SOURCES}
+)
+
+add_simple_test(SearchViewTests
+    SearchViewTests.cpp
+    ../src/Views/SearchView.cpp
+    ../src/Views/SearchViewPort.cpp
+    ../src/Views/TextLayout.cpp
+    ${VIEWS_EDITOR_STACK_SOURCES}
+)
+
+add_simple_test(TerminalViewTests
+    TerminalViewTests.cpp
+    ../src/Views/TerminalView.cpp
+    ../src/Views/TextLayout.cpp
+    ${VIEWS_EDITOR_STACK_SOURCES}
+)
+
+add_simple_test(FileBrowserViewTests
+    FileBrowserViewTests.cpp
+    ../src/Views/FileBrowserView.cpp
+    ../src/Views/TextLayout.cpp
+    ../src/FileBrowser/FileBrowser.cpp
+)

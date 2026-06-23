@@ -4,16 +4,15 @@ void SearchView::render(RenderContext &renderContext, const Editor &editor, cons
 {
     if (editor.isSearchActive())
     {
-        renderSearchOverlay(renderContext, editor.getSearch(), textLayout, searchLayout, viewport);
+        renderSearchOverlay(renderContext, editor.getSearch(), textLayout, searchLayout);
         renderSearchSelection(renderContext, editor.getSearch(), textLayout, searchLayout, viewport);
-        renderSearchText(renderContext, editor.getSearch(), textLayout, searchLayout, viewport);
+        renderSearchText(renderContext, editor.getSearch(), searchLayout, viewport);
         renderSearchCursor(renderContext, editor.getSearch(), textLayout, searchLayout, viewport, cursorVisible);
     }
 }
 
-void SearchView::renderSearchOverlay(RenderContext &renderContext, const SearchSession &session, const TextLayout &textLayout, const SearchLayout &searchLayout, const SearchViewport &viewport)
+void SearchView::renderSearchOverlay(RenderContext &renderContext, const SearchSession &session, const TextLayout &textLayout, const SearchLayout &searchLayout)
 {
-    (void)viewport;
     const auto &theme = renderContext.getTheme();
     uint32_t currMatch = session.hasMatches() ? session.getCurrentMatchIndex() + 1 : 0;
     const std::string &matchStr = std::to_string(currMatch) + "/" + std::to_string(session.getMatches().size());
@@ -23,9 +22,8 @@ void SearchView::renderSearchOverlay(RenderContext &renderContext, const SearchS
     renderContext.drawRect(searchLayout.matchBox.x, searchLayout.matchBox.y, matchBoxWidth, searchLayout.matchBox.h, theme.overlayBackground);
 }
 
-void SearchView::renderSearchText(RenderContext &renderContext, const SearchSession &session, const TextLayout &textLayout, const SearchLayout &searchLayout, const SearchViewport &viewport)
+void SearchView::renderSearchText(RenderContext &renderContext, const SearchSession &session, const SearchLayout &searchLayout, const SearchViewport &viewport)
 {
-    (void)textLayout;
     uint32_t currMatch = session.hasMatches() ? session.getCurrentMatchIndex() + 1 : 0;
     const std::string &matchStr = std::to_string(currMatch) + "/" + std::to_string(session.getMatches().size());
 

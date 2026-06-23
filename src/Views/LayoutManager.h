@@ -22,8 +22,6 @@ struct LayoutConfig
 struct EditorLayout
 {
     Rect viewport;
-    Rect textArea;
-    Rect lineNumberArea;
 };
 
 struct SearchLayout
@@ -60,7 +58,6 @@ struct FileBrowserLayout
     uint32_t legendY = 0;
     uint32_t legendMarkerSize = 0;
 };
-
 
 class LayoutManager{
 

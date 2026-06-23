@@ -2,7 +2,7 @@
 
 #include "FileBrowserView.h"
 
-const std::string FileBrowserView::fitTextToWidthFile(const std::string &text, const std::string &extension, const TextLayout &textLayout, uint32_t availableWidth) const
+std::string FileBrowserView::fitTextToWidthFile(const std::string &text, const std::string &extension, const TextLayout &textLayout, uint32_t availableWidth) const
 {
     const uint32_t reservedWidth = textLayout.width("...") + textLayout.width(extension);
     if (availableWidth <= reservedWidth)

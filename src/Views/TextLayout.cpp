@@ -1,4 +1,5 @@
 #include "TextLayout.h"
+#include "logger.h"
 
 void TextLayout::setMeasurer(const ITextMeasurer *measurer)
 {
@@ -13,6 +14,7 @@ uint32_t TextLayout::width(const std::string &text) const
     }
     if (!mMeasurer)
     {
+        LOG_ERROR() << "Measurer not initialized!";
         return 0;
     }
     return mMeasurer->width(text);
@@ -20,7 +22,7 @@ uint32_t TextLayout::width(const std::string &text) const
 
 std::string TextLayout::expandTabs(std::string_view text) const
 {
-    std::string result = "";
+    std::string result;
 
     for (char c : text)
     {
@@ -53,7 +55,7 @@ uint32_t TextLayout::virtualColumn(std::string_view line, uint32_t rawCol) const
     return virtualCol;
 }
 
-int TextLayout::columnToPixel(std::string_view line, uint32_t col) const
+uint32_t TextLayout::columnToPixel(std::string_view line, uint32_t col) const
 {
     return width(expandTabs(line.substr(0, col)));
 }
