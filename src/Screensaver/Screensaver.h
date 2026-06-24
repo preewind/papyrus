@@ -5,7 +5,7 @@
 #include <vector>
 #include <SDL3/SDL_events.h>
 
-#include "types.h"
+struct Window_Properties;
 
 struct Logo
 {
@@ -59,7 +59,6 @@ public:
     Screensaver();
     void updateScreensaver();
     void runScreensaver(const Window_Properties &windowProps);
-    void runSuccessScene(uint32_t nowMs, float deltaSeconds);
     void resolveEffectDef(std::string_view assetName, uint32_t duration, float w, float h);
     bool isSuccess() const;
     const SuccessAnimation &getSuccessAnimation() const;
@@ -68,10 +67,15 @@ public:
     bool isInactive() const;
     void resetTimer();
     const Logo &getLogo() const;
-    bool canHitCorner(const Window_Properties &windowProps);
     void handleKey(const SDL_Event &event);
 
 private:
+    void initializeLogo();
+    void startSuccessScene(const Window_Properties &windowProps, uint32_t nowMs);
+    void spawnSuccessEffects(const Window_Properties &windowProps);
+    void runSuccessScene(uint32_t nowMs, float deltaSeconds);
+    bool areAllEffectsFinished(uint32_t nowMs) const;
+
     uint64_t mInactivityTimer = 0;
     uint64_t mInactivityInterval = 3;
     bool mInactive = false;
@@ -79,7 +83,6 @@ private:
     bool mSuccess = false;
     uint32_t mLastFrameTimeMs = 0;
     uint32_t mFrameTimeMs = 0;
-    uint32_t mSuccessStartTimeMs = 0;
     std::vector<EffectGroup> mEffects;
     Logo mLogo;
     SuccessAnimation mSuccessAnimation;

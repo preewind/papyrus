@@ -1,12 +1,12 @@
 #include <SDL3/SDL_timer.h>
 #include <algorithm>
 #include <cmath>
-#include <random>
 #include <numeric>
+#include <random>
 
 #include "Screensaver.h"
+#include "Core/types.h"
 #include "ScreensaverAssets.h"
-#include "logger.h"
 
 Screensaver::Screensaver()
 {
@@ -83,16 +83,8 @@ void Screensaver::runScreensaver(const Window_Properties &windowProps)
     }
     if (!mInitialized)
     {
-        mLogo.w = 386;
-        mLogo.h = 180;
-        // mLogo.x = (windowProps.totalWindowWidth - mLogo.w) / 2;
-        mLogo.x = 438;
-        // mLogo.y = (windowProps.totalWindowHeight - mLogo.h) / 2;
-        mLogo.y = 270;
-        mLogo.dx = 3;
-        mLogo.dy = 3;
+        initializeLogo();
         mInitialized = true;
-        LOG_DEBUG() << "Can the logo hit the perfect corner? " << canHitCorner(windowProps);
     }
 
     mLogo.x += mLogo.dx;
@@ -128,49 +120,73 @@ void Screensaver::runScreensaver(const Window_Properties &windowProps)
 
     if (upperLeft || upperRight || lowerLeft || lowerRight)
     {
-        mSuccess = true;
-        mSuccessStartTimeMs = nowMs;
-        mSuccessAnimation.active = true;
-        mSuccessAnimation.endX = mLogo.x;
-        mSuccessAnimation.endY = mLogo.y - mLogo.h / 5;
-        mSuccessAnimation.w = mLogo.w;
-        mSuccessAnimation.h = mLogo.h;
-        mSuccessAnimation.startX = (windowProps.totalWindowWidth - mSuccessAnimation.w) / 2;
-        mSuccessAnimation.startY = (windowProps.totalWindowHeight - mSuccessAnimation.h) / 2;
-        mSuccessAnimation.currentX = mSuccessAnimation.startX;
-        mSuccessAnimation.currentY = mSuccessAnimation.startY;
+        startSuccessScene(windowProps, nowMs);
+    }
+}
 
-        thread_local std::random_device rd;
-        thread_local std::mt19937 gen(rd());
-        std::uniform_int_distribution<int> xdistrib(0, windowProps.totalWindowWidth);
-        std::uniform_int_distribution<int> ydistrib(0, windowProps.totalWindowHeight);
+void Screensaver::initializeLogo()
+{
+    mLogo.w = 386;
+    mLogo.h = 180;
+    mLogo.x = 438;
+    mLogo.y = 270;
+    mLogo.dx = 3;
+    mLogo.dy = 3;
+}
 
-        for (auto &group : mEffects)
+void Screensaver::startSuccessScene(const Window_Properties &windowProps, uint32_t nowMs)
+{
+    (void)nowMs;
+    mSuccess = true;
+    mSuccessAnimation.active = true;
+    mSuccessAnimation.endX = mLogo.x;
+    mSuccessAnimation.endY = mLogo.y - mLogo.h / 5;
+    mSuccessAnimation.w = mLogo.w;
+    mSuccessAnimation.h = mLogo.h;
+    mSuccessAnimation.startX = (windowProps.totalWindowWidth - mSuccessAnimation.w) / 2;
+    mSuccessAnimation.startY = (windowProps.totalWindowHeight - mSuccessAnimation.h) / 2;
+    mSuccessAnimation.currentX = mSuccessAnimation.startX;
+    mSuccessAnimation.currentY = mSuccessAnimation.startY;
+
+    spawnSuccessEffects(windowProps);
+}
+
+void Screensaver::spawnSuccessEffects(const Window_Properties &windowProps)
+{
+    thread_local std::random_device rd;
+    thread_local std::mt19937 gen(rd());
+
+    for (auto &group : mEffects)
+    {
+        const EffectDef &def = group.def;
+        group.instances.clear();
+        group.instances.reserve(def.count);
+
+        const int maxX = std::max(0, static_cast<int>(windowProps.totalWindowWidth - def.w));
+        const int maxY = std::max(0, static_cast<int>(windowProps.totalWindowHeight - def.h));
+        std::uniform_int_distribution<int> xDist(0, maxX);
+        std::uniform_int_distribution<int> yDist(0, maxY);
+        std::uniform_int_distribution<uint32_t> offsetDist(0, def.maxOffsetMs);
+
+        for (size_t i = 0; i < def.count; ++i)
         {
-            const EffectDef &def = group.def;
-            group.instances.clear();
-            group.instances.reserve(def.count);
-            std::uniform_int_distribution<uint32_t> offsetDist(0, def.maxOffsetMs);
-
-            for (size_t i = 0; i < def.count; ++i)
+            SuccessEffect effect;
+            if (def.positionMode == EffectPositionMode::Centered)
             {
-                SuccessEffect e;
-                if (def.positionMode == EffectPositionMode::Centered)
-                {
-                    e.x = (windowProps.totalWindowWidth  - def.w) / 2;
-                    e.y = (windowProps.totalWindowHeight - def.h) / 2;
-                }
-                else
-                {
-                    e.x = static_cast<float>(xdistrib(gen));
-                    e.y = static_cast<float>(ydistrib(gen));
-                }
-                e.w           = def.w;
-                e.h           = def.h;
-                e.startOffset = def.maxOffsetMs > 0 ? offsetDist(gen) : 0;
-                e.duration    = def.duration;
-                group.instances.push_back(e);
+                effect.x = (windowProps.totalWindowWidth - def.w) / 2;
+                effect.y = (windowProps.totalWindowHeight - def.h) / 2;
             }
+            else
+            {
+                effect.x = static_cast<float>(xDist(gen));
+                effect.y = static_cast<float>(yDist(gen));
+            }
+
+            effect.w = def.w;
+            effect.h = def.h;
+            effect.startOffset = def.maxOffsetMs > 0 ? offsetDist(gen) : 0;
+            effect.duration = def.duration;
+            group.instances.push_back(effect);
         }
     }
 }
@@ -179,7 +195,7 @@ void Screensaver::runSuccessScene(uint32_t nowMs, float deltaSeconds)
 {
     float dx = mSuccessAnimation.endX - mSuccessAnimation.currentX;
     float dy = mSuccessAnimation.endY - mSuccessAnimation.currentY;
-    float length = sqrtf(dx * dx + dy * dy);
+    float length = std::sqrt(dx * dx + dy * dy);
     float movementStep = mSuccessAnimation.speedPixelsPerSecond * deltaSeconds;
     if (length <= movementStep)
     {
@@ -194,20 +210,7 @@ void Screensaver::runSuccessScene(uint32_t nowMs, float deltaSeconds)
                     e.startTime = nowMs + e.startOffset;
         }
 
-        bool allDone = true;
-        for (const auto &group : mEffects)
-        {
-            for (const auto &e : group.instances)
-            {
-                if (nowMs < e.startTime + e.duration)
-                {
-                    allDone = false;
-                    break;
-                }
-            }
-            if (!allDone) break;
-        }
-        if (allDone)
+        if (areAllEffectsFinished(nowMs))
         {
             mSuccess = false;
         }
@@ -217,6 +220,22 @@ void Screensaver::runSuccessScene(uint32_t nowMs, float deltaSeconds)
         mSuccessAnimation.currentX += (dx / length) * movementStep;
         mSuccessAnimation.currentY += (dy / length) * movementStep;
     }
+}
+
+bool Screensaver::areAllEffectsFinished(uint32_t nowMs) const
+{
+    for (const auto &group : mEffects)
+    {
+        for (const auto &effect : group.instances)
+        {
+            if (nowMs < effect.startTime + effect.duration)
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 bool Screensaver::isSuccess() const
@@ -240,14 +259,20 @@ void Screensaver::resolveEffectDef(std::string_view assetName, uint32_t duration
     {
         EffectDef &def = group.def;
         if (def.assetName != assetName)
+        {
             continue;
+        }
         if (def.duration == 0)
+        {
             def.duration = duration;
+        }
         if (def.w == 0.0f || def.h == 0.0f)
         {
             def.w = w * def.dimensionScale;
             def.h = h * def.dimensionScale;
         }
+
+        break;
     }
 }
 
@@ -270,17 +295,6 @@ void Screensaver::resetTimer()
 const Logo &Screensaver::getLogo() const
 {
     return mLogo;
-}
-
-bool Screensaver::canHitCorner(const Window_Properties &windowProps)
-{
-    int xMax = windowProps.totalWindowWidth - mLogo.w;
-    int yMax = windowProps.totalWindowHeight - mLogo.h;
-
-    int horizontal_factor = yMax * std::abs(mLogo.dx);
-    int vertical_factor = xMax * std::abs(mLogo.dy);
-
-    return std::gcd(horizontal_factor, vertical_factor) > 1;
 }
 
 void Screensaver::handleKey(const SDL_Event &event)

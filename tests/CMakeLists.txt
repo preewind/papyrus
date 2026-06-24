@@ -89,8 +89,7 @@ add_simple_test(FileBrowserViewTests
     ../src/FileBrowser/FileBrowser.cpp
 )
 
-add_simple_test(ScreensaverViewTests
-    ScreensaverViewTests.cpp
-    ../src/Views/ScreensaverView.cpp
+add_simple_test(ScreensaverTests
+    ScreensaverTests.cpp
     ../src/Screensaver/Screensaver.cpp
 )

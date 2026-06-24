@@ -1,6 +1,5 @@
 #include "ScreensaverAssets.h"
 #include "ScreensaverView.h"
-#include "logger.h"
 
 void ScreensaverView::render(RenderContext &renderContext, const Screensaver &screensaver)
 {
