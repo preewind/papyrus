@@ -33,6 +33,7 @@ private:
     void update();
     void printUsage() const;
     void initializeWindowAndRendering();
+    void preloadStaticTextures();
     void openInitialFileIfProvided(const std::string &filename);
     void processEvents();
     void handleEvent(const SDL_Event &event);

@@ -97,6 +97,15 @@ struct FakeRenderContext : public RenderContext
         (void)h;
     }
 
+    void loadTextureByName(float x, float y, float w, float h, std::string_view assetName) override
+    {
+        (void)assetName;
+        (void)x;
+        (void)y;
+        (void)w;
+        (void)h;
+    }
+
     void pushClipRect(const Rect &rect) override
     {
         clipRects.push_back(rect);

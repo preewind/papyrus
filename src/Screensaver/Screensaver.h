@@ -14,10 +14,19 @@ struct Logo
 
 struct SuccessAnimation
 {
-    int startX, startY;
-    int currentX, currentY;
-    int endX, endY;
+    float startX, startY;
+    float currentX, currentY;
+    float endX, endY;
+    bool active = true;
     uint32_t w, h;
+    float speedPixelsPerSecond = 414.0f;
+};
+
+struct HitMarker{
+    int x,y;
+    uint32_t startTime;
+    uint32_t startOffset;
+    uint32_t duration;
 };
 
 class Screensaver
@@ -26,9 +35,11 @@ public:
     Screensaver();
     void updateScreensaver();
     void runScreensaver(const Window_Properties &windowProps);
-    void runSuccessScene();
+    void runSuccessScene(uint32_t nowMs, float deltaSeconds);
     bool isSuccess() const;
     const SuccessAnimation &getSuccessAnimation() const;
+    const std::vector<HitMarker>& getMarkers() const;
+    uint32_t getFrameTimeMs() const;
     bool isInactive() const;
     void resetTimer();
     const Logo &getLogo() const;
@@ -41,6 +52,9 @@ private:
     bool mInactive = false;
     bool mInitialized = false;
     bool mSuccess = false;
+    uint32_t mLastFrameTimeMs = 0;
+    uint32_t mFrameTimeMs = 0;
+    std::vector<HitMarker> mMarkers;
     Logo mLogo;
     SuccessAnimation mSuccessAnimation;
 };

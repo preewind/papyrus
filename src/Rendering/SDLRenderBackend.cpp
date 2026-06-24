@@ -4,6 +4,8 @@
 
 #include <SDL3_image/SDL_image.h>
 
+#include <utility>
+
 SDLRenderBackend::SDLRenderBackend(SDL_Window *window, const std::string &fontPath, uint8_t fontSize)
 {
     mRenderer = SDL_CreateRenderer(window, nullptr);
@@ -19,6 +21,8 @@ SDLRenderBackend::SDLRenderBackend(SDL_Window *window, const std::string &fontPa
 
 SDLRenderBackend::~SDLRenderBackend()
 {
+    clearTextureCache();
+
     if (mFont)
     {
         TTF_CloseFont(mFont);
@@ -108,13 +112,68 @@ void SDLRenderBackend::drawText(const std::string &text, int x, int y, const Ren
 
 void SDLRenderBackend::loadTexture(float x, float y, float w, float h, const std::filesystem::path &file)
 {
-    SDL_Texture *texture = IMG_LoadTexture(mRenderer, file.string().c_str());
-    CSP(texture);
+    SDL_Texture *texture = loadAndCacheTexture(file);
+    if (texture == nullptr)
+    {
+        return;
+    }
+
     SDL_FRect dst{x, y, w, h};
     CSF(SDL_RenderTexture(mRenderer, texture, nullptr, &dst));
+}
 
-    SDL_DestroyTexture(texture);
-    
+bool SDLRenderBackend::preloadTexture(const std::filesystem::path &file)
+{
+    return loadAndCacheTexture(file) != nullptr;
+}
+
+void SDLRenderBackend::evictTexture(const std::filesystem::path &file)
+{
+    const std::string key = textureKey(file);
+    auto textureEntry = mTextureCache.find(key);
+    if (textureEntry == mTextureCache.end())
+    {
+        return;
+    }
+
+    SDL_DestroyTexture(textureEntry->second);
+    mTextureCache.erase(textureEntry);
+}
+
+void SDLRenderBackend::clearTextureCache()
+{
+    for (auto &[key, texture] : mTextureCache)
+    {
+        (void)key;
+        SDL_DestroyTexture(texture);
+    }
+
+    mTextureCache.clear();
+}
+
+SDL_Texture *SDLRenderBackend::loadAndCacheTexture(const std::filesystem::path &file)
+{
+    const std::string key = textureKey(file);
+    auto textureEntry = mTextureCache.find(key);
+    if (textureEntry != mTextureCache.end())
+    {
+        return textureEntry->second;
+    }
+
+    SDL_Texture *texture = IMG_LoadTexture(mRenderer, key.c_str());
+    if (texture == nullptr)
+    {
+        CSP(texture);
+        return nullptr;
+    }
+
+    mTextureCache.emplace(key, texture);
+    return texture;
+}
+
+std::string SDLRenderBackend::textureKey(const std::filesystem::path &file)
+{
+    return file.lexically_normal().string();
 }
 
 uint32_t SDLRenderBackend::width(std::string_view text) const

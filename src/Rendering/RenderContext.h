@@ -1,6 +1,8 @@
 #pragma once
 
+#include <filesystem>
 #include <string>
+#include <string_view>
 
 #include "theme.h"
 #include "types.h"
@@ -18,6 +20,7 @@ public:
     virtual void drawRect(int x, int y, int w, int h, RenderColor color) = 0;
     virtual void drawRect(Rect rect, RenderColor color) = 0;
     virtual void loadTexture(float x, float y, float w, float h, const std::filesystem::path &file) = 0;
+    virtual void loadTextureByName(float x, float y, float w, float h, std::string_view assetName) = 0;
     virtual void pushClipRect(const Rect &rect) = 0;
     virtual void clearClipRect() = 0;
 };

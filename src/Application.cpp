@@ -1,5 +1,6 @@
 #include "Application.h"
 #include "SDLRenderBackend.h"
+#include "ScreensaverAssets.h"
 #include "StartupParser.h"
 #include "logger.h"
 #include "util.h"
@@ -46,6 +47,18 @@ void Application::initializeWindowAndRendering()
     mRenderer = std::make_unique<Renderer>(*mRenderBackend, mTheme, static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight));
 
     mTextLayout.setMeasurer(mRenderBackend.get());
+    preloadStaticTextures();
+}
+
+void Application::preloadStaticTextures()
+{
+    mRenderer->registerTextureAsset(ScreensaverAssets::Logo, ScreensaverAssets::LogoPath);
+    mRenderer->registerTextureAsset(ScreensaverAssets::Success, ScreensaverAssets::SuccessPath);
+    mRenderer->registerTextureAsset(ScreensaverAssets::HitMarker, ScreensaverAssets::HitMarkerPath);
+
+    mRenderer->preloadTextureByName(ScreensaverAssets::Logo);
+    mRenderer->preloadTextureByName(ScreensaverAssets::Success);
+    mRenderer->preloadTextureByName(ScreensaverAssets::HitMarker);
 }
 
 void Application::openInitialFileIfProvided(const std::string &filename)
