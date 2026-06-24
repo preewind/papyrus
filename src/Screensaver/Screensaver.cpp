@@ -12,38 +12,38 @@
 
 namespace
 {
-std::vector<uint32_t> sampleUniqueCellIndices(uint32_t totalCells, uint32_t sampleCount)
-{
-    if (sampleCount == 0 || totalCells == 0)
+    std::vector<uint32_t> sampleUniqueCellIndices(uint32_t totalCells, uint32_t sampleCount)
     {
-        return {};
-    }
-
-    sampleCount = std::min(sampleCount, totalCells);
-    std::unordered_set<uint32_t> selected;
-    selected.reserve(sampleCount * 2);
-
-    auto &rng = Random::get_engine();
-    for (uint32_t j = totalCells - sampleCount; j < totalCells; ++j)
-    {
-        std::uniform_int_distribution<uint32_t> dist(0, j);
-        const uint32_t t = dist(rng);
-        if (!selected.insert(t).second)
+        if (sampleCount == 0 || totalCells == 0)
         {
-            selected.insert(j);
+            return {};
         }
-    }
 
-    std::vector<uint32_t> indices;
-    indices.reserve(sampleCount);
-    for (uint32_t idx : selected)
-    {
-        indices.push_back(idx);
+        sampleCount = std::min(sampleCount, totalCells);
+        std::unordered_set<uint32_t> selected;
+        selected.reserve(sampleCount * 2);
+
+        auto &rng = Random::get_engine();
+        for (uint32_t j = totalCells - sampleCount; j < totalCells; ++j)
+        {
+            std::uniform_int_distribution<uint32_t> dist(0, j);
+            const uint32_t t = dist(rng);
+            if (!selected.insert(t).second)
+            {
+                selected.insert(j);
+            }
+        }
+
+        std::vector<uint32_t> indices;
+        indices.reserve(sampleCount);
+        for (uint32_t idx : selected)
+        {
+            indices.push_back(idx);
+        }
+        std::shuffle(indices.begin(), indices.end(), rng);
+        return indices;
     }
-    std::shuffle(indices.begin(), indices.end(), rng);
-    return indices;
 }
-} // namespace
 
 Screensaver::Screensaver()
 {
@@ -103,6 +103,20 @@ Screensaver::Screensaver()
                 400,
                 EffectPositionMode::RandomGrid,
                 1.2f},
+            {}
+
+        },
+        EffectGroup{
+            EffectDef{
+                ScreensaverAssets::MlgOh,
+                ScreensaverAssets::MlgOhPath,
+                true,
+                1,
+                0, 0,
+                0,
+                1,
+                EffectPositionMode::Centered,
+                2.0},
             {}
 
         },
