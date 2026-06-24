@@ -26,6 +26,8 @@ public:
                                      std::string_view assetName,
                                      uint32_t elapsedMs,
                                      AnimationPlaybackMode playbackMode) = 0;
+    virtual uint32_t getAnimationDurationByName(std::string_view assetName) const = 0;
+    virtual std::pair<uint32_t, uint32_t> getAnimationDimensionsByName(std::string_view assetName) const = 0;
     virtual void pushClipRect(const Rect &rect) = 0;
     virtual void clearClipRect() = 0;
 };

@@ -33,6 +33,8 @@ public:
                              std::string_view assetName,
                              uint32_t elapsedMs,
                              AnimationPlaybackMode playbackMode) override;
+    uint32_t getAnimationDurationByName(std::string_view assetName) const override;
+    std::pair<uint32_t, uint32_t> getAnimationDimensionsByName(std::string_view assetName) const override;
     void registerTextureAsset(const std::string &assetName, const std::filesystem::path &file);
     void registerAnimationAsset(const std::string &assetName, const std::filesystem::path &file);
     bool preloadTextureByName(std::string_view assetName);

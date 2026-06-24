@@ -226,6 +226,8 @@ SDL_Texture *SDLRenderBackend::loadAndCacheTexture(const std::filesystem::path &
         return nullptr;
     }
 
+    CSF(SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND));
+
     mTextureCache.emplace(key, texture);
     return texture;
 }
@@ -263,6 +265,8 @@ SDLRenderBackend::AnimationData *SDLRenderBackend::loadAndCacheAnimation(const s
             CSP(texture);
             continue;
         }
+
+        CSF(SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND));
 
         const int rawDelay = rawAnimation->delays != nullptr ? rawAnimation->delays[i] : 0;
         const uint32_t delayMs = rawDelay > 0 ? static_cast<uint32_t>(rawDelay) : 100;
@@ -353,6 +357,40 @@ uint32_t SDLRenderBackend::selectAnimationFrameIndex(const AnimationData &animat
     }
 
     return static_cast<uint32_t>(animation.frames.size() - 1);
+}
+
+uint32_t SDLRenderBackend::getAnimationDurationMs(const std::filesystem::path &file) const
+{
+    const std::string key = textureKey(file);
+    auto animationEntry = mAnimationCache.find(key);
+    if (animationEntry == mAnimationCache.end())
+    {
+        return 0;
+    }
+
+    return animationEntry->second.totalDurationMs;
+}
+
+std::pair<uint32_t, uint32_t> SDLRenderBackend::getAnimationDimensions(const std::filesystem::path &file) const
+{
+    const std::string key = textureKey(file);
+    auto animationEntry = mAnimationCache.find(key);
+    if (animationEntry == mAnimationCache.end() || animationEntry->second.frames.empty())
+    {
+        return {0, 0};
+    }
+
+    const AnimationData &animation = animationEntry->second;
+    SDL_Texture *firstTexture = animation.frames[0].texture;
+    if (firstTexture == nullptr)
+    {
+        return {0, 0};
+    }
+
+    float w = 0.0f;
+    float h = 0.0f;
+    CSF(SDL_GetTextureSize(firstTexture, &w, &h));
+    return {static_cast<uint32_t>(w), static_cast<uint32_t>(h)};
 }
 
 uint32_t SDLRenderBackend::width(std::string_view text) const

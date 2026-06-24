@@ -77,8 +77,9 @@ struct FakeRenderContext : public RenderContext
         return theme;
     }
 
-    void clear(RenderColor color) override{
-        (void) color;
+    void clear(RenderColor color) override
+    {
+        (void)color;
     }
 
     void drawText(const std::string &text, int x, int y) override
@@ -125,6 +126,15 @@ struct FakeRenderContext : public RenderContext
                              AnimationPlaybackMode playbackMode) override
     {
         animationCalls.push_back(AnimationCall{x, y, w, h, std::string(assetName), elapsedMs, playbackMode});
+    }
+    uint32_t getAnimationDurationByName(std::string_view assetName) const override
+    {
+        (void) assetName;
+        return 0;
+    }
+    std::pair<uint32_t, uint32_t> getAnimationDimensionsByName(std::string_view assetName) const override{
+        (void) assetName;
+        return {0,0};
     }
 
     void pushClipRect(const Rect &rect) override

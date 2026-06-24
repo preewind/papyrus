@@ -96,6 +96,7 @@ void Screensaver::runScreensaver(const Window_Properties &windowProps)
         mSuccessAnimation.currentX = mSuccessAnimation.startX;
         mSuccessAnimation.currentY = mSuccessAnimation.startY;
 
+        // hit markers
         mMarkers.clear();
         size_t markerCount = 200;
         mMarkers.reserve(markerCount);
@@ -114,6 +115,28 @@ void Screensaver::runScreensaver(const Window_Properties &windowProps)
             marker.duration = 0.5 * SDL_MS_PER_SECOND;
             mMarkers.push_back(marker);
         }
+        // explosions
+        mExplosions.clear();
+        size_t explosionCount = 10;
+        mExplosions.reserve(explosionCount);
+
+        for (size_t i = 0; i < explosionCount; ++i)
+        {
+            Explosion explosion;
+            explosion.x = xdistrib(gen);
+            explosion.y = ydistrib(gen);
+            explosion.w = 420.0f;
+            explosion.h = 420.0f;
+            explosion.startOffset = timedistrib(gen);
+            explosion.duration = 0.5 * SDL_MS_PER_SECOND;
+            mExplosions.push_back(explosion);
+        }
+        // wow guy
+        mWow.w = 498*2;
+        mWow.h = 280*2;
+        mWow.x = (windowProps.totalWindowWidth-mWow.w)/2;
+        mWow.y = (windowProps.totalWindowHeight - mWow.h)/2;
+        mWow.startOffset = 0;
     }
 }
 
@@ -135,6 +158,11 @@ void Screensaver::runSuccessScene(uint32_t nowMs, float deltaSeconds)
             {
                 marker.startTime = nowMs + marker.startOffset;
             }
+            for (auto &explosion : mExplosions)
+            {
+                explosion.startTime = nowMs + explosion.startOffset;
+            }
+            mWow.startTime = nowMs;
         }
 
         bool allMarkersFinished = true;
@@ -146,8 +174,18 @@ void Screensaver::runSuccessScene(uint32_t nowMs, float deltaSeconds)
                 break;
             }
         }
-
-        if (allMarkersFinished)
+        bool allExplosionsFinished = true;
+        for(const auto& explosion: mExplosions){
+            if(nowMs < explosion.startTime + explosion.duration){
+                allExplosionsFinished = false;
+                break;
+            }
+        }
+        bool wowGuyFinished = true;
+        if(nowMs < mWow.startTime + 1350){
+            wowGuyFinished = false;
+        }
+        if (allMarkersFinished && allExplosionsFinished && wowGuyFinished)
         {
             mSuccess = false;
         }
@@ -172,6 +210,16 @@ const SuccessAnimation &Screensaver::getSuccessAnimation() const
 const std::vector<HitMarker> &Screensaver::getMarkers() const
 {
     return mMarkers;
+}
+
+const std::vector<Explosion> &Screensaver::getExplosions() const
+{
+    return mExplosions;
+}
+
+const Wow &Screensaver::getWow() const
+{
+    return mWow;
 }
 
 uint32_t Screensaver::getFrameTimeMs() const

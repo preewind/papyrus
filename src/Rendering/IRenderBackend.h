@@ -34,6 +34,9 @@ public:
     virtual void clearTextureCache() = 0;
     virtual void clearAnimationCache() = 0;
 
+    virtual uint32_t getAnimationDurationMs(const std::filesystem::path &file) const = 0;
+    virtual std::pair<uint32_t, uint32_t> getAnimationDimensions(const std::filesystem::path &file) const = 0;
+
     virtual int lineHeight() const = 0;
     virtual void setFontSize(uint8_t size) = 0;
 };

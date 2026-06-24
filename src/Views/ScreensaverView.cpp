@@ -2,6 +2,7 @@
 
 #include "ScreensaverAssets.h"
 #include "ScreensaverView.h"
+#include "logger.h"
 
 void ScreensaverView::render(RenderContext &renderContext, const Screensaver &screensaver)
 {
@@ -28,16 +29,25 @@ void ScreensaverView::renderSuccess(RenderContext &renderContext, const Screensa
     renderContext.loadTextureByName(success.currentX, success.currentY, success.w, success.h, ScreensaverAssets::Success);
 
     const auto &markers = screensaver.getMarkers();
+    const auto &explosions = screensaver.getExplosions();
+    const Wow &wow = screensaver.getWow();
+    uint32_t wowDurationMs = renderContext.getAnimationDurationByName(ScreensaverAssets::Wow);
     const uint32_t frameTime = screensaver.getFrameTimeMs();
     if (!success.active)
     {
-        renderContext.loadAnimationByName(success.currentX + success.w * 0.35f,
-                                          success.currentY + success.h * 0.2f,
-                                          120.0f,
-                                          120.0f,
-                                          ScreensaverAssets::Explosion,
-                                          screensaver.getSuccessElapsedMs(),
-                                          AnimationPlaybackMode::HideAfterEnd);
+        if (frameTime >= wow.startTime && frameTime < wow.startTime + wowDurationMs)
+            {
+                const uint32_t wowElapsedMs = frameTime - wow.startTime;
+                renderContext.loadAnimationByName(wow.x, wow.y, wow.w, wow.h, ScreensaverAssets::Wow, wowElapsedMs, AnimationPlaybackMode::HideAfterEnd);
+            }
+        for (const auto &explosion : explosions)
+        {
+            if (frameTime >= explosion.startTime && frameTime < explosion.startTime + explosion.duration)
+            {
+                renderContext.loadAnimationByName(explosion.x, explosion.y, explosion.w, explosion.h, ScreensaverAssets::Explosion, screensaver.getSuccessElapsedMs(), AnimationPlaybackMode::HideAfterEnd);
+            }
+        }
+
         for (const auto &marker : markers)
         {
             if (frameTime >= marker.startTime && frameTime < marker.startTime + marker.duration)

@@ -41,6 +41,9 @@ public:
     void clearTextureCache() override;
     void clearAnimationCache() override;
 
+    uint32_t getAnimationDurationMs(const std::filesystem::path &file) const override;
+    std::pair<uint32_t, uint32_t> getAnimationDimensions(const std::filesystem::path &file) const override;
+
     uint32_t width(std::string_view text) const override;
     int lineHeight() const override;
     void setFontSize(uint8_t size) override;

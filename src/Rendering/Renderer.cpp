@@ -155,6 +155,28 @@ void Renderer::clearAnimationCache()
     mBackend->clearAnimationCache();
 }
 
+uint32_t Renderer::getAnimationDurationByName(std::string_view assetName) const
+{
+    const std::filesystem::path *assetPath = findAnimationAsset(assetName);
+    if (assetPath == nullptr)
+    {
+        return 0;
+    }
+
+    return mBackend->getAnimationDurationMs(*assetPath);
+}
+
+std::pair<uint32_t, uint32_t> Renderer::getAnimationDimensionsByName(std::string_view assetName) const
+{
+    const std::filesystem::path *assetPath = findAnimationAsset(assetName);
+    if (assetPath == nullptr)
+    {
+        return {0, 0};
+    }
+
+    return mBackend->getAnimationDimensions(*assetPath);
+}
+
 void Renderer::pushClipRect(const Rect &rect)
 {
     mBackend->setClipRect(RenderRect{static_cast<int>(rect.x), static_cast<int>(rect.y), static_cast<int>(rect.w), static_cast<int>(rect.h)});
