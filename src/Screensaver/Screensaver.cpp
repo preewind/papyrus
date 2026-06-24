@@ -25,10 +25,12 @@ void Screensaver::runScreensaver(const Window_Properties &windowProps)
 {
     if (!mInitialized)
     {
-        mLogo.w = 100;
-        mLogo.h = 100;
-        mLogo.x = (windowProps.totalWindowWidth - mLogo.w) / 2;
-        mLogo.y = (windowProps.totalWindowHeight - mLogo.h) / 2;
+        mLogo.w = 386;
+        mLogo.h = 180;
+        //mLogo.x = (windowProps.totalWindowWidth - mLogo.w) / 2;
+        mLogo.x = 438;
+        //mLogo.y = (windowProps.totalWindowHeight - mLogo.h) / 2;
+        mLogo.y = 270;
         mLogo.dx = 3;
         mLogo.dy = 3;
         mInitialized = true;

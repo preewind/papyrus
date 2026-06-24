@@ -2,6 +2,8 @@
 
 #include "util.h"
 
+#include <SDL3_image/SDL_image.h>
+
 SDLRenderBackend::SDLRenderBackend(SDL_Window *window, const std::string &fontPath, uint8_t fontSize)
 {
     mRenderer = SDL_CreateRenderer(window, nullptr);
@@ -102,6 +104,17 @@ void SDLRenderBackend::drawText(const std::string &text, int x, int y, const Ren
 
     SDL_DestroyTexture(texture);
     SDL_DestroySurface(surface);
+}
+
+void SDLRenderBackend::loadTexture(float x, float y, float w, float h, const std::filesystem::path &file)
+{
+    SDL_Texture *texture = IMG_LoadTexture(mRenderer, file.string().c_str());
+    CSP(texture);
+    SDL_FRect dst{x, y, w, h};
+    CSF(SDL_RenderTexture(mRenderer, texture, nullptr, &dst));
+
+    SDL_DestroyTexture(texture);
+    
 }
 
 uint32_t SDLRenderBackend::width(std::string_view text) const

@@ -50,6 +50,11 @@ void Renderer::drawRect(Rect rect, RenderColor color)
     drawRect(rect.x, rect.y, rect.w, rect.h, color);
 }
 
+void Renderer::loadTexture(float x, float y, float w, float h, const std::filesystem::path &file)
+{
+    mBackend->loadTexture(x, y, w, h, file);
+}
+
 void Renderer::pushClipRect(const Rect &rect)
 {
     mBackend->setClipRect(RenderRect{static_cast<int>(rect.x), static_cast<int>(rect.y), static_cast<int>(rect.w), static_cast<int>(rect.h)});

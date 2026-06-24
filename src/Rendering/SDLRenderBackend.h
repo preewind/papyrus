@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <filesystem>
 #include <string>
 
 #include <SDL3/SDL.h>
@@ -26,6 +27,7 @@ public:
     void clearClipRect() override;
 
     void drawText(const std::string &text, int x, int y, const RenderColor &color) override;
+    void loadTexture(float x, float y, float w, float h, const std::filesystem::path &file) override;
 
     uint32_t width(std::string_view text) const override;
     int lineHeight() const override;
@@ -34,7 +36,6 @@ public:
     SDL_Renderer *nativeRenderer() const;
 
 private:
-    RenderColor clampAlpha(RenderColor color);
 
     SDL_Renderer *mRenderer = nullptr;
     TTF_Font *mFont = nullptr;

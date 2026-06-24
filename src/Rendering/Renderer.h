@@ -25,6 +25,7 @@ public:
     void drawText(const std::string &text, int x, int y, RenderColor color) override;
     void drawRect(int x, int y, int w, int h, RenderColor color) override;
     void drawRect(Rect rect, RenderColor color) override;
+    void loadTexture(float x, float y, float w, float h, const std::filesystem::path &file) override;
     void pushClipRect(const Rect &rect) override;
     void clearClipRect() override;
     void present();

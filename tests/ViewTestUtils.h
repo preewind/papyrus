@@ -84,6 +84,15 @@ struct FakeRenderContext : public RenderContext
         drawRect(static_cast<int>(rect.x), static_cast<int>(rect.y), static_cast<int>(rect.w), static_cast<int>(rect.h), color);
     }
 
+    void loadTexture(float x, float y, float w, float h, const std::filesystem::path &file) override
+    {
+        (void)file;
+        (void)x;
+        (void)y;
+        (void)w;
+        (void)h;
+    }
+
     void pushClipRect(const Rect &rect) override
     {
         clipRects.push_back(rect);

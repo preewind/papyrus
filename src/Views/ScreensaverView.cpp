@@ -11,5 +11,5 @@ void ScreensaverView::render(RenderContext &renderContext, const Screensaver &sc
 void ScreensaverView::renderLogo(RenderContext &renderContext, const Screensaver &screensaver)
 {
     const Logo &logo = screensaver.getLogo();
-    renderContext.drawRect(logo.x, logo.y, logo.w, logo.h, {255, 0, 0, 255});
+    renderContext.loadTexture(logo.x, logo.y, logo.w, logo.h, "./assets/dvd_logo.png");
 }
