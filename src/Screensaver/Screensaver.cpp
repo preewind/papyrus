@@ -3,10 +3,47 @@
 #include <cmath>
 #include <numeric>
 #include <random>
+#include <unordered_set>
 
 #include "Screensaver.h"
 #include "Core/types.h"
+#include "random.h"
 #include "ScreensaverAssets.h"
+
+namespace
+{
+std::vector<uint32_t> sampleUniqueCellIndices(uint32_t totalCells, uint32_t sampleCount)
+{
+    if (sampleCount == 0 || totalCells == 0)
+    {
+        return {};
+    }
+
+    sampleCount = std::min(sampleCount, totalCells);
+    std::unordered_set<uint32_t> selected;
+    selected.reserve(sampleCount * 2);
+
+    auto &rng = Random::get_engine();
+    for (uint32_t j = totalCells - sampleCount; j < totalCells; ++j)
+    {
+        std::uniform_int_distribution<uint32_t> dist(0, j);
+        const uint32_t t = dist(rng);
+        if (!selected.insert(t).second)
+        {
+            selected.insert(j);
+        }
+    }
+
+    std::vector<uint32_t> indices;
+    indices.reserve(sampleCount);
+    for (uint32_t idx : selected)
+    {
+        indices.push_back(idx);
+    }
+    std::shuffle(indices.begin(), indices.end(), rng);
+    return indices;
+}
+} // namespace
 
 Screensaver::Screensaver()
 {
@@ -21,39 +58,53 @@ Screensaver::Screensaver()
                 ScreensaverAssets::HitMarkerPath,
                 false,
                 200,
-                50.0f, 50.0f,
+                50.0f,
+                50.0f,
                 500,
                 600,
                 EffectPositionMode::Random,
             },
-            {}
-        },
+            {}},
         EffectGroup{
             EffectDef{
                 ScreensaverAssets::Explosion,
                 ScreensaverAssets::ExplosionPath,
                 true,
                 10,
-                420.0f, 420.0f,
+                420.0f,
+                420.0f,
                 0,
                 600,
                 EffectPositionMode::Random,
             },
-            {}
-        },
+            {}},
         EffectGroup{
             EffectDef{
                 ScreensaverAssets::Wow,
                 ScreensaverAssets::WowPath,
                 true,
                 1,
-                0.0f, 0.0f,
+                0.0f,
+                0.0f,
                 0,
                 0,
                 EffectPositionMode::Centered,
                 2.0f,
             },
+            {}},
+        EffectGroup{
+            EffectDef{
+                ScreensaverAssets::Quickscope,
+                ScreensaverAssets::QuickscopePath,
+                true,
+                5,
+                0, 0,
+                0,
+                400,
+                EffectPositionMode::RandomGrid,
+                1.2f},
             {}
+
         },
     };
 }
@@ -153,8 +204,7 @@ void Screensaver::startSuccessScene(const Window_Properties &windowProps, uint32
 
 void Screensaver::spawnSuccessEffects(const Window_Properties &windowProps)
 {
-    thread_local std::random_device rd;
-    thread_local std::mt19937 gen(rd());
+    auto &rng = Random::get_engine();
 
     for (auto &group : mEffects)
     {
@@ -168,6 +218,13 @@ void Screensaver::spawnSuccessEffects(const Window_Properties &windowProps)
         std::uniform_int_distribution<int> yDist(0, maxY);
         std::uniform_int_distribution<uint32_t> offsetDist(0, def.maxOffsetMs);
 
+        std::vector<uint32_t> cellPool;
+        if (def.positionMode == EffectPositionMode::RandomGrid)
+        {
+            const uint32_t totalCells = def.count * def.count;
+            cellPool = sampleUniqueCellIndices(totalCells, def.count);
+        }
+
         for (size_t i = 0; i < def.count; ++i)
         {
             SuccessEffect effect;
@@ -176,15 +233,24 @@ void Screensaver::spawnSuccessEffects(const Window_Properties &windowProps)
                 effect.x = (windowProps.totalWindowWidth - def.w) / 2;
                 effect.y = (windowProps.totalWindowHeight - def.h) / 2;
             }
+            else if (def.positionMode == EffectPositionMode::RandomGrid)
+            {
+                uint32_t chosenCellIdx = cellPool[i];
+                uint32_t cellX = chosenCellIdx % def.count;
+                uint32_t cellY = chosenCellIdx / def.count;
+                Vec2 pos = getRandomGridPos(cellX, cellY, def.count, windowProps.totalWindowWidth, windowProps.totalWindowHeight, def.w, def.h);
+                effect.x = pos.x;
+                effect.y = pos.y;
+            }
             else
             {
-                effect.x = static_cast<float>(xDist(gen));
-                effect.y = static_cast<float>(yDist(gen));
+                effect.x = static_cast<float>(xDist(rng));
+                effect.y = static_cast<float>(yDist(rng));
             }
 
             effect.w = def.w;
             effect.h = def.h;
-            effect.startOffset = def.maxOffsetMs > 0 ? offsetDist(gen) : 0;
+            effect.startOffset = def.maxOffsetMs > 0 ? offsetDist(rng) : 0;
             effect.duration = def.duration;
             group.instances.push_back(effect);
         }
@@ -236,6 +302,35 @@ bool Screensaver::areAllEffectsFinished(uint32_t nowMs) const
     }
 
     return true;
+}
+
+// divide screen into grid of count*count cells,
+Vec2 Screensaver::getRandomGridPos(uint32_t cellX, uint32_t cellY, uint32_t count, uint32_t screenWidth, uint32_t screenHeight, float spriteWidth, float spriteHeight) const
+{
+    if (count == 0)
+    {
+        return {0.0f, 0.0f};
+    }
+
+    float cellWidth = static_cast<float>(screenWidth) / count;
+    float cellHeight = static_cast<float>(screenHeight) / count;
+
+    float cellCenterX = (cellX * cellWidth) + (cellWidth / 2.0f);
+    float cellCenterY = (cellY * cellHeight) + (cellHeight / 2.0f);
+
+    float maxJitterX = std::max(0.0f, (cellWidth - spriteWidth) / 2.0f);
+    float maxJitterY = std::max(0.0f, (cellHeight - spriteHeight) / 2.0f);
+
+    float offsetX = Random::get_float(-maxJitterX, maxJitterX);
+    float offsetY = Random::get_float(-maxJitterY, maxJitterY);
+
+    const float rawX = cellCenterX + offsetX - (spriteWidth / 2.0f);
+    const float rawY = cellCenterY + offsetY - (spriteHeight / 2.0f);
+
+    const float maxX = std::max(0.0f, static_cast<float>(screenWidth) - spriteWidth);
+    const float maxY = std::max(0.0f, static_cast<float>(screenHeight) - spriteHeight);
+
+    return {std::clamp(rawX, 0.0f, maxX), std::clamp(rawY, 0.0f, maxY)};
 }
 
 bool Screensaver::isSuccess() const

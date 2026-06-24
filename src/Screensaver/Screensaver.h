@@ -7,6 +7,10 @@
 
 struct Window_Properties;
 
+struct Vec2{
+    float x, y;
+};
+
 struct Logo
 {
     int x, y;
@@ -32,14 +36,14 @@ struct SuccessEffect
     uint32_t duration    = 0;
 };
 
-enum class EffectPositionMode { Random, Centered };
+enum class EffectPositionMode { Random, RandomGrid, Centered };
 
 struct EffectDef
 {
     std::string_view assetName;
     std::string_view assetPath;
     bool             isAnimation;
-    size_t           count;
+    uint32_t           count;
     float            w, h;              // 0 = resolve from asset
     uint32_t         duration;          // ms, 0 = resolve from asset
     uint32_t         maxOffsetMs;
@@ -75,6 +79,7 @@ private:
     void spawnSuccessEffects(const Window_Properties &windowProps);
     void runSuccessScene(uint32_t nowMs, float deltaSeconds);
     bool areAllEffectsFinished(uint32_t nowMs) const;
+    Vec2 getRandomGridPos(uint32_t cellX, uint32_t cellY, uint32_t count, uint32_t screenWidth, uint32_t screenHeight, float spriteWidth, float spriteHeight) const;
 
     uint64_t mInactivityTimer = 0;
     uint64_t mInactivityInterval = 3;
