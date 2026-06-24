@@ -64,6 +64,10 @@ struct FakeRenderContext : public RenderContext
         return theme;
     }
 
+    void clear(RenderColor color) override{
+        (void) color;
+    }
+
     void drawText(const std::string &text, int x, int y) override
     {
         textCalls.push_back(TextCall{text, x, y, false, {}});

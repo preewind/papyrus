@@ -15,6 +15,11 @@ void Renderer::clear()
     mBackend->clear(mTheme->background);
 }
 
+void Renderer::clear(RenderColor color)
+{
+    mBackend->clear(color);
+}
+
 int Renderer::getLineHeight() const
 {
     return mBackend->lineHeight();

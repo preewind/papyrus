@@ -3,9 +3,12 @@
 #include "Screensaver.h"
 #include "RenderContext.h"
 
-class ScreensaverView {
+class ScreensaverView
+{
 public:
-    void render(RenderContext &renderContext, const Screensaver& screensaver);
+    void render(RenderContext &renderContext, const Screensaver &screensaver);
+
 private:
-    void renderLogo(RenderContext &renderContext, const Screensaver& screensaver);
+    void renderLogo(RenderContext &renderContext, const Screensaver &screensaver);
+    void renderSuccess(RenderContext &renderContext, const Screensaver &screensaver);
 };

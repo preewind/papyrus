@@ -17,6 +17,7 @@ public:
     Renderer &operator=(const Renderer &) = delete;
 
     void clear();
+    void clear(RenderColor color) override;
     int getLineHeight() const;
     const Window_Properties &getWindowProperties() const override;
     const Theme &getTheme() const override;

@@ -72,6 +72,7 @@ private:
 
     CursorBlinker mCursorBlinker;
     Screen mCurrentScreen = Screen::Editor;
+    Screen mPreviousScreen;
     bool mRunning = true;
     int mExitCode = 0;
     std::filesystem::path mDisplayedEditorFilePath;
