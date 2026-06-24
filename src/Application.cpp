@@ -52,14 +52,11 @@ void Application::initializeWindowAndRendering()
 
 void Application::preloadStaticTextures()
 {
-    // Preload non-effect screensaver assets explicitly
     mRenderer->registerTextureAsset(ScreensaverAssets::Logo, ScreensaverAssets::LogoPath);
     mRenderer->registerTextureAsset(ScreensaverAssets::Success, ScreensaverAssets::SuccessPath);
     mRenderer->preloadTextureByName(ScreensaverAssets::Logo);
     mRenderer->preloadTextureByName(ScreensaverAssets::Success);
 
-    // Preload all effect groups — adding a new effect only requires a new
-    // entry in Screensaver's constructor, no changes needed here.
     for (const auto &group : mScreensaver.getEffects())
     {
         const auto &def = group.def;
@@ -75,7 +72,16 @@ void Application::preloadStaticTextures()
         }
     }
 
-    mScreensaver.initializeEffects(*mRenderer);
+    for (const auto &group : mScreensaver.getEffects())
+    {
+        const auto &def = group.def;
+        if (def.isAnimation && (def.duration == 0 || def.w == 0.0f || def.h == 0.0f))
+        {
+            const uint32_t dur = mRenderer->getAnimationDurationByName(def.assetName);
+            const auto [w, h]  = mRenderer->getAnimationDimensionsByName(def.assetName);
+            mScreensaver.resolveEffectDef(def.assetName, dur, static_cast<float>(w), static_cast<float>(h));
+        }
+    }
 }
 
 void Application::openInitialFileIfProvided(const std::string &filename)

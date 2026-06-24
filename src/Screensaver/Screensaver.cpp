@@ -47,10 +47,11 @@ Screensaver::Screensaver()
                 ScreensaverAssets::WowPath,
                 true,
                 1,
-                0.0f, 0.0f,  
+                0.0f, 0.0f,
                 0,
                 0,
                 EffectPositionMode::Centered,
+                2.0f,
             },
             {}
         },
@@ -233,21 +234,19 @@ const std::vector<EffectGroup> &Screensaver::getEffects() const
     return mEffects;
 }
 
-void Screensaver::initializeEffects(RenderContext &ctx)
+void Screensaver::resolveEffectDef(std::string_view assetName, uint32_t duration, float w, float h)
 {
     for (auto &group : mEffects)
     {
         EffectDef &def = group.def;
-        if (def.isAnimation)
+        if (def.assetName != assetName)
+            continue;
+        if (def.duration == 0)
+            def.duration = duration;
+        if (def.w == 0.0f || def.h == 0.0f)
         {
-            if (def.duration == 0)
-                def.duration = ctx.getAnimationDurationByName(def.assetName);
-            if (def.w == 0.0f || def.h == 0.0f)
-            {
-                auto [w, h] = ctx.getAnimationDimensionsByName(def.assetName);
-                def.w = static_cast<float>(w);
-                def.h = static_cast<float>(h);
-            }
+            def.w = w * def.dimensionScale;
+            def.h = h * def.dimensionScale;
         }
     }
 }

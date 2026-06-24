@@ -6,7 +6,6 @@
 #include <SDL3/SDL_events.h>
 
 #include "types.h"
-#include "RenderContext.h"
 
 struct Logo
 {
@@ -41,10 +40,11 @@ struct EffectDef
     std::string_view assetPath;
     bool             isAnimation;
     size_t           count;
-    float            w, h;           // 0 = resolve from asset
-    uint32_t         duration;       // ms, 0 = resolve from asset
+    float            w, h;              // 0 = resolve from asset
+    uint32_t         duration;          // ms, 0 = resolve from asset
     uint32_t         maxOffsetMs;
     EffectPositionMode positionMode;
+    float            dimensionScale = 1.0f; // only applied when w/h are auto-resolved
 };
 
 struct EffectGroup
@@ -60,7 +60,7 @@ public:
     void updateScreensaver();
     void runScreensaver(const Window_Properties &windowProps);
     void runSuccessScene(uint32_t nowMs, float deltaSeconds);
-    void initializeEffects(RenderContext &ctx);
+    void resolveEffectDef(std::string_view assetName, uint32_t duration, float w, float h);
     bool isSuccess() const;
     const SuccessAnimation &getSuccessAnimation() const;
     const std::vector<EffectGroup> &getEffects() const;
