@@ -52,17 +52,30 @@ void Application::initializeWindowAndRendering()
 
 void Application::preloadStaticTextures()
 {
+    // Preload non-effect screensaver assets explicitly
     mRenderer->registerTextureAsset(ScreensaverAssets::Logo, ScreensaverAssets::LogoPath);
     mRenderer->registerTextureAsset(ScreensaverAssets::Success, ScreensaverAssets::SuccessPath);
-    mRenderer->registerTextureAsset(ScreensaverAssets::HitMarker, ScreensaverAssets::HitMarkerPath);
-    mRenderer->registerAnimationAsset(ScreensaverAssets::Explosion, ScreensaverAssets::ExplosionPath);
-    mRenderer->registerAnimationAsset(ScreensaverAssets::Wow, ScreensaverAssets::WowPath);
-
     mRenderer->preloadTextureByName(ScreensaverAssets::Logo);
     mRenderer->preloadTextureByName(ScreensaverAssets::Success);
-    mRenderer->preloadTextureByName(ScreensaverAssets::HitMarker);
-    mRenderer->preloadAnimationByName(ScreensaverAssets::Explosion);
-    mRenderer->preloadAnimationByName(ScreensaverAssets::Wow);
+
+    // Preload all effect groups — adding a new effect only requires a new
+    // entry in Screensaver's constructor, no changes needed here.
+    for (const auto &group : mScreensaver.getEffects())
+    {
+        const auto &def = group.def;
+        if (def.isAnimation)
+        {
+            mRenderer->registerAnimationAsset(std::string(def.assetName), def.assetPath);
+            mRenderer->preloadAnimationByName(def.assetName);
+        }
+        else
+        {
+            mRenderer->registerTextureAsset(std::string(def.assetName), def.assetPath);
+            mRenderer->preloadTextureByName(def.assetName);
+        }
+    }
+
+    mScreensaver.initializeEffects(*mRenderer);
 }
 
 void Application::openInitialFileIfProvided(const std::string &filename)

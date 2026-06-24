@@ -1,9 +1,12 @@
 #pragma once
 
 #include <stdint.h>
+#include <string_view>
+#include <vector>
 #include <SDL3/SDL_events.h>
 
 #include "types.h"
+#include "RenderContext.h"
 
 struct Logo
 {
@@ -22,29 +25,32 @@ struct SuccessAnimation
     float speedPixelsPerSecond = 414.0f;
 };
 
-struct HitMarker
+struct SuccessEffect
 {
-    int x, y;
-    uint32_t startTime;
-    uint32_t startOffset;
-    uint32_t duration;
+    float x, y, w, h;
+    uint32_t startTime   = 0;
+    uint32_t startOffset = 0;
+    uint32_t duration    = 0;
 };
 
-struct Explosion
+enum class EffectPositionMode { Random, Centered };
+
+struct EffectDef
 {
-    int x, y;
-    int w, h;
-    uint32_t startTime;
-    uint32_t startOffset;
-    uint32_t duration;
+    std::string_view assetName;
+    std::string_view assetPath;
+    bool             isAnimation;
+    size_t           count;
+    float            w, h;           // 0 = resolve from asset
+    uint32_t         duration;       // ms, 0 = resolve from asset
+    uint32_t         maxOffsetMs;
+    EffectPositionMode positionMode;
 };
 
-struct Wow
+struct EffectGroup
 {
-    int x, y;
-    int w, h;
-    uint32_t startTime;
-    uint32_t startOffset;
+    EffectDef                def;
+    std::vector<SuccessEffect> instances;
 };
 
 class Screensaver
@@ -54,13 +60,11 @@ public:
     void updateScreensaver();
     void runScreensaver(const Window_Properties &windowProps);
     void runSuccessScene(uint32_t nowMs, float deltaSeconds);
+    void initializeEffects(RenderContext &ctx);
     bool isSuccess() const;
     const SuccessAnimation &getSuccessAnimation() const;
-    const std::vector<HitMarker> &getMarkers() const;
-    const std::vector<Explosion> &getExplosions() const;
-    const Wow &getWow() const;
+    const std::vector<EffectGroup> &getEffects() const;
     uint32_t getFrameTimeMs() const;
-    uint32_t getSuccessElapsedMs() const;
     bool isInactive() const;
     void resetTimer();
     const Logo &getLogo() const;
@@ -76,9 +80,7 @@ private:
     uint32_t mLastFrameTimeMs = 0;
     uint32_t mFrameTimeMs = 0;
     uint32_t mSuccessStartTimeMs = 0;
-    std::vector<HitMarker> mMarkers;
-    std::vector<Explosion> mExplosions;
-    Wow mWow;
+    std::vector<EffectGroup> mEffects;
     Logo mLogo;
     SuccessAnimation mSuccessAnimation;
 };

@@ -5,6 +5,7 @@
 #include <numeric>
 
 #include "Screensaver.h"
+#include "ScreensaverAssets.h"
 #include "logger.h"
 
 Screensaver::Screensaver()
@@ -12,6 +13,48 @@ Screensaver::Screensaver()
     mInactivityTimer = SDL_GetTicks();
     mLastFrameTimeMs = mInactivityTimer;
     mFrameTimeMs = mInactivityTimer;
+
+    mEffects = {
+        EffectGroup{
+            EffectDef{
+                ScreensaverAssets::HitMarker,
+                ScreensaverAssets::HitMarkerPath,
+                false,
+                200,
+                50.0f, 50.0f,
+                500,
+                600,
+                EffectPositionMode::Random,
+            },
+            {}
+        },
+        EffectGroup{
+            EffectDef{
+                ScreensaverAssets::Explosion,
+                ScreensaverAssets::ExplosionPath,
+                true,
+                10,
+                420.0f, 420.0f,
+                0,
+                600,
+                EffectPositionMode::Random,
+            },
+            {}
+        },
+        EffectGroup{
+            EffectDef{
+                ScreensaverAssets::Wow,
+                ScreensaverAssets::WowPath,
+                true,
+                1,
+                0.0f, 0.0f,  
+                0,
+                0,
+                EffectPositionMode::Centered,
+            },
+            {}
+        },
+    };
 }
 
 void Screensaver::updateScreensaver()
@@ -96,47 +139,38 @@ void Screensaver::runScreensaver(const Window_Properties &windowProps)
         mSuccessAnimation.currentX = mSuccessAnimation.startX;
         mSuccessAnimation.currentY = mSuccessAnimation.startY;
 
-        // hit markers
-        mMarkers.clear();
-        size_t markerCount = 200;
-        mMarkers.reserve(markerCount);
         thread_local std::random_device rd;
         thread_local std::mt19937 gen(rd());
-
         std::uniform_int_distribution<int> xdistrib(0, windowProps.totalWindowWidth);
         std::uniform_int_distribution<int> ydistrib(0, windowProps.totalWindowHeight);
-        std::uniform_int_distribution<int> timedistrib(0, 600);
-        for (size_t i = 0; i < markerCount; ++i)
-        {
-            HitMarker marker;
-            marker.x = xdistrib(gen);
-            marker.y = ydistrib(gen);
-            marker.startOffset = timedistrib(gen);
-            marker.duration = 0.5 * SDL_MS_PER_SECOND;
-            mMarkers.push_back(marker);
-        }
-        // explosions
-        mExplosions.clear();
-        size_t explosionCount = 10;
-        mExplosions.reserve(explosionCount);
 
-        for (size_t i = 0; i < explosionCount; ++i)
+        for (auto &group : mEffects)
         {
-            Explosion explosion;
-            explosion.x = xdistrib(gen);
-            explosion.y = ydistrib(gen);
-            explosion.w = 420.0f;
-            explosion.h = 420.0f;
-            explosion.startOffset = timedistrib(gen);
-            explosion.duration = 0.5 * SDL_MS_PER_SECOND;
-            mExplosions.push_back(explosion);
+            const EffectDef &def = group.def;
+            group.instances.clear();
+            group.instances.reserve(def.count);
+            std::uniform_int_distribution<uint32_t> offsetDist(0, def.maxOffsetMs);
+
+            for (size_t i = 0; i < def.count; ++i)
+            {
+                SuccessEffect e;
+                if (def.positionMode == EffectPositionMode::Centered)
+                {
+                    e.x = (windowProps.totalWindowWidth  - def.w) / 2;
+                    e.y = (windowProps.totalWindowHeight - def.h) / 2;
+                }
+                else
+                {
+                    e.x = static_cast<float>(xdistrib(gen));
+                    e.y = static_cast<float>(ydistrib(gen));
+                }
+                e.w           = def.w;
+                e.h           = def.h;
+                e.startOffset = def.maxOffsetMs > 0 ? offsetDist(gen) : 0;
+                e.duration    = def.duration;
+                group.instances.push_back(e);
+            }
         }
-        // wow guy
-        mWow.w = 498*2;
-        mWow.h = 280*2;
-        mWow.x = (windowProps.totalWindowWidth-mWow.w)/2;
-        mWow.y = (windowProps.totalWindowHeight - mWow.h)/2;
-        mWow.startOffset = 0;
     }
 }
 
@@ -154,38 +188,25 @@ void Screensaver::runSuccessScene(uint32_t nowMs, float deltaSeconds)
         if (mSuccessAnimation.active)
         {
             mSuccessAnimation.active = false;
-            for (auto &marker : mMarkers)
-            {
-                marker.startTime = nowMs + marker.startOffset;
-            }
-            for (auto &explosion : mExplosions)
-            {
-                explosion.startTime = nowMs + explosion.startOffset;
-            }
-            mWow.startTime = nowMs;
+            for (auto &group : mEffects)
+                for (auto &e : group.instances)
+                    e.startTime = nowMs + e.startOffset;
         }
 
-        bool allMarkersFinished = true;
-        for (const auto &marker : mMarkers)
+        bool allDone = true;
+        for (const auto &group : mEffects)
         {
-            if (nowMs < marker.startTime + marker.duration)
+            for (const auto &e : group.instances)
             {
-                allMarkersFinished = false;
-                break;
+                if (nowMs < e.startTime + e.duration)
+                {
+                    allDone = false;
+                    break;
+                }
             }
+            if (!allDone) break;
         }
-        bool allExplosionsFinished = true;
-        for(const auto& explosion: mExplosions){
-            if(nowMs < explosion.startTime + explosion.duration){
-                allExplosionsFinished = false;
-                break;
-            }
-        }
-        bool wowGuyFinished = true;
-        if(nowMs < mWow.startTime + 1350){
-            wowGuyFinished = false;
-        }
-        if (allMarkersFinished && allExplosionsFinished && wowGuyFinished)
+        if (allDone)
         {
             mSuccess = false;
         }
@@ -207,34 +228,33 @@ const SuccessAnimation &Screensaver::getSuccessAnimation() const
     return mSuccessAnimation;
 }
 
-const std::vector<HitMarker> &Screensaver::getMarkers() const
+const std::vector<EffectGroup> &Screensaver::getEffects() const
 {
-    return mMarkers;
+    return mEffects;
 }
 
-const std::vector<Explosion> &Screensaver::getExplosions() const
+void Screensaver::initializeEffects(RenderContext &ctx)
 {
-    return mExplosions;
-}
-
-const Wow &Screensaver::getWow() const
-{
-    return mWow;
+    for (auto &group : mEffects)
+    {
+        EffectDef &def = group.def;
+        if (def.isAnimation)
+        {
+            if (def.duration == 0)
+                def.duration = ctx.getAnimationDurationByName(def.assetName);
+            if (def.w == 0.0f || def.h == 0.0f)
+            {
+                auto [w, h] = ctx.getAnimationDimensionsByName(def.assetName);
+                def.w = static_cast<float>(w);
+                def.h = static_cast<float>(h);
+            }
+        }
+    }
 }
 
 uint32_t Screensaver::getFrameTimeMs() const
 {
     return mFrameTimeMs;
-}
-
-uint32_t Screensaver::getSuccessElapsedMs() const
-{
-    if (!mSuccess)
-    {
-        return 0;
-    }
-
-    return mFrameTimeMs - mSuccessStartTimeMs;
 }
 
 bool Screensaver::isInactive() const

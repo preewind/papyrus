@@ -1,5 +1,3 @@
-#include <random>
-
 #include "ScreensaverAssets.h"
 #include "ScreensaverView.h"
 #include "logger.h"
@@ -28,31 +26,21 @@ void ScreensaverView::renderSuccess(RenderContext &renderContext, const Screensa
     const SuccessAnimation &success = screensaver.getSuccessAnimation();
     renderContext.loadTextureByName(success.currentX, success.currentY, success.w, success.h, ScreensaverAssets::Success);
 
-    const auto &markers = screensaver.getMarkers();
-    const auto &explosions = screensaver.getExplosions();
-    const Wow &wow = screensaver.getWow();
-    uint32_t wowDurationMs = renderContext.getAnimationDurationByName(ScreensaverAssets::Wow);
-    const uint32_t frameTime = screensaver.getFrameTimeMs();
     if (!success.active)
     {
-        if (frameTime >= wow.startTime && frameTime < wow.startTime + wowDurationMs)
-            {
-                const uint32_t wowElapsedMs = frameTime - wow.startTime;
-                renderContext.loadAnimationByName(wow.x, wow.y, wow.w, wow.h, ScreensaverAssets::Wow, wowElapsedMs, AnimationPlaybackMode::HideAfterEnd);
-            }
-        for (const auto &explosion : explosions)
+        const uint32_t frameTime = screensaver.getFrameTimeMs();
+        for (const auto &group : screensaver.getEffects())
         {
-            if (frameTime >= explosion.startTime && frameTime < explosion.startTime + explosion.duration)
+            for (const auto &e : group.instances)
             {
-                renderContext.loadAnimationByName(explosion.x, explosion.y, explosion.w, explosion.h, ScreensaverAssets::Explosion, screensaver.getSuccessElapsedMs(), AnimationPlaybackMode::HideAfterEnd);
-            }
-        }
+                if (frameTime < e.startTime || frameTime >= e.startTime + e.duration)
+                    continue;
 
-        for (const auto &marker : markers)
-        {
-            if (frameTime >= marker.startTime && frameTime < marker.startTime + marker.duration)
-            {
-                renderContext.loadTextureByName(marker.x, marker.y, 50, 50, ScreensaverAssets::HitMarker);
+                const uint32_t elapsed = frameTime - e.startTime;
+                if (group.def.isAnimation)
+                    renderContext.loadAnimationByName(e.x, e.y, e.w, e.h, group.def.assetName, elapsed, AnimationPlaybackMode::HideAfterEnd);
+                else
+                    renderContext.loadTextureByName(e.x, e.y, e.w, e.h, group.def.assetName);
             }
         }
     }
