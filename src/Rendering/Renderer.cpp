@@ -76,9 +76,29 @@ void Renderer::loadTextureByName(float x, float y, float w, float h, std::string
     loadTexture(x, y, w, h, *assetPath);
 }
 
+void Renderer::loadAnimationByName(float x, float y, float w, float h,
+                                   std::string_view assetName,
+                                   uint32_t elapsedMs,
+                                   AnimationPlaybackMode playbackMode)
+{
+    const std::filesystem::path *assetPath = findAnimationAsset(assetName);
+    if (assetPath == nullptr)
+    {
+        LOG_ERROR() << "Missing animation: " << assetName;
+        return;
+    }
+
+    mBackend->loadAnimation(x, y, w, h, *assetPath, elapsedMs, playbackMode);
+}
+
 void Renderer::registerTextureAsset(const std::string &assetName, const std::filesystem::path &file)
 {
     mTextureAssets[assetName] = file;
+}
+
+void Renderer::registerAnimationAsset(const std::string &assetName, const std::filesystem::path &file)
+{
+    mAnimationAssets[assetName] = file;
 }
 
 bool Renderer::preloadTextureByName(std::string_view assetName)
@@ -86,11 +106,23 @@ bool Renderer::preloadTextureByName(std::string_view assetName)
     const std::filesystem::path *assetPath = findTextureAsset(assetName);
     if (assetPath == nullptr)
     {
-        LOG_ERROR() << "missing texture: " << assetPath;
+        LOG_ERROR() << "Missing texture: " << assetName;
         return false;
     }
 
     return preloadTexture(*assetPath);
+}
+
+bool Renderer::preloadAnimationByName(std::string_view assetName)
+{
+    const std::filesystem::path *assetPath = findAnimationAsset(assetName);
+    if (assetPath == nullptr)
+    {
+        LOG_ERROR() << "Missing animation: " << assetName;
+        return false;
+    }
+
+    return preloadAnimation(*assetPath);
 }
 
 bool Renderer::preloadTexture(const std::filesystem::path &file)
@@ -98,14 +130,29 @@ bool Renderer::preloadTexture(const std::filesystem::path &file)
     return mBackend->preloadTexture(file);
 }
 
+bool Renderer::preloadAnimation(const std::filesystem::path &file)
+{
+    return mBackend->preloadAnimation(file);
+}
+
 void Renderer::evictTexture(const std::filesystem::path &file)
 {
     mBackend->evictTexture(file);
 }
 
+void Renderer::evictAnimation(const std::filesystem::path &file)
+{
+    mBackend->evictAnimation(file);
+}
+
 void Renderer::clearTextureCache()
 {
     mBackend->clearTextureCache();
+}
+
+void Renderer::clearAnimationCache()
+{
+    mBackend->clearAnimationCache();
 }
 
 void Renderer::pushClipRect(const Rect &rect)
@@ -139,6 +186,17 @@ const std::filesystem::path *Renderer::findTextureAsset(std::string_view assetNa
 {
     auto entry = mTextureAssets.find(std::string(assetName));
     if (entry == mTextureAssets.end())
+    {
+        return nullptr;
+    }
+
+    return &entry->second;
+}
+
+const std::filesystem::path *Renderer::findAnimationAsset(std::string_view assetName) const
+{
+    auto entry = mAnimationAssets.find(std::string(assetName));
+    if (entry == mAnimationAssets.end())
     {
         return nullptr;
     }

@@ -29,6 +29,13 @@ struct HitMarker{
     uint32_t duration;
 };
 
+struct Explosion {
+    int x, y;
+    uint32_t startTime;
+    uint32_t startOffset;
+    uint32_t duration;
+};
+
 class Screensaver
 {
 public:
@@ -40,6 +47,7 @@ public:
     const SuccessAnimation &getSuccessAnimation() const;
     const std::vector<HitMarker>& getMarkers() const;
     uint32_t getFrameTimeMs() const;
+    uint32_t getSuccessElapsedMs() const;
     bool isInactive() const;
     void resetTimer();
     const Logo &getLogo() const;
@@ -54,7 +62,9 @@ private:
     bool mSuccess = false;
     uint32_t mLastFrameTimeMs = 0;
     uint32_t mFrameTimeMs = 0;
+    uint32_t mSuccessStartTimeMs = 0;
     std::vector<HitMarker> mMarkers;
+    std::vector<Explosion> mExplosions;
     Logo mLogo;
     SuccessAnimation mSuccessAnimation;
 };

@@ -8,6 +8,7 @@
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_keycode.h>
 
+#include "AnimationPlaybackMode.h"
 #include "ITextMeasurer.h"
 #include "RenderContext.h"
 
@@ -47,10 +48,22 @@ struct FakeRenderContext : public RenderContext
         RenderColor color{};
     };
 
+    struct AnimationCall
+    {
+        float x = 0;
+        float y = 0;
+        float w = 0;
+        float h = 0;
+        std::string assetName;
+        uint32_t elapsedMs = 0;
+        AnimationPlaybackMode playbackMode = AnimationPlaybackMode::Loop;
+    };
+
     Window_Properties windowProperties{20, 1280, 720};
     Theme theme{};
     std::vector<TextCall> textCalls;
     std::vector<RectCall> rectCalls;
+    std::vector<AnimationCall> animationCalls;
     std::vector<Rect> clipRects;
     uint32_t clearClipCount = 0;
 
@@ -104,6 +117,14 @@ struct FakeRenderContext : public RenderContext
         (void)y;
         (void)w;
         (void)h;
+    }
+
+    void loadAnimationByName(float x, float y, float w, float h,
+                             std::string_view assetName,
+                             uint32_t elapsedMs,
+                             AnimationPlaybackMode playbackMode) override
+    {
+        animationCalls.push_back(AnimationCall{x, y, w, h, std::string(assetName), elapsedMs, playbackMode});
     }
 
     void pushClipRect(const Rect &rect) override

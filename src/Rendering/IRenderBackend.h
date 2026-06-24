@@ -1,9 +1,10 @@
 #pragma once
 
 #include <cstdint>
-#include <string>
 #include <filesystem>
+#include <string>
 
+#include "AnimationPlaybackMode.h"
 #include "RenderTypes.h"
 #include "ITextMeasurer.h"
 
@@ -22,9 +23,16 @@ public:
 
     virtual void drawText(const std::string &text, int x, int y, const RenderColor &color) = 0;
     virtual void loadTexture(float x, float y, float w, float h, const std::filesystem::path &file) = 0;
+    virtual void loadAnimation(float x, float y, float w, float h,
+                               const std::filesystem::path &file,
+                               uint32_t elapsedMs,
+                               AnimationPlaybackMode playbackMode) = 0;
     virtual bool preloadTexture(const std::filesystem::path &file) = 0;
+    virtual bool preloadAnimation(const std::filesystem::path &file) = 0;
     virtual void evictTexture(const std::filesystem::path &file) = 0;
+    virtual void evictAnimation(const std::filesystem::path &file) = 0;
     virtual void clearTextureCache() = 0;
+    virtual void clearAnimationCache() = 0;
 
     virtual int lineHeight() const = 0;
     virtual void setFontSize(uint8_t size) = 0;

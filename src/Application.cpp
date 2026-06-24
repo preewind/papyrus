@@ -55,10 +55,12 @@ void Application::preloadStaticTextures()
     mRenderer->registerTextureAsset(ScreensaverAssets::Logo, ScreensaverAssets::LogoPath);
     mRenderer->registerTextureAsset(ScreensaverAssets::Success, ScreensaverAssets::SuccessPath);
     mRenderer->registerTextureAsset(ScreensaverAssets::HitMarker, ScreensaverAssets::HitMarkerPath);
+    mRenderer->registerAnimationAsset(ScreensaverAssets::Explosion, ScreensaverAssets::ExplosionPath);
 
     mRenderer->preloadTextureByName(ScreensaverAssets::Logo);
     mRenderer->preloadTextureByName(ScreensaverAssets::Success);
     mRenderer->preloadTextureByName(ScreensaverAssets::HitMarker);
+    mRenderer->preloadAnimationByName(ScreensaverAssets::Explosion);
 }
 
 void Application::openInitialFileIfProvided(const std::string &filename)

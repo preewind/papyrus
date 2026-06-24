@@ -29,11 +29,20 @@ public:
     void drawRect(Rect rect, RenderColor color) override;
     void loadTexture(float x, float y, float w, float h, const std::filesystem::path &file) override;
     void loadTextureByName(float x, float y, float w, float h, std::string_view assetName) override;
+    void loadAnimationByName(float x, float y, float w, float h,
+                             std::string_view assetName,
+                             uint32_t elapsedMs,
+                             AnimationPlaybackMode playbackMode) override;
     void registerTextureAsset(const std::string &assetName, const std::filesystem::path &file);
+    void registerAnimationAsset(const std::string &assetName, const std::filesystem::path &file);
     bool preloadTextureByName(std::string_view assetName);
+    bool preloadAnimationByName(std::string_view assetName);
     bool preloadTexture(const std::filesystem::path &file);
+    bool preloadAnimation(const std::filesystem::path &file);
     void evictTexture(const std::filesystem::path &file);
+    void evictAnimation(const std::filesystem::path &file);
     void clearTextureCache();
+    void clearAnimationCache();
     void pushClipRect(const Rect &rect) override;
     void clearClipRect() override;
     void present();
@@ -44,9 +53,11 @@ public:
 
 private:
     const std::filesystem::path *findTextureAsset(std::string_view assetName) const;
+    const std::filesystem::path *findAnimationAsset(std::string_view assetName) const;
 
     IRenderBackend *mBackend = nullptr;
     const Theme *mTheme = nullptr;
     Window_Properties mLayout;
     std::unordered_map<std::string, std::filesystem::path> mTextureAssets;
+    std::unordered_map<std::string, std::filesystem::path> mAnimationAssets;
 };

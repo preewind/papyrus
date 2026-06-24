@@ -26,11 +26,19 @@ void ScreensaverView::renderSuccess(RenderContext &renderContext, const Screensa
 {
     const SuccessAnimation &success = screensaver.getSuccessAnimation();
     renderContext.loadTextureByName(success.currentX, success.currentY, success.w, success.h, ScreensaverAssets::Success);
+
     const auto &markers = screensaver.getMarkers();
     const uint32_t frameTime = screensaver.getFrameTimeMs();
     if (!success.active)
     {
-        for (const auto& marker : markers)
+        renderContext.loadAnimationByName(success.currentX + success.w * 0.35f,
+                                          success.currentY + success.h * 0.2f,
+                                          120.0f,
+                                          120.0f,
+                                          ScreensaverAssets::Explosion,
+                                          screensaver.getSuccessElapsedMs(),
+                                          AnimationPlaybackMode::HideAfterEnd);
+        for (const auto &marker : markers)
         {
             if (frameTime >= marker.startTime && frameTime < marker.startTime + marker.duration)
             {

@@ -22,6 +22,7 @@ SDLRenderBackend::SDLRenderBackend(SDL_Window *window, const std::string &fontPa
 SDLRenderBackend::~SDLRenderBackend()
 {
     clearTextureCache();
+    clearAnimationCache();
 
     if (mFont)
     {
@@ -122,9 +123,43 @@ void SDLRenderBackend::loadTexture(float x, float y, float w, float h, const std
     CSF(SDL_RenderTexture(mRenderer, texture, nullptr, &dst));
 }
 
+void SDLRenderBackend::loadAnimation(float x, float y, float w, float h,
+                                     const std::filesystem::path &file,
+                                     uint32_t elapsedMs,
+                                     AnimationPlaybackMode playbackMode)
+{
+    AnimationData *animation = loadAndCacheAnimation(file);
+    if (animation == nullptr || animation->frames.empty())
+    {
+        return;
+    }
+
+    bool shouldRender = true;
+    const uint32_t frameIndex = selectAnimationFrameIndex(*animation, elapsedMs, playbackMode, shouldRender);
+    if (!shouldRender)
+    {
+        return;
+    }
+
+    SDL_Texture *texture = animation->frames[frameIndex].texture;
+    if (texture == nullptr)
+    {
+        return;
+    }
+
+    SDL_FRect dst{x, y, w, h};
+    CSF(SDL_RenderTexture(mRenderer, texture, nullptr, &dst));
+}
+
 bool SDLRenderBackend::preloadTexture(const std::filesystem::path &file)
 {
     return loadAndCacheTexture(file) != nullptr;
+}
+
+bool SDLRenderBackend::preloadAnimation(const std::filesystem::path &file)
+{
+    AnimationData *animation = loadAndCacheAnimation(file);
+    return animation != nullptr && !animation->frames.empty();
 }
 
 void SDLRenderBackend::evictTexture(const std::filesystem::path &file)
@@ -140,6 +175,19 @@ void SDLRenderBackend::evictTexture(const std::filesystem::path &file)
     mTextureCache.erase(textureEntry);
 }
 
+void SDLRenderBackend::evictAnimation(const std::filesystem::path &file)
+{
+    const std::string key = textureKey(file);
+    auto animationEntry = mAnimationCache.find(key);
+    if (animationEntry == mAnimationCache.end())
+    {
+        return;
+    }
+
+    destroyAnimationData(animationEntry->second);
+    mAnimationCache.erase(animationEntry);
+}
+
 void SDLRenderBackend::clearTextureCache()
 {
     for (auto &[key, texture] : mTextureCache)
@@ -149,6 +197,17 @@ void SDLRenderBackend::clearTextureCache()
     }
 
     mTextureCache.clear();
+}
+
+void SDLRenderBackend::clearAnimationCache()
+{
+    for (auto &[key, animation] : mAnimationCache)
+    {
+        (void)key;
+        destroyAnimationData(animation);
+    }
+
+    mAnimationCache.clear();
 }
 
 SDL_Texture *SDLRenderBackend::loadAndCacheTexture(const std::filesystem::path &file)
@@ -171,9 +230,129 @@ SDL_Texture *SDLRenderBackend::loadAndCacheTexture(const std::filesystem::path &
     return texture;
 }
 
+SDLRenderBackend::AnimationData *SDLRenderBackend::loadAndCacheAnimation(const std::filesystem::path &file)
+{
+    const std::string key = textureKey(file);
+    auto animationEntry = mAnimationCache.find(key);
+    if (animationEntry != mAnimationCache.end())
+    {
+        return &animationEntry->second;
+    }
+
+    IMG_Animation *rawAnimation = IMG_LoadAnimation(key.c_str());
+    if (rawAnimation == nullptr)
+    {
+        CSP(rawAnimation);
+        return nullptr;
+    }
+
+    AnimationData animationData;
+    animationData.frames.reserve(static_cast<size_t>(rawAnimation->count));
+
+    for (int i = 0; i < rawAnimation->count; ++i)
+    {
+        SDL_Surface *surface = rawAnimation->frames[i];
+        if (surface == nullptr)
+        {
+            continue;
+        }
+
+        SDL_Texture *texture = SDL_CreateTextureFromSurface(mRenderer, surface);
+        if (texture == nullptr)
+        {
+            CSP(texture);
+            continue;
+        }
+
+        const int rawDelay = rawAnimation->delays != nullptr ? rawAnimation->delays[i] : 0;
+        const uint32_t delayMs = rawDelay > 0 ? static_cast<uint32_t>(rawDelay) : 100;
+
+        animationData.frames.push_back(AnimationFrame{texture, delayMs});
+        animationData.totalDurationMs += delayMs;
+    }
+
+    IMG_FreeAnimation(rawAnimation);
+
+    if (animationData.frames.empty())
+    {
+        return nullptr;
+    }
+
+    auto [insertedIt, inserted] = mAnimationCache.emplace(key, std::move(animationData));
+    (void)inserted;
+    return &insertedIt->second;
+}
+
 std::string SDLRenderBackend::textureKey(const std::filesystem::path &file)
 {
     return file.lexically_normal().string();
+}
+
+void SDLRenderBackend::destroyAnimationData(AnimationData &animation)
+{
+    for (auto &frame : animation.frames)
+    {
+        if (frame.texture != nullptr)
+        {
+            SDL_DestroyTexture(frame.texture);
+            frame.texture = nullptr;
+        }
+    }
+
+    animation.frames.clear();
+    animation.totalDurationMs = 0;
+}
+
+uint32_t SDLRenderBackend::selectAnimationFrameIndex(const AnimationData &animation,
+                                                     uint32_t elapsedMs,
+                                                     AnimationPlaybackMode playbackMode,
+                                                     bool &shouldRender)
+{
+    shouldRender = true;
+    if (animation.frames.empty())
+    {
+        shouldRender = false;
+        return 0;
+    }
+
+    const uint32_t totalDuration = animation.totalDurationMs;
+    if (totalDuration == 0)
+    {
+        return 0;
+    }
+
+    uint32_t localElapsed = elapsedMs;
+    switch (playbackMode)
+    {
+    case AnimationPlaybackMode::Loop:
+        localElapsed %= totalDuration;
+        break;
+    case AnimationPlaybackMode::HoldLastFrame:
+        if (localElapsed >= totalDuration)
+        {
+            return static_cast<uint32_t>(animation.frames.size() - 1);
+        }
+        break;
+    case AnimationPlaybackMode::HideAfterEnd:
+        if (localElapsed >= totalDuration)
+        {
+            shouldRender = false;
+            return 0;
+        }
+        break;
+    }
+
+    uint32_t accumulated = 0;
+    for (uint32_t i = 0; i < animation.frames.size(); ++i)
+    {
+        accumulated += animation.frames[i].delayMs;
+        if (localElapsed < accumulated)
+        {
+            return i;
+        }
+    }
+
+    return static_cast<uint32_t>(animation.frames.size() - 1);
 }
 
 uint32_t SDLRenderBackend::width(std::string_view text) const

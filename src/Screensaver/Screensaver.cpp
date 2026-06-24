@@ -85,6 +85,7 @@ void Screensaver::runScreensaver(const Window_Properties &windowProps)
     if (upperLeft || upperRight || lowerLeft || lowerRight)
     {
         mSuccess = true;
+        mSuccessStartTimeMs = nowMs;
         mSuccessAnimation.active = true;
         mSuccessAnimation.endX = mLogo.x;
         mSuccessAnimation.endY = mLogo.y - mLogo.h / 5;
@@ -176,6 +177,16 @@ const std::vector<HitMarker> &Screensaver::getMarkers() const
 uint32_t Screensaver::getFrameTimeMs() const
 {
     return mFrameTimeMs;
+}
+
+uint32_t Screensaver::getSuccessElapsedMs() const
+{
+    if (!mSuccess)
+    {
+        return 0;
+    }
+
+    return mFrameTimeMs - mSuccessStartTimeMs;
 }
 
 bool Screensaver::isInactive() const
