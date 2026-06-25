@@ -213,9 +213,6 @@ void Application::handleGlobalKeyDown(const SDL_KeyboardEvent &keyEvent)
     case SDLK_F4:
         mCurrentScreen = Screen::Editor;
         break;
-    case SDLK_F5:
-        mEditor.toggleEditorMode();
-        break;
     case SDLK_T:
         mEditor.handleT(mod);
         break;
@@ -247,6 +244,14 @@ void Application::registerCommands()
                                  mRunning = false;
                                  return CommandResult{true, "Quit!"};
                              }});
+    mEditor.registerCommand({.name = "mlg",
+                             .description = "Toggles mlg mode",
+                             .usage = "",
+                             .handler = [this](const std::vector<std::string> &)
+                             {
+                                 mEditor.toggleEditorMode();
+                                 return CommandResult{true, "Toggled MLG!"};
+                             }});
     mEditor.registerCommand({.name = "inactivity",
                              .description = "Set the inactivity interval",
                              .usage = "<interval>",
@@ -254,7 +259,7 @@ void Application::registerCommands()
                              {
                                  if (args.empty())
                                  {
-                                    return CommandResult{false, "Usage: inactivity <interval>"};
+                                     return CommandResult{false, "Usage: inactivity <interval>"};
                                  }
                                  mScreensaver.setIntervalSeconds(std::atoi(args[0].c_str()));
                                  return CommandResult{true, "Set inactivity interval to " + args[0] + "s"};

@@ -106,7 +106,7 @@ private:
     Vec2 getRandomGridPos(uint32_t cellX, uint32_t cellY, uint32_t count, uint32_t screenWidth, uint32_t screenHeight, float spriteWidth, float spriteHeight) const;
 
     uint64_t mInactivityTimer = 0;
-    uint64_t mInactivityInterval = 10;
+    uint64_t mInactivityInterval = 60;
     bool mInactive = false;
     bool mInitialized = false;
     bool mSuccess = false;
