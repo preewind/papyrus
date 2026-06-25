@@ -86,6 +86,7 @@ public:
     uint32_t getFrameTimeMs() const;
     bool isInactive() const;
     void resetTimer();
+    void setIntervalSeconds(uint64_t interval);
     const Logo &getLogo() const;
     void handleKey(const SDL_Event &event);
 
