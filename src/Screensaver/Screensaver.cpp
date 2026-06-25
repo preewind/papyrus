@@ -264,7 +264,7 @@ void Screensaver::startSuccessScene(const Window_Properties &windowProps, uint32
     mSuccess = true;
     mSuccessAnimation.active = true;
     mSuccessAnimation.endX = mLogo.x;
-    mSuccessAnimation.endY = mLogo.y - mLogo.h / 5;
+    mSuccessAnimation.endY = mLogo.y - mLogo.h / 7;
     mSuccessAnimation.w = mLogo.w;
     mSuccessAnimation.h = mLogo.h;
     mSuccessAnimation.startX = (windowProps.totalWindowWidth - mSuccessAnimation.w) / 2;

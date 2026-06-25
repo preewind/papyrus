@@ -6,7 +6,7 @@ void ScreensaverView::render(RenderContext &renderContext, const Screensaver &sc
 {
     if (screensaver.isInactive())
     {
-        renderContext.clear({34, 35, 46, 255});
+        renderContext.clear({22, 22, 22, 255});
         renderLogo(renderContext, screensaver);
         if (screensaver.isSuccess())
         {
