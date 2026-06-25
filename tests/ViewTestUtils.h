@@ -111,20 +111,23 @@ struct FakeRenderContext : public RenderContext
         (void)h;
     }
 
-    void loadTextureByName(float x, float y, float w, float h, std::string_view assetName) override
+    void loadTextureByName(float x, float y, float w, float h, std::string_view assetName, float rotation = 0.0f) override
     {
         (void)assetName;
         (void)x;
         (void)y;
         (void)w;
         (void)h;
+        (void)rotation;
     }
 
     void loadAnimationByName(float x, float y, float w, float h,
                              std::string_view assetName,
                              uint32_t elapsedMs,
-                             AnimationPlaybackMode playbackMode) override
+                             AnimationPlaybackMode playbackMode,
+                             float rotation = 0.0f) override
     {
+        (void)rotation;
         animationCalls.push_back(AnimationCall{x, y, w, h, std::string(assetName), elapsedMs, playbackMode});
     }
     uint32_t getAnimationDurationByName(std::string_view assetName) const override

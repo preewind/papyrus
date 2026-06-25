@@ -140,3 +140,90 @@ TEST(ScreensaverTests, SuccessSpawnPopulatesConfiguredEffectInstances)
     EXPECT_FLOAT_EQ(wow->instances.front().w, 996.0f);
     EXPECT_FLOAT_EQ(wow->instances.front().h, 560.0f);
 }
+
+TEST(ScreensaverTests, SpawnedEffectRotationIsWithinConfiguredRange)
+{
+    Screensaver screensaver;
+    Window_Properties windowProps{20, 1280, 720};
+
+    // Resolve dimensions for the text group (GetRekt is the primary asset)
+    screensaver.resolveEffectDef(ScreensaverAssets::GetRekt, 1000, 300.0f, 100.0f);
+
+    for (int i = 0; i < 200000 && !screensaver.isSuccess(); ++i)
+        screensaver.runScreensaver(windowProps);
+
+    ASSERT_TRUE(screensaver.isSuccess());
+
+    const EffectGroup *textGroup = findEffectGroup(screensaver, ScreensaverAssets::GetRekt);
+    ASSERT_NE(textGroup, nullptr);
+    EXPECT_GT(textGroup->def.maxRotationDeg, 0.0f);
+
+    for (const auto &effect : textGroup->instances)
+    {
+        EXPECT_GE(effect.rotation, -textGroup->def.maxRotationDeg);
+        EXPECT_LE(effect.rotation,  textGroup->def.maxRotationDeg);
+    }
+}
+
+TEST(ScreensaverTests, SpawnedEffectRotationIsZeroWhenMaxRotationIsZero)
+{
+    Screensaver screensaver;
+    Window_Properties windowProps{20, 1280, 720};
+
+    for (int i = 0; i < 200000 && !screensaver.isSuccess(); ++i)
+        screensaver.runScreensaver(windowProps);
+
+    ASSERT_TRUE(screensaver.isSuccess());
+
+    // HitMarker has no rotation configured
+    const EffectGroup *marker = findEffectGroup(screensaver, ScreensaverAssets::HitMarker);
+    ASSERT_NE(marker, nullptr);
+    EXPECT_FLOAT_EQ(marker->def.maxRotationDeg, 0.0f);
+
+    for (const auto &effect : marker->instances)
+        EXPECT_FLOAT_EQ(effect.rotation, 0.0f);
+}
+
+TEST(ScreensaverTests, SpawnedVariantInstanceAssetIsOneOfConfiguredVariants)
+{
+    Screensaver screensaver;
+    Window_Properties windowProps{20, 1280, 720};
+
+    screensaver.resolveEffectDef(ScreensaverAssets::GetRekt, 1000, 300.0f, 100.0f);
+
+    for (int i = 0; i < 200000 && !screensaver.isSuccess(); ++i)
+        screensaver.runScreensaver(windowProps);
+
+    ASSERT_TRUE(screensaver.isSuccess());
+
+    const EffectGroup *textGroup = findEffectGroup(screensaver, ScreensaverAssets::GetRekt);
+    ASSERT_NE(textGroup, nullptr);
+    ASSERT_FALSE(textGroup->def.assetVariants.empty());
+
+    for (const auto &effect : textGroup->instances)
+    {
+        ASSERT_FALSE(effect.instanceAssetName.empty());
+        const auto &variants = textGroup->def.assetVariants;
+        const bool found = std::find(variants.begin(), variants.end(), effect.instanceAssetName) != variants.end();
+        EXPECT_TRUE(found) << "instanceAssetName '" << effect.instanceAssetName << "' not in assetVariants";
+    }
+}
+
+TEST(ScreensaverTests, SpawnedInstanceAssetNameIsEmptyWhenNoVariants)
+{
+    Screensaver screensaver;
+    Window_Properties windowProps{20, 1280, 720};
+
+    for (int i = 0; i < 200000 && !screensaver.isSuccess(); ++i)
+        screensaver.runScreensaver(windowProps);
+
+    ASSERT_TRUE(screensaver.isSuccess());
+
+    // Explosion has no variants
+    const EffectGroup *explosion = findEffectGroup(screensaver, ScreensaverAssets::Explosion);
+    ASSERT_NE(explosion, nullptr);
+    EXPECT_TRUE(explosion->def.assetVariants.empty());
+
+    for (const auto &effect : explosion->instances)
+        EXPECT_TRUE(effect.instanceAssetName.empty());
+}

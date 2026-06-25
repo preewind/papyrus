@@ -63,6 +63,7 @@ Screensaver::Screensaver()
                 500,
                 600,
                 EffectPositionMode::Random,
+                1.0f, 0.0f, 0.0f, {}, {},
             },
             {}},
         EffectGroup{
@@ -76,6 +77,7 @@ Screensaver::Screensaver()
                 0,
                 600,
                 EffectPositionMode::Random,
+                1.0f, 0.0f, 0.0f, {}, {},
             },
             {}},
         EffectGroup{
@@ -89,7 +91,7 @@ Screensaver::Screensaver()
                 0,
                 0,
                 EffectPositionMode::Centered,
-                2.0f,
+                2.0f, 0.0f, 0.0f, {}, {},
             },
             {}},
         EffectGroup{
@@ -102,7 +104,7 @@ Screensaver::Screensaver()
                 0,
                 400,
                 EffectPositionMode::RandomGrid,
-                1.2f},
+                1.2f, 0.0f, 0.0f, {}, {}},
             {}
 
         },
@@ -116,7 +118,7 @@ Screensaver::Screensaver()
                 0,
                 100,
                 EffectPositionMode::Centered,
-                2.0},
+                2.0f, 0.0f, 0.0f, {}, {}},
             {}
 
         },
@@ -125,14 +127,34 @@ Screensaver::Screensaver()
                 ScreensaverAssets::GetRekt,
                 ScreensaverAssets::GetRektPath,
                 true,
-                1,
+                7,
                 0, 0,
                 0,
-                300,
+                400,
                 EffectPositionMode::RandomGrid,
-                1.0},
+                1.0f,
+                45.0f,        
+                12.0f,        
+                {             
+                    ScreensaverAssets::GetRekt,
+                    ScreensaverAssets::Yes,
+                    ScreensaverAssets::Yes2,
+                    ScreensaverAssets::MomCamera,
+                    ScreensaverAssets::Omg,
+                    ScreensaverAssets::Swag,
+                    ScreensaverAssets::Woah,
+                },
+                {
+                    ScreensaverAssets::GetRektPath,
+                    ScreensaverAssets::YesPath,
+                    ScreensaverAssets::Yes2Path,
+                    ScreensaverAssets::MomCameraPath,
+                    ScreensaverAssets::OmgPath,
+                    ScreensaverAssets::SwagPath,
+                    ScreensaverAssets::WoahPath,
+                },
+            },
             {}
-
         },
 
     };
@@ -241,10 +263,6 @@ void Screensaver::spawnSuccessEffects(const Window_Properties &windowProps)
         group.instances.clear();
         group.instances.reserve(def.count);
 
-        const int maxX = std::max(0, static_cast<int>(windowProps.totalWindowWidth - def.w));
-        const int maxY = std::max(0, static_cast<int>(windowProps.totalWindowHeight - def.h));
-        std::uniform_int_distribution<int> xDist(0, maxX);
-        std::uniform_int_distribution<int> yDist(0, maxY);
         std::uniform_int_distribution<uint32_t> offsetDist(0, def.maxOffsetMs);
 
         std::vector<uint32_t> cellPool;
@@ -257,17 +275,40 @@ void Screensaver::spawnSuccessEffects(const Window_Properties &windowProps)
         for (size_t i = 0; i < def.count; ++i)
         {
             SuccessEffect effect;
+            float instanceW = def.w;
+            float instanceH = def.h;
+            uint32_t instanceDuration = def.duration;
+
+            if (!def.assetVariants.empty())
+            {
+                std::uniform_int_distribution<size_t> variantDist(0, def.assetVariants.size() - 1);
+                effect.instanceAssetName = def.assetVariants[variantDist(rng)];
+
+                const auto resolvedIt = mResolvedVariantDefs.find(std::string(effect.instanceAssetName));
+                if (resolvedIt != mResolvedVariantDefs.end())
+                {
+                    instanceW = resolvedIt->second.w;
+                    instanceH = resolvedIt->second.h;
+                    instanceDuration = resolvedIt->second.duration;
+                }
+            }
+
+            const int maxX = std::max(0, static_cast<int>(windowProps.totalWindowWidth - instanceW));
+            const int maxY = std::max(0, static_cast<int>(windowProps.totalWindowHeight - instanceH));
+            std::uniform_int_distribution<int> xDist(0, maxX);
+            std::uniform_int_distribution<int> yDist(0, maxY);
+
             if (def.positionMode == EffectPositionMode::Centered)
             {
-                effect.x = (windowProps.totalWindowWidth - def.w) / 2;
-                effect.y = (windowProps.totalWindowHeight - def.h) / 2;
+                effect.x = (windowProps.totalWindowWidth - instanceW) / 2;
+                effect.y = (windowProps.totalWindowHeight - instanceH) / 2;
             }
             else if (def.positionMode == EffectPositionMode::RandomGrid)
             {
                 uint32_t chosenCellIdx = cellPool[i];
                 uint32_t cellX = chosenCellIdx % def.count;
                 uint32_t cellY = chosenCellIdx / def.count;
-                Vec2 pos = getRandomGridPos(cellX, cellY, def.count, windowProps.totalWindowWidth, windowProps.totalWindowHeight, def.w, def.h);
+                Vec2 pos = getRandomGridPos(cellX, cellY, def.count, windowProps.totalWindowWidth, windowProps.totalWindowHeight, instanceW, instanceH);
                 effect.x = pos.x;
                 effect.y = pos.y;
             }
@@ -277,10 +318,16 @@ void Screensaver::spawnSuccessEffects(const Window_Properties &windowProps)
                 effect.y = static_cast<float>(yDist(rng));
             }
 
-            effect.w = def.w;
-            effect.h = def.h;
+            effect.w = instanceW;
+            effect.h = instanceH;
             effect.startOffset = def.maxOffsetMs > 0 ? offsetDist(rng) : 0;
-            effect.duration = def.duration;
+            effect.duration = instanceDuration;
+
+            if (def.maxRotationDeg > 0.0f)
+            {
+                effect.rotation = Random::get_float(-def.maxRotationDeg, def.maxRotationDeg);
+            }
+
             group.instances.push_back(effect);
         }
     }
@@ -398,6 +445,15 @@ void Screensaver::resolveEffectDef(std::string_view assetName, uint32_t duration
 
         break;
     }
+}
+
+void Screensaver::resolveEffectVariantDef(std::string_view assetName, uint32_t duration, float w, float h, float dimensionScale)
+{
+    mResolvedVariantDefs[std::string(assetName)] = EffectResolvedDef{
+        duration,
+        w * dimensionScale,
+        h * dimensionScale,
+    };
 }
 
 uint32_t Screensaver::getFrameTimeMs() const

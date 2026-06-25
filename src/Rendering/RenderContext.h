@@ -21,11 +21,12 @@ public:
     virtual void drawRect(int x, int y, int w, int h, RenderColor color) = 0;
     virtual void drawRect(Rect rect, RenderColor color) = 0;
     virtual void loadTexture(float x, float y, float w, float h, const std::filesystem::path &file) = 0;
-    virtual void loadTextureByName(float x, float y, float w, float h, std::string_view assetName) = 0;
+    virtual void loadTextureByName(float x, float y, float w, float h, std::string_view assetName, float rotation = 0.0f) = 0;
     virtual void loadAnimationByName(float x, float y, float w, float h,
                                      std::string_view assetName,
                                      uint32_t elapsedMs,
-                                     AnimationPlaybackMode playbackMode) = 0;
+                                     AnimationPlaybackMode playbackMode,
+                                     float rotation = 0.0f) = 0;
     virtual uint32_t getAnimationDurationByName(std::string_view assetName) const = 0;
     virtual std::pair<uint32_t, uint32_t> getAnimationDimensionsByName(std::string_view assetName) const = 0;
     virtual void pushClipRect(const Rect &rect) = 0;

@@ -64,7 +64,7 @@ void Renderer::loadTexture(float x, float y, float w, float h, const std::filesy
     mBackend->loadTexture(x, y, w, h, file);
 }
 
-void Renderer::loadTextureByName(float x, float y, float w, float h, std::string_view assetName)
+void Renderer::loadTextureByName(float x, float y, float w, float h, std::string_view assetName, float rotation)
 {
     const std::filesystem::path *assetPath = findTextureAsset(assetName);
     if (assetPath == nullptr)
@@ -73,13 +73,14 @@ void Renderer::loadTextureByName(float x, float y, float w, float h, std::string
         return;
     }
 
-    loadTexture(x, y, w, h, *assetPath);
+    mBackend->loadTexture(x, y, w, h, *assetPath, rotation);
 }
 
 void Renderer::loadAnimationByName(float x, float y, float w, float h,
                                    std::string_view assetName,
                                    uint32_t elapsedMs,
-                                   AnimationPlaybackMode playbackMode)
+                                   AnimationPlaybackMode playbackMode,
+                                   float rotation)
 {
     const std::filesystem::path *assetPath = findAnimationAsset(assetName);
     if (assetPath == nullptr)
@@ -88,7 +89,7 @@ void Renderer::loadAnimationByName(float x, float y, float w, float h,
         return;
     }
 
-    mBackend->loadAnimation(x, y, w, h, *assetPath, elapsedMs, playbackMode);
+    mBackend->loadAnimation(x, y, w, h, *assetPath, elapsedMs, playbackMode, rotation);
 }
 
 void Renderer::registerTextureAsset(const std::string &assetName, const std::filesystem::path &file)

@@ -70,6 +70,23 @@ void Application::preloadStaticTextures()
             mRenderer->registerTextureAsset(std::string(def.assetName), def.assetPath);
             mRenderer->preloadTextureByName(def.assetName);
         }
+
+        // Register and preload each asset variant (used for grouped multi-asset effects)
+        for (size_t i = 0; i < def.assetVariants.size(); ++i)
+        {
+            const std::string variantName(def.assetVariants[i]);
+            const std::string variantPath(def.assetVariantPaths[i]);
+            if (def.isAnimation)
+            {
+                mRenderer->registerAnimationAsset(variantName, variantPath);
+                mRenderer->preloadAnimationByName(variantName);
+            }
+            else
+            {
+                mRenderer->registerTextureAsset(variantName, variantPath);
+                mRenderer->preloadTextureByName(variantName);
+            }
+        }
     }
 
     for (const auto &group : mScreensaver.getEffects())
@@ -80,6 +97,20 @@ void Application::preloadStaticTextures()
             const uint32_t dur = mRenderer->getAnimationDurationByName(def.assetName);
             const auto [w, h]  = mRenderer->getAnimationDimensionsByName(def.assetName);
             mScreensaver.resolveEffectDef(def.assetName, dur, static_cast<float>(w), static_cast<float>(h));
+        }
+
+        if (def.isAnimation)
+        {
+            for (const auto &variantName : def.assetVariants)
+            {
+                const uint32_t variantDur = mRenderer->getAnimationDurationByName(variantName);
+                const auto [variantW, variantH] = mRenderer->getAnimationDimensionsByName(variantName);
+                mScreensaver.resolveEffectVariantDef(variantName,
+                                                     variantDur,
+                                                     static_cast<float>(variantW),
+                                                     static_cast<float>(variantH),
+                                                     def.dimensionScale);
+            }
         }
     }
 }

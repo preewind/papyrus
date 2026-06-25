@@ -30,11 +30,8 @@ public:
 
     void drawText(const std::string &text, int x, int y, const RenderColor &color) override;
     void rainBowText();
-    void loadTexture(float x, float y, float w, float h, const std::filesystem::path &file) override;
-    void loadAnimation(float x, float y, float w, float h,
-                       const std::filesystem::path &file,
-                       uint32_t elapsedMs,
-                       AnimationPlaybackMode playbackMode) override;
+    void loadTexture(float x, float y, float w, float h, const std::filesystem::path &file, float rotation = 0.0f) override;
+    void loadAnimation(float x, float y, float w, float h, const std::filesystem::path &file, uint32_t elapsedMs, AnimationPlaybackMode playbackMode, float rotation = 0.0f) override;
     bool preloadTexture(const std::filesystem::path &file) override;
     bool preloadAnimation(const std::filesystem::path &file) override;
     void evictTexture(const std::filesystem::path &file) override;

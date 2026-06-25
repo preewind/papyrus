@@ -171,7 +171,7 @@ void SDLRenderBackend::rainBowText()
 
 }
 
-void SDLRenderBackend::loadTexture(float x, float y, float w, float h, const std::filesystem::path &file)
+void SDLRenderBackend::loadTexture(float x, float y, float w, float h, const std::filesystem::path &file, float rotation)
 {
     SDL_Texture *texture = loadAndCacheTexture(file);
     if (texture == nullptr)
@@ -180,10 +180,10 @@ void SDLRenderBackend::loadTexture(float x, float y, float w, float h, const std
     }
 
     SDL_FRect dst{x, y, w, h};
-    CSF(SDL_RenderTexture(mRenderer, texture, nullptr, &dst));
+    CSF(SDL_RenderTextureRotated(mRenderer, texture, nullptr, &dst, rotation, nullptr, SDL_FLIP_NONE));
 }
 
-void SDLRenderBackend::loadAnimation(float x, float y, float w, float h, const std::filesystem::path &file, uint32_t elapsedMs, AnimationPlaybackMode playbackMode)
+void SDLRenderBackend::loadAnimation(float x, float y, float w, float h, const std::filesystem::path &file, uint32_t elapsedMs, AnimationPlaybackMode playbackMode, float rotation)
 {
     AnimationData *animation = loadAndCacheAnimation(file);
     if (animation == nullptr || animation->frames.empty())
@@ -205,7 +205,7 @@ void SDLRenderBackend::loadAnimation(float x, float y, float w, float h, const s
     }
 
     SDL_FRect dst{x, y, w, h};
-    CSF(SDL_RenderTexture(mRenderer, texture, nullptr, &dst));
+    CSF(SDL_RenderTextureRotated(mRenderer, texture, nullptr, &dst, rotation, nullptr, SDL_FLIP_NONE));
 }
 
 bool SDLRenderBackend::preloadTexture(const std::filesystem::path &file)
