@@ -18,6 +18,7 @@ public:
     virtual void clear(RenderColor color) = 0;
     virtual void drawText(const std::string &text, int x, int y) = 0;
     virtual void drawText(const std::string &text, int x, int y, RenderColor color) = 0;
+    virtual void drawRainbowText(const std::string &text, int x, int y) = 0;
     virtual void drawRect(int x, int y, int w, int h, RenderColor color) = 0;
     virtual void drawRect(Rect rect, RenderColor color) = 0;
     virtual void loadTexture(float x, float y, float w, float h, const std::filesystem::path &file) = 0;

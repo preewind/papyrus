@@ -49,6 +49,11 @@ void Renderer::drawText(const std::string &text, int x, int y, RenderColor color
     mBackend->drawText(text, x, y, color);
 }
 
+void Renderer::drawRainbowText(const std::string &text, int x, int y)
+{
+    mBackend->drawRainbowText(text, x, y);
+}
+
 void Renderer::drawRect(int x, int y, int w, int h, RenderColor color)
 {
     mBackend->fillRect(RenderRect{x, y, w, h}, color);

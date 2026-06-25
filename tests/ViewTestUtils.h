@@ -36,6 +36,7 @@ struct FakeRenderContext : public RenderContext
         int x = 0;
         int y = 0;
         bool hasColor = false;
+        bool isRainbow = false;
         RenderColor color{};
     };
 
@@ -84,12 +85,17 @@ struct FakeRenderContext : public RenderContext
 
     void drawText(const std::string &text, int x, int y) override
     {
-        textCalls.push_back(TextCall{text, x, y, false, {}});
+        textCalls.push_back(TextCall{text, x, y, false, false, {}});
+    }
+
+    void drawRainbowText(const std::string &text, int x, int y) override
+    {
+        textCalls.push_back(TextCall{text, x, y, false, true, {}});
     }
 
     void drawText(const std::string &text, int x, int y, RenderColor color) override
     {
-        textCalls.push_back(TextCall{text, x, y, true, color});
+        textCalls.push_back(TextCall{text, x, y, true, false, color});
     }
 
     void drawRect(int x, int y, int w, int h, RenderColor color) override

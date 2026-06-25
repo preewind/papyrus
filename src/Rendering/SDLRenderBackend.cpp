@@ -19,7 +19,7 @@ SDLRenderBackend::SDLRenderBackend(SDL_Window *window, const std::string &fontPa
     mFont = TTF_OpenFont(fontPath.c_str(), fontSize);
     CSP(mFont);
 
-    rainBowText();
+    // drawRainbowText();
 }
 
 SDLRenderBackend::~SDLRenderBackend()
@@ -27,6 +27,10 @@ SDLRenderBackend::~SDLRenderBackend()
     clearTextureCache();
     clearAnimationCache();
 
+    if (mOverrideFont)
+    {
+        TTF_CloseFont(mOverrideFont);
+    }
     if (mFont)
     {
         TTF_CloseFont(mFont);
@@ -114,7 +118,7 @@ void SDLRenderBackend::drawText(const std::string &text, int x, int y, const Ren
     SDL_DestroySurface(surface);
 }
 
-void SDLRenderBackend::rainBowText()
+void SDLRenderBackend::rainbowText()
 {
     const char *fontPath = "assets/impact.ttf";
     TTF_Font *localFont = TTF_OpenFont(fontPath, 72);
@@ -153,6 +157,69 @@ void SDLRenderBackend::rainBowText()
     }
     delete[] frames;
     delete[] delays;
+}
+
+void SDLRenderBackend::loadOverrideFont(const std::string &fontPath, uint8_t fontSize)
+{
+    if (mOverrideFont)
+    {
+        TTF_CloseFont(mOverrideFont);
+        mOverrideFont = nullptr;
+    }
+    mOverrideFont = TTF_OpenFont(fontPath.c_str(), fontSize);
+    CSP(mOverrideFont);
+}
+
+void SDLRenderBackend::drawRainbowText(const std::string &text, int x, int y)
+{
+    if (text.empty())
+    {
+        return;
+    }
+
+    TTF_Font *drawFont = mOverrideFont ? mOverrideFont : mFont;
+    int penX = x;
+    const RainbowTextConfig &cfg = mRainbowConfig;
+    const float timeHue = static_cast<float>(SDL_GetTicks()) * cfg.speed;
+    const float linePhase = static_cast<float>(y) * cfg.linePhase;
+    const int layoutLineHeight = TTF_GetFontHeight(mFont);
+    const int drawLineHeight = TTF_GetFontHeight(drawFont);
+    const float lineOffsetY = static_cast<float>(layoutLineHeight - drawLineHeight) * 0.5f;
+
+    for (size_t i = 0; i < text.size(); ++i)
+    {
+        std::string glyph(1, text[i]);
+        const float hue = std::fmod(std::fabs(timeHue + linePhase + static_cast<float>(i) * cfg.charSpread), 360.0f);
+        SDL_Color mlgColor = HSVtoRGB(hue, 1.0f, 1.0f);
+
+        SDL_Surface *surface = TTF_RenderText_Blended(drawFont, glyph.c_str(), glyph.size(), mlgColor);
+        CSP(surface);
+
+        SDL_Texture *texture = SDL_CreateTextureFromSurface(mRenderer, surface);
+        CSP(texture);
+
+        const float wobbleSeed = static_cast<float>(SDL_GetTicks()) * 0.008f + static_cast<float>(i) * 1.73f + static_cast<float>(y) * 0.11f;
+        const float xWobble = cfg.wobbleX ? std::sin(wobbleSeed) * 3.0f : 0.0f;
+        const float yWobble = cfg.wobbleY ? std::cos(wobbleSeed * 0.83f) * 2.0f : 0.0f;
+        const int spacingJitter = cfg.wobbleSpacing ? static_cast<int>(std::round((std::sin(wobbleSeed * 1.3f) + 1.0f) * 0.5f)) : 0;
+        int layoutGlyphWidth = surface->w;
+        int layoutGlyphHeight = 0;
+        CSF(TTF_GetStringSize(mFont, glyph.c_str(), glyph.size(), &layoutGlyphWidth, &layoutGlyphHeight));
+        const float slotOffsetX = static_cast<float>(layoutGlyphWidth - surface->w) * 0.5f;
+
+        SDL_FRect dst;
+        dst.x = static_cast<float>(penX) + slotOffsetX + xWobble;
+        dst.y = static_cast<float>(y) + lineOffsetY + yWobble;
+        dst.w = static_cast<float>(surface->w);
+        dst.h = static_cast<float>(surface->h);
+
+        CSF(SDL_RenderTexture(mRenderer, texture, nullptr, &dst));
+
+        penX += layoutGlyphWidth + spacingJitter;
+
+        SDL_DestroyTexture(texture);
+        SDL_DestroySurface(surface);
+    }
 }
 
 void SDLRenderBackend::loadTexture(float x, float y, float w, float h, const std::filesystem::path &file, float rotation)
@@ -452,6 +519,10 @@ int SDLRenderBackend::lineHeight() const
 void SDLRenderBackend::setFontSize(uint8_t size)
 {
     CSF(TTF_SetFontSize(mFont, size));
+    if (mOverrideFont)
+    {
+        CSF(TTF_SetFontSize(mOverrideFont, size));
+    }
 }
 
 SDL_Renderer *SDLRenderBackend::nativeRenderer() const

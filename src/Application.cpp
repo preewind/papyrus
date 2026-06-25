@@ -44,6 +44,7 @@ void Application::initializeWindowAndRendering()
     SDL_GetWindowSize(mWindow, &windowWidth, &windowHeight);
 
     mRenderBackend = std::make_unique<SDLRenderBackend>(mWindow, "assets/JetBrainsMono-Regular.ttf", mFontSize);
+    static_cast<SDLRenderBackend *>(mRenderBackend.get())->loadOverrideFont("assets/impact.ttf", mFontSize);
     mRenderer = std::make_unique<Renderer>(*mRenderBackend, mTheme, static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight));
 
     mTextLayout.setMeasurer(mRenderBackend.get());
@@ -213,11 +214,7 @@ void Application::handleGlobalKeyDown(const SDL_KeyboardEvent &keyEvent)
         mCurrentScreen = Screen::Editor;
         break;
     case SDLK_F5:
-        if (mCurrentScreen != Screen::Screensaver)
-        {
-            mPreviousScreen = mCurrentScreen;
-            mCurrentScreen = Screen::Screensaver;
-        }
+        mEditor.toggleEditorMode();
         break;
     case SDLK_T:
         mEditor.handleT(mod);
