@@ -494,6 +494,14 @@ void Screensaver::resetTimer()
     mInactive = false;
 }
 
+void Screensaver::setIntervalSeconds(uint64_t interval)
+{
+    if (interval > 0)
+    {
+        mInactivityInterval = interval;
+    }
+}
+
 const Logo &Screensaver::getLogo() const
 {
     return mLogo;

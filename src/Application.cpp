@@ -95,7 +95,7 @@ void Application::preloadStaticTextures()
         if (def.isAnimation && (def.duration == 0 || def.w == 0.0f || def.h == 0.0f))
         {
             const uint32_t dur = mRenderer->getAnimationDurationByName(def.assetName);
-            const auto [w, h]  = mRenderer->getAnimationDimensionsByName(def.assetName);
+            const auto [w, h] = mRenderer->getAnimationDimensionsByName(def.assetName);
             mScreensaver.resolveEffectDef(def.assetName, dur, static_cast<float>(w), static_cast<float>(h));
         }
 
@@ -250,7 +250,18 @@ void Application::registerCommands()
                                  mRunning = false;
                                  return CommandResult{true, "Quit!"};
                              }});
-
+    mEditor.registerCommand({.name = "inactivity",
+                             .description = "Set the inactivity interval",
+                             .usage = "<interval>",
+                             .handler = [this](const std::vector<std::string> &args)
+                             {
+                                 if (args.empty())
+                                 {
+                                    return CommandResult{false, "Usage: inactivity <interval>"};
+                                 }
+                                 mScreensaver.setIntervalSeconds(std::atoi(args[0].c_str()));
+                                 return CommandResult{true, "Set inactivity interval to " + args[0] + "s"};
+                             }});
     mEditor.registerCommand({.name = "open",
                              .description = "Open a file in the editor",
                              .usage = "<file>",
