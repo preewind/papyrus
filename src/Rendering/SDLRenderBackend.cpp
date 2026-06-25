@@ -1,10 +1,11 @@
-#include "SDLRenderBackend.h"
-
-#include "util.h"
+#include <utility>
+#include <cmath>
 
 #include <SDL3_image/SDL_image.h>
 
-#include <utility>
+#include "SDLRenderBackend.h"
+#include "util.h"
+#include "SDLUtil.h"
 
 SDLRenderBackend::SDLRenderBackend(SDL_Window *window, const std::string &fontPath, uint8_t fontSize)
 {
@@ -17,6 +18,8 @@ SDLRenderBackend::SDLRenderBackend(SDL_Window *window, const std::string &fontPa
 
     mFont = TTF_OpenFont(fontPath.c_str(), fontSize);
     CSP(mFont);
+
+    rainBowText();
 }
 
 SDLRenderBackend::~SDLRenderBackend()
@@ -111,6 +114,63 @@ void SDLRenderBackend::drawText(const std::string &text, int x, int y, const Ren
     SDL_DestroySurface(surface);
 }
 
+void SDLRenderBackend::rainBowText()
+{
+    const char* fontPath = "assets/impact.ttf"; 
+    TTF_Font* localFont = TTF_OpenFont(fontPath, 72);
+    CSP(localFont);
+
+    std::string text = "SWAG";
+
+    size_t frameCount = 60;
+
+    SDL_Surface **frames = new SDL_Surface *[frameCount];
+    int *delays = new int[frameCount];
+
+    for (size_t i = 0; i < frameCount; ++i)
+    {
+        float noise = (i * 123.456f);
+        float hue = fmod(std::fabs(noise), 360.0f);
+        SDL_Color mlgColor = HSVtoRGB(hue, 1.0f, 1.0f);
+        frames[i] = TTF_RenderText_Blended(localFont, text.c_str(), text.size(), mlgColor);
+        CSP(frames[i]);
+
+        delays[i] = 30;
+    }
+
+    IMG_Animation anim;
+    anim.w = frames[frameCount - 1]->w;
+    anim.h = frames[frameCount - 1]->h;
+    anim.count = frameCount;
+    anim.frames = frames;
+    anim.delays = delays;
+
+    IMG_SaveAnimation(&anim, "rainbow.gif");
+
+    for (size_t i = 0; i < frameCount; ++i)
+    {
+        SDL_DestroySurface(frames[i]);
+    }
+    delete[] frames;
+    delete[] delays;
+
+
+
+
+    // TODO:
+    // create other texts in mlg style
+    // add rotation to effects -> 0 as standard
+    // add mlg effects
+    // make video with new features 
+    // add mlg mode to editor where text is rendered as rainbow text with the impact font
+    // think about creating a separate mlg-ify repo for just doing that stuff
+
+
+
+
+
+}
+
 void SDLRenderBackend::loadTexture(float x, float y, float w, float h, const std::filesystem::path &file)
 {
     SDL_Texture *texture = loadAndCacheTexture(file);
@@ -123,10 +183,7 @@ void SDLRenderBackend::loadTexture(float x, float y, float w, float h, const std
     CSF(SDL_RenderTexture(mRenderer, texture, nullptr, &dst));
 }
 
-void SDLRenderBackend::loadAnimation(float x, float y, float w, float h,
-                                     const std::filesystem::path &file,
-                                     uint32_t elapsedMs,
-                                     AnimationPlaybackMode playbackMode)
+void SDLRenderBackend::loadAnimation(float x, float y, float w, float h, const std::filesystem::path &file, uint32_t elapsedMs, AnimationPlaybackMode playbackMode)
 {
     AnimationData *animation = loadAndCacheAnimation(file);
     if (animation == nullptr || animation->frames.empty())

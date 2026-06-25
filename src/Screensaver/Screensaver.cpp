@@ -114,12 +114,27 @@ Screensaver::Screensaver()
                 1,
                 0, 0,
                 0,
-                1,
+                100,
                 EffectPositionMode::Centered,
                 2.0},
             {}
 
         },
+        EffectGroup{
+            EffectDef{
+                ScreensaverAssets::GetRekt,
+                ScreensaverAssets::GetRektPath,
+                true,
+                1,
+                0, 0,
+                0,
+                300,
+                EffectPositionMode::RandomGrid,
+                1.0},
+            {}
+
+        },
+
     };
 }
 

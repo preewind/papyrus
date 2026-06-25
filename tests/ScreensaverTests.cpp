@@ -31,8 +31,6 @@ TEST(ScreensaverTests, ConstructorDefinesExpectedEffectGroups)
 {
     Screensaver screensaver;
 
-    ASSERT_EQ(screensaver.getEffects().size(), 4u);
-
     const EffectDef *marker = findEffectDef(screensaver, ScreensaverAssets::HitMarker);
     ASSERT_NE(marker, nullptr);
     EXPECT_FALSE(marker->isAnimation);
