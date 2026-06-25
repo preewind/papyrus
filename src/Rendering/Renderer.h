@@ -29,11 +29,7 @@ public:
     void drawRect(Rect rect, RenderColor color) override;
     void loadTexture(float x, float y, float w, float h, const std::filesystem::path &file) override;
     void loadTextureByName(float x, float y, float w, float h, std::string_view assetName, float rotation = 0.0f) override;
-    void loadAnimationByName(float x, float y, float w, float h,
-                             std::string_view assetName,
-                             uint32_t elapsedMs,
-                             AnimationPlaybackMode playbackMode,
-                             float rotation = 0.0f) override;
+    void loadAnimationByName(float x, float y, float w, float h, std::string_view assetName, uint32_t elapsedMs, AnimationPlaybackMode playbackMode, float rotation = 0.0f) override;
     uint32_t getAnimationDurationByName(std::string_view assetName) const override;
     std::pair<uint32_t, uint32_t> getAnimationDimensionsByName(std::string_view assetName) const override;
     void registerTextureAsset(const std::string &assetName, const std::filesystem::path &file);

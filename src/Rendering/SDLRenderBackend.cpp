@@ -116,8 +116,8 @@ void SDLRenderBackend::drawText(const std::string &text, int x, int y, const Ren
 
 void SDLRenderBackend::rainBowText()
 {
-    const char* fontPath = "assets/impact.ttf"; 
-    TTF_Font* localFont = TTF_OpenFont(fontPath, 72);
+    const char *fontPath = "assets/impact.ttf";
+    TTF_Font *localFont = TTF_OpenFont(fontPath, 72);
     CSP(localFont);
 
     std::string text = "SWAG";
@@ -153,22 +153,6 @@ void SDLRenderBackend::rainBowText()
     }
     delete[] frames;
     delete[] delays;
-
-
-
-
-    // TODO:
-    // create other texts in mlg style
-    // add rotation to effects -> 0 as standard
-    // add mlg effects
-    // make video with new features 
-    // add mlg mode to editor where text is rendered as rainbow text with the impact font
-    // think about creating a separate mlg-ify repo for just doing that stuff
-
-
-
-
-
 }
 
 void SDLRenderBackend::loadTexture(float x, float y, float w, float h, const std::filesystem::path &file, float rotation)
@@ -364,10 +348,7 @@ void SDLRenderBackend::destroyAnimationData(AnimationData &animation)
     animation.totalDurationMs = 0;
 }
 
-uint32_t SDLRenderBackend::selectAnimationFrameIndex(const AnimationData &animation,
-                                                     uint32_t elapsedMs,
-                                                     AnimationPlaybackMode playbackMode,
-                                                     bool &shouldRender)
+uint32_t SDLRenderBackend::selectAnimationFrameIndex(const AnimationData &animation, uint32_t elapsedMs, AnimationPlaybackMode playbackMode, bool &shouldRender)
 {
     shouldRender = true;
     if (animation.frames.empty())

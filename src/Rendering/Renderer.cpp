@@ -76,11 +76,7 @@ void Renderer::loadTextureByName(float x, float y, float w, float h, std::string
     mBackend->loadTexture(x, y, w, h, *assetPath, rotation);
 }
 
-void Renderer::loadAnimationByName(float x, float y, float w, float h,
-                                   std::string_view assetName,
-                                   uint32_t elapsedMs,
-                                   AnimationPlaybackMode playbackMode,
-                                   float rotation)
+void Renderer::loadAnimationByName(float x, float y, float w, float h, std::string_view assetName, uint32_t elapsedMs, AnimationPlaybackMode playbackMode, float rotation)
 {
     const std::filesystem::path *assetPath = findAnimationAsset(assetName);
     if (assetPath == nullptr)
