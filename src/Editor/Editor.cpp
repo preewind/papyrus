@@ -931,6 +931,21 @@ const uint32_t &Editor::getVisibleRows() const
     return mVisibleRows;
 }
 
+const EditorMode &Editor::getEditorMode() const
+{
+    return mMode;
+}
+
+void Editor::setEditorMode(const EditorMode& mode)
+{
+    mMode = mode;
+}
+
+void Editor::toggleEditorMode()
+{
+    mMode = mMode == EditorMode::Normal ? EditorMode::MLG : EditorMode::Normal;
+}
+
 void Editor::processTerminalInputResponses()
 {
     if (!mTerminalActionRouter.hasPendingAction())

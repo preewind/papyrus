@@ -26,6 +26,11 @@ enum class Focus
     Terminal
 };
 
+enum class EditorMode{
+    Normal,
+    MLG,
+};
+
 class Editor
 {
 
@@ -108,6 +113,9 @@ public:
     const std::vector<std::string> &getText() const;
     void setVisibleRows(uint32_t rows);
     const uint32_t &getVisibleRows() const;
+    const EditorMode& getEditorMode() const;
+    void setEditorMode(const EditorMode& mode);
+    void toggleEditorMode();
 
     void updateViewPort(const LayoutManager& layout, uint32_t lineHeight);
     void processTerminalInputResponses();
@@ -120,6 +128,7 @@ private:
     TextBuffer mBuffer;
     UndoManager mUndoManager;
     Focus mFocus = Focus::Editor;
+    EditorMode mMode = EditorMode::Normal;
     bool mTerminalVisible = false;
     std::unique_ptr<Terminal> mTerminal;
     std::optional<SearchSession> mSearch;

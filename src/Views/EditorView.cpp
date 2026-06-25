@@ -42,7 +42,7 @@ int EditorView::screenY(const Window_Properties &layout, uint32_t row, uint32_t 
     return editorMarginTop + (row - scrollOffset) * layout.lineHeight;
 }
 
-void EditorView::render(RenderContext &renderContext, const Editor &editor, const EditorViewport& viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig, const EditorLayout &editorLayout, bool cursorVisible)
+void EditorView::render(RenderContext &renderContext, const Editor &editor, const EditorViewport &viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig, const EditorLayout &editorLayout, bool cursorVisible)
 {
     if (editor.isSearchActive())
     {
@@ -61,7 +61,7 @@ void EditorView::render(RenderContext &renderContext, const Editor &editor, cons
     }
 
     renderCursor(renderContext, editor, viewport, textLayout, layoutConfig, cursorVisible);
-    renderText(renderContext, editor, viewport, textLayout, layoutConfig);
+    renderText(renderContext, editor, viewport, textLayout, layoutConfig, editor.getEditorMode() == EditorMode::MLG);
 
     renderContext.clearClipRect();
 }
@@ -79,7 +79,7 @@ void EditorView::renderLineNumbers(RenderContext &renderContext, uint32_t numLin
     }
 }
 
-void EditorView::renderSelection(RenderContext &renderContext, const Editor &editor, const EditorViewport& viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig)
+void EditorView::renderSelection(RenderContext &renderContext, const Editor &editor, const EditorViewport &viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig)
 {
     Selection selection = editor.getSelection().normalized();
 
@@ -127,7 +127,7 @@ void EditorView::renderSelection(RenderContext &renderContext, const Editor &edi
     }
 }
 
-void EditorView::renderCursor(RenderContext &renderContext, const Editor &editor, const EditorViewport& viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig, bool cursorVisible)
+void EditorView::renderCursor(RenderContext &renderContext, const Editor &editor, const EditorViewport &viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig, bool cursorVisible)
 {
     const auto &layout = renderContext.getWindowProperties();
     const auto &theme = renderContext.getTheme();
@@ -143,7 +143,7 @@ void EditorView::renderCursor(RenderContext &renderContext, const Editor &editor
     }
 }
 
-void EditorView::renderText(RenderContext &renderContext, const Editor &editor, const EditorViewport& viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig)
+void EditorView::renderText(RenderContext &renderContext, const Editor &editor, const EditorViewport &viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig, bool mlg)
 {
     auto &text = editor.getText();
     int visRows = editor.getVisibleRows();
@@ -154,7 +154,11 @@ void EditorView::renderText(RenderContext &renderContext, const Editor &editor, 
     const auto &tokens = editor.getTokens();
     for (int i = first; i < last; ++i)
     {
-        if (tokens.size() > 0)
+        if (mlg)
+        {
+            renderContext.drawRainbowText(textLayout.expandTabs(text[i]), layoutConfig.editorMarginLeft - viewport.scrollX(), screenY(renderContext.getWindowProperties(), i, first, layoutConfig.editorMarginTop));
+        }
+        else if (tokens.size() > 0)
         {
             std::string expandedLine = textLayout.expandTabs(text[i]);
             int y = screenY(renderContext.getWindowProperties(), i, first, layoutConfig.editorMarginTop);
@@ -174,7 +178,7 @@ void EditorView::renderText(RenderContext &renderContext, const Editor &editor, 
     }
 }
 
-void EditorView::renderSearchMatches(RenderContext &renderContext, const Editor &editor, const EditorViewport& viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig)
+void EditorView::renderSearchMatches(RenderContext &renderContext, const Editor &editor, const EditorViewport &viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig)
 {
     if (editor.getSearch().getMatches().size() == 0)
     {

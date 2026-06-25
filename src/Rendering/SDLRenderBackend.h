@@ -11,6 +11,16 @@
 
 #include "IRenderBackend.h"
 
+struct RainbowTextConfig
+{
+    float speed          = 4.115f;  
+    float charSpread     = 40.0f;
+    float linePhase      = 17.3f;
+    bool  wobbleX        = false;  
+    bool  wobbleY        = false;   
+    bool  wobbleSpacing  = false;
+};
+
 class SDLRenderBackend : public IRenderBackend
 {
 public:
@@ -27,9 +37,9 @@ public:
     void fillRect(const RenderRect &rect, const RenderColor &color) override;
     void setClipRect(const RenderRect &rect) override;
     void clearClipRect() override;
-
+    void rainbowText();
     void drawText(const std::string &text, int x, int y, const RenderColor &color) override;
-    void rainBowText();
+    void drawRainbowText(const std::string &text, int x, int y) override;
     void loadTexture(float x, float y, float w, float h, const std::filesystem::path &file, float rotation = 0.0f) override;
     void loadAnimation(float x, float y, float w, float h, const std::filesystem::path &file, uint32_t elapsedMs, AnimationPlaybackMode playbackMode, float rotation = 0.0f) override;
     bool preloadTexture(const std::filesystem::path &file) override;
@@ -45,6 +55,7 @@ public:
     uint32_t width(std::string_view text) const override;
     int lineHeight() const override;
     void setFontSize(uint8_t size) override;
+    void loadOverrideFont(const std::string &fontPath, uint8_t fontSize);
 
     SDL_Renderer *nativeRenderer() const;
 
@@ -72,6 +83,10 @@ private:
 
     SDL_Renderer *mRenderer = nullptr;
     TTF_Font *mFont = nullptr;
+    TTF_Font *mOverrideFont = nullptr;
     std::unordered_map<std::string, SDL_Texture *> mTextureCache;
     std::unordered_map<std::string, AnimationData> mAnimationCache;
+
+public:
+    RainbowTextConfig mRainbowConfig;
 };

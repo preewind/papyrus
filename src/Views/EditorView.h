@@ -19,7 +19,7 @@ private:
     void renderLineNumbers(RenderContext &renderContext, uint32_t numLines, uint32_t scrollOffsetY, uint32_t visibleRows, const TextLayout &textLayout, const LayoutConfig &layoutConfig);
     void renderSelection(RenderContext &renderContext, const Editor &editor, const EditorViewport &viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig);
     void renderCursor(RenderContext &renderContext, const Editor &editor, const EditorViewport &viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig, bool cursorVisible);
-    void renderText(RenderContext &renderContext, const Editor &editor, const EditorViewport &viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig);
+    void renderText(RenderContext &renderContext, const Editor &editor, const EditorViewport &viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig, bool mlg);
     void renderSearchMatches(RenderContext &renderContext, const Editor &editor, const EditorViewport &viewport, const TextLayout &textLayout, const LayoutConfig &layoutConfig);
 
     LexerTheme mLexerTheme;
