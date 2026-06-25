@@ -10,8 +10,9 @@ The goal of this project is to keep dependencies intentionally low and implement
 # Dependencies
 - SDL3
 - SDL3_ttf
+- SDL3_image
 
-The core application runtime is built around these two libraries. Test code additionally uses GoogleTest.
+The core application runtime is built around these SDL libraries. Test code additionally uses GoogleTest.
 
 # Usage
 

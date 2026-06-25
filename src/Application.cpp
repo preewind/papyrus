@@ -1,5 +1,6 @@
 #include "Application.h"
 #include "SDLRenderBackend.h"
+#include "ScreensaverAssets.h"
 #include "StartupParser.h"
 #include "logger.h"
 #include "util.h"
@@ -46,6 +47,72 @@ void Application::initializeWindowAndRendering()
     mRenderer = std::make_unique<Renderer>(*mRenderBackend, mTheme, static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight));
 
     mTextLayout.setMeasurer(mRenderBackend.get());
+    preloadStaticTextures();
+}
+
+void Application::preloadStaticTextures()
+{
+    mRenderer->registerTextureAsset(ScreensaverAssets::Logo, ScreensaverAssets::LogoPath);
+    mRenderer->registerTextureAsset(ScreensaverAssets::Success, ScreensaverAssets::SuccessPath);
+    mRenderer->preloadTextureByName(ScreensaverAssets::Logo);
+    mRenderer->preloadTextureByName(ScreensaverAssets::Success);
+
+    for (const auto &group : mScreensaver.getEffects())
+    {
+        const auto &def = group.def;
+        if (def.isAnimation)
+        {
+            mRenderer->registerAnimationAsset(std::string(def.assetName), def.assetPath);
+            mRenderer->preloadAnimationByName(def.assetName);
+        }
+        else
+        {
+            mRenderer->registerTextureAsset(std::string(def.assetName), def.assetPath);
+            mRenderer->preloadTextureByName(def.assetName);
+        }
+
+        // Register and preload each asset variant (used for grouped multi-asset effects)
+        for (size_t i = 0; i < def.assetVariants.size(); ++i)
+        {
+            const std::string variantName(def.assetVariants[i]);
+            const std::string variantPath(def.assetVariantPaths[i]);
+            if (def.isAnimation)
+            {
+                mRenderer->registerAnimationAsset(variantName, variantPath);
+                mRenderer->preloadAnimationByName(variantName);
+            }
+            else
+            {
+                mRenderer->registerTextureAsset(variantName, variantPath);
+                mRenderer->preloadTextureByName(variantName);
+            }
+        }
+    }
+
+    for (const auto &group : mScreensaver.getEffects())
+    {
+        const auto &def = group.def;
+        if (def.isAnimation && (def.duration == 0 || def.w == 0.0f || def.h == 0.0f))
+        {
+            const uint32_t dur = mRenderer->getAnimationDurationByName(def.assetName);
+            const auto [w, h]  = mRenderer->getAnimationDimensionsByName(def.assetName);
+            mScreensaver.resolveEffectDef(def.assetName, dur, static_cast<float>(w), static_cast<float>(h));
+        }
+
+        if (def.isAnimation)
+        {
+            for (const auto &variantName : def.assetVariants)
+            {
+                const uint32_t variantDur = mRenderer->getAnimationDurationByName(variantName);
+                const auto [variantW, variantH] = mRenderer->getAnimationDimensionsByName(variantName);
+                mScreensaver.resolveEffectVariantDef(variantName,
+                                                     variantDur,
+                                                     static_cast<float>(variantW),
+                                                     static_cast<float>(variantH),
+                                                     def.dimensionScale);
+            }
+        }
+    }
 }
 
 void Application::openInitialFileIfProvided(const std::string &filename)
@@ -75,9 +142,18 @@ void Application::update()
     case Screen::FileBrowser:
         updateFileBrowserScreen();
         break;
+    case Screen::Screensaver:
+        updateScreenSaverScreen();
+        break;
     default:
         LOG_ERROR() << "Unknown Screen!";
         break;
+    }
+    mScreensaver.updateScreensaver();
+    if (mScreensaver.isInactive() && mCurrentScreen != Screen::Screensaver)
+    {
+        mPreviousScreen = mCurrentScreen;
+        mCurrentScreen = Screen::Screensaver;
     }
 }
 
@@ -100,7 +176,14 @@ void Application::handleEvent(const SDL_Event &event)
     {
         mFileBrowser.handleKey(event);
     }
-
+    else if (mCurrentScreen == Screen::Screensaver)
+    {
+        mScreensaver.handleKey(event);
+        if (!mScreensaver.isInactive())
+        {
+            mCurrentScreen = mPreviousScreen;
+        }
+    }
     if (event.type == SDL_EVENT_KEY_DOWN)
     {
         handleGlobalKeyDown(event.key);
@@ -117,6 +200,7 @@ void Application::handleEvent(const SDL_Event &event)
 
 void Application::handleGlobalKeyDown(const SDL_KeyboardEvent &keyEvent)
 {
+    mScreensaver.resetTimer();
     const SDL_Keycode key = keyEvent.key;
     const SDL_Keymod mod = keyEvent.mod;
 
@@ -127,6 +211,13 @@ void Application::handleGlobalKeyDown(const SDL_KeyboardEvent &keyEvent)
         break;
     case SDLK_F4:
         mCurrentScreen = Screen::Editor;
+        break;
+    case SDLK_F5:
+        if (mCurrentScreen != Screen::Screensaver)
+        {
+            mPreviousScreen = mCurrentScreen;
+            mCurrentScreen = Screen::Screensaver;
+        }
         break;
     case SDLK_T:
         mEditor.handleT(mod);
@@ -151,79 +242,67 @@ void Application::handleGlobalKeyDown(const SDL_KeyboardEvent &keyEvent)
 
 void Application::registerCommands()
 {
-    mEditor.registerCommand({
-        .name = "quit",
-        .description = "Exit the editor",
-        .usage = "",
-        .handler = [this](const std::vector<std::string> &)
-        {
-            mRunning = false;
-            return CommandResult{true, "Quit!"};
-        }
-    });
+    mEditor.registerCommand({.name = "quit",
+                             .description = "Exit the editor",
+                             .usage = "",
+                             .handler = [this](const std::vector<std::string> &)
+                             {
+                                 mRunning = false;
+                                 return CommandResult{true, "Quit!"};
+                             }});
 
-    mEditor.registerCommand({
-        .name = "open",
-        .description = "Open a file in the editor",
-        .usage = "<file>",
-        .handler = [this](const std::vector<std::string> &args)
-        {
-            if (args.empty())
-                return CommandResult{false, "Usage: open <file>"};
-            mEditor.loadFile(args[0]);
-            
-            return CommandResult{true, "Opened: " + args[0]};
-        }
-    });
+    mEditor.registerCommand({.name = "open",
+                             .description = "Open a file in the editor",
+                             .usage = "<file>",
+                             .handler = [this](const std::vector<std::string> &args)
+                             {
+                                 if (args.empty())
+                                     return CommandResult{false, "Usage: open <file>"};
+                                 mEditor.loadFile(args[0]);
 
-    mEditor.registerCommand({
-        .name = "save",
-        .description = "Save the current file (prompts for name if unsaved)",
-        .usage = "",
-        .handler = [this](const std::vector<std::string> &)
-        {
-            mEditor.saveFile();
-            return CommandResult{true, ""};
-        }
-    });
+                                 return CommandResult{true, "Opened: " + args[0]};
+                             }});
 
-    mEditor.registerCommand({
-        .name = "cl",
-        .description = "Change syntax highlighting language",
-        .usage = "<cpp|text>",
-        .handler = [this](const std::vector<std::string> &args)
-        {
-            if (args.empty())
-                return CommandResult{false, "Usage: cl <cpp|text>"};
-            if (args[0] == "cpp")
-            {
-                mEditor.setLanguage(Language::Cpp);
-                mEditor.updateTokens();
-                return CommandResult{true, "Language set to C++"};
-            }
-            if (args[0] == "text")
-            {
-                mEditor.setLanguage(Language::PlainText);
-                mEditor.updateTokens();
-                return CommandResult{true, "Language set to Plain Text"};
-            }
-            return CommandResult{false, "Unknown language '" + args[0] + "' (use: cpp, text)"};
-        }
-    });
+    mEditor.registerCommand({.name = "save",
+                             .description = "Save the current file (prompts for name if unsaved)",
+                             .usage = "",
+                             .handler = [this](const std::vector<std::string> &)
+                             {
+                                 mEditor.saveFile();
+                                 return CommandResult{true, ""};
+                             }});
 
-    mEditor.registerCommand({
-        .name = "build",
-        .description = "Build the project",
-        .usage = "",
-        .shellScript = "./run.sh -r"
-    });
+    mEditor.registerCommand({.name = "cl",
+                             .description = "Change syntax highlighting language",
+                             .usage = "<cpp|text>",
+                             .handler = [this](const std::vector<std::string> &args)
+                             {
+                                 if (args.empty())
+                                     return CommandResult{false, "Usage: cl <cpp|text>"};
+                                 if (args[0] == "cpp")
+                                 {
+                                     mEditor.setLanguage(Language::Cpp);
+                                     mEditor.updateTokens();
+                                     return CommandResult{true, "Language set to C++"};
+                                 }
+                                 if (args[0] == "text")
+                                 {
+                                     mEditor.setLanguage(Language::PlainText);
+                                     mEditor.updateTokens();
+                                     return CommandResult{true, "Language set to Plain Text"};
+                                 }
+                                 return CommandResult{false, "Unknown language '" + args[0] + "' (use: cpp, text)"};
+                             }});
 
-    mEditor.registerCommand({
-        .name = "flex",
-        .description = "Show line counts for all source files",
-        .usage = "",
-        .shellScript = "find src -type f -name '*.cpp' -print0 | xargs -0 wc -l"
-    });
+    mEditor.registerCommand({.name = "build",
+                             .description = "Build the project",
+                             .usage = "",
+                             .shellScript = "./run.sh -r"});
+
+    mEditor.registerCommand({.name = "flex",
+                             .description = "Show line counts for all source files",
+                             .usage = "",
+                             .shellScript = "find src -type f -name '*.cpp' -print0 | xargs -0 wc -l"});
 }
 
 void Application::processTerminalInputResponses()
@@ -291,6 +370,14 @@ void Application::updateFileBrowserScreen()
     }
 }
 
+void Application::updateScreenSaverScreen()
+{
+    mScreensaver.runScreensaver(mRenderer->getWindowProperties());
+    mRenderer->clear();
+    mScreensaverView.render(*mRenderer, mScreensaver);
+    mRenderer->present();
+}
+
 void Application::updateWindowTitle(const std::string &title)
 {
     CSF(SDL_SetWindowTitle(mWindow, title.c_str()));
@@ -309,7 +396,8 @@ void Application::handleHash(SDL_Keymod mod)
 
 void Application::increaseFontSize()
 {
-    if(mFontSize > 150){
+    if (mFontSize > 150)
+    {
         return;
     }
     ++mFontSize;

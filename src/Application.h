@@ -17,6 +17,8 @@
 #include "SearchView.h"
 #include "TerminalView.h"
 #include "StartupOptions.h"
+#include "Screensaver.h"
+#include "ScreensaverView.h"
 
 class Application
 {
@@ -31,6 +33,7 @@ private:
     void update();
     void printUsage() const;
     void initializeWindowAndRendering();
+    void preloadStaticTextures();
     void openInitialFileIfProvided(const std::string &filename);
     void processEvents();
     void handleEvent(const SDL_Event &event);
@@ -41,6 +44,7 @@ private:
     void syncWindowTitleWithEditorFile();
     void updateEditorScreen();
     void updateFileBrowserScreen();
+    void updateScreenSaverScreen();
     void updateWindowTitle(const std::string &title);
     void increaseFontSize();
     void decreaseFontSize();
@@ -59,14 +63,17 @@ private:
 
     Editor mEditor;
     FileBrowser mFileBrowser;
+    Screensaver mScreensaver;
 
     EditorView mEditorView;
     FileBrowserView mFileBrowserView;
+    ScreensaverView mScreensaverView;
     SearchView mSearchView;
     TerminalView mTerminalView;
 
     CursorBlinker mCursorBlinker;
     Screen mCurrentScreen = Screen::Editor;
+    Screen mPreviousScreen;
     bool mRunning = true;
     int mExitCode = 0;
     std::filesystem::path mDisplayedEditorFilePath;

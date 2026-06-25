@@ -8,6 +8,7 @@
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_keycode.h>
 
+#include "AnimationPlaybackMode.h"
 #include "ITextMeasurer.h"
 #include "RenderContext.h"
 
@@ -47,10 +48,22 @@ struct FakeRenderContext : public RenderContext
         RenderColor color{};
     };
 
+    struct AnimationCall
+    {
+        float x = 0;
+        float y = 0;
+        float w = 0;
+        float h = 0;
+        std::string assetName;
+        uint32_t elapsedMs = 0;
+        AnimationPlaybackMode playbackMode = AnimationPlaybackMode::Loop;
+    };
+
     Window_Properties windowProperties{20, 1280, 720};
     Theme theme{};
     std::vector<TextCall> textCalls;
     std::vector<RectCall> rectCalls;
+    std::vector<AnimationCall> animationCalls;
     std::vector<Rect> clipRects;
     uint32_t clearClipCount = 0;
 
@@ -62,6 +75,11 @@ struct FakeRenderContext : public RenderContext
     const Theme &getTheme() const override
     {
         return theme;
+    }
+
+    void clear(RenderColor color) override
+    {
+        (void)color;
     }
 
     void drawText(const std::string &text, int x, int y) override
@@ -82,6 +100,44 @@ struct FakeRenderContext : public RenderContext
     void drawRect(Rect rect, RenderColor color) override
     {
         drawRect(static_cast<int>(rect.x), static_cast<int>(rect.y), static_cast<int>(rect.w), static_cast<int>(rect.h), color);
+    }
+
+    void loadTexture(float x, float y, float w, float h, const std::filesystem::path &file) override
+    {
+        (void)file;
+        (void)x;
+        (void)y;
+        (void)w;
+        (void)h;
+    }
+
+    void loadTextureByName(float x, float y, float w, float h, std::string_view assetName, float rotation = 0.0f) override
+    {
+        (void)assetName;
+        (void)x;
+        (void)y;
+        (void)w;
+        (void)h;
+        (void)rotation;
+    }
+
+    void loadAnimationByName(float x, float y, float w, float h,
+                             std::string_view assetName,
+                             uint32_t elapsedMs,
+                             AnimationPlaybackMode playbackMode,
+                             float rotation = 0.0f) override
+    {
+        (void)rotation;
+        animationCalls.push_back(AnimationCall{x, y, w, h, std::string(assetName), elapsedMs, playbackMode});
+    }
+    uint32_t getAnimationDurationByName(std::string_view assetName) const override
+    {
+        (void) assetName;
+        return 0;
+    }
+    std::pair<uint32_t, uint32_t> getAnimationDimensionsByName(std::string_view assetName) const override{
+        (void) assetName;
+        return {0,0};
     }
 
     void pushClipRect(const Rect &rect) override

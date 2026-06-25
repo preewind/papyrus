@@ -1,0 +1,14 @@
+#pragma once
+
+#include "Screensaver.h"
+#include "RenderContext.h"
+
+class ScreensaverView
+{
+public:
+    void render(RenderContext &renderContext, const Screensaver &screensaver);
+
+private:
+    void renderLogo(RenderContext &renderContext, const Screensaver &screensaver);
+    void renderSuccess(RenderContext &renderContext, const Screensaver &screensaver);
+};

@@ -13,6 +13,7 @@ function(add_simple_test testName src)
         ${CMAKE_SOURCE_DIR}/src/Editor
         ${CMAKE_SOURCE_DIR}/src/FileBrowser
         ${CMAKE_SOURCE_DIR}/src/Rendering
+        ${CMAKE_SOURCE_DIR}/src/Screensaver
         ${CMAKE_SOURCE_DIR}/src/Search
         ${CMAKE_SOURCE_DIR}/src/Syntax
         ${CMAKE_SOURCE_DIR}/src/Terminal
@@ -86,4 +87,9 @@ add_simple_test(FileBrowserViewTests
     ../src/Views/FileBrowserView.cpp
     ../src/Views/TextLayout.cpp
     ../src/FileBrowser/FileBrowser.cpp
+)
+
+add_simple_test(ScreensaverTests
+    ScreensaverTests.cpp
+    ../src/Screensaver/Screensaver.cpp
 )

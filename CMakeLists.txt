@@ -11,6 +11,7 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build libraries as static by default" FORC
 
 add_subdirectory(third_party/SDL)
 add_subdirectory(third_party/SDL_ttf)
+add_subdirectory(third_party/SDL_image)
 add_subdirectory(third_party/googletest)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -33,11 +34,13 @@ add_subdirectory(src/Search)
 add_subdirectory(src/Syntax)
 add_subdirectory(src/Terminal)
 add_subdirectory(src/Core)
+add_subdirectory(src/Screensaver)
 
 target_link_libraries(papyrus
     PRIVATE
     SDL3::SDL3
     SDL3_ttf::SDL3_ttf
+    SDL3_image::SDL3_image
 )
 
 add_subdirectory(tests)

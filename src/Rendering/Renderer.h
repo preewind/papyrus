@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <unordered_map>
 
 #include "IRenderBackend.h"
 #include "RenderContext.h"
@@ -17,6 +18,7 @@ public:
     Renderer &operator=(const Renderer &) = delete;
 
     void clear();
+    void clear(RenderColor color) override;
     int getLineHeight() const;
     const Window_Properties &getWindowProperties() const override;
     const Theme &getTheme() const override;
@@ -25,6 +27,21 @@ public:
     void drawText(const std::string &text, int x, int y, RenderColor color) override;
     void drawRect(int x, int y, int w, int h, RenderColor color) override;
     void drawRect(Rect rect, RenderColor color) override;
+    void loadTexture(float x, float y, float w, float h, const std::filesystem::path &file) override;
+    void loadTextureByName(float x, float y, float w, float h, std::string_view assetName, float rotation = 0.0f) override;
+    void loadAnimationByName(float x, float y, float w, float h, std::string_view assetName, uint32_t elapsedMs, AnimationPlaybackMode playbackMode, float rotation = 0.0f) override;
+    uint32_t getAnimationDurationByName(std::string_view assetName) const override;
+    std::pair<uint32_t, uint32_t> getAnimationDimensionsByName(std::string_view assetName) const override;
+    void registerTextureAsset(const std::string &assetName, const std::filesystem::path &file);
+    void registerAnimationAsset(const std::string &assetName, const std::filesystem::path &file);
+    bool preloadTextureByName(std::string_view assetName);
+    bool preloadAnimationByName(std::string_view assetName);
+    bool preloadTexture(const std::filesystem::path &file);
+    bool preloadAnimation(const std::filesystem::path &file);
+    void evictTexture(const std::filesystem::path &file);
+    void evictAnimation(const std::filesystem::path &file);
+    void clearTextureCache();
+    void clearAnimationCache();
     void pushClipRect(const Rect &rect) override;
     void clearClipRect() override;
     void present();
@@ -34,7 +51,12 @@ public:
     void setFontSize(uint8_t fontSize);
 
 private:
+    const std::filesystem::path *findTextureAsset(std::string_view assetName) const;
+    const std::filesystem::path *findAnimationAsset(std::string_view assetName) const;
+
     IRenderBackend *mBackend = nullptr;
     const Theme *mTheme = nullptr;
     Window_Properties mLayout;
+    std::unordered_map<std::string, std::filesystem::path> mTextureAssets;
+    std::unordered_map<std::string, std::filesystem::path> mAnimationAssets;
 };
