@@ -8,6 +8,7 @@
 #include "Core/types.h"
 #include "random.h"
 #include "ScreensaverAssets.h"
+#include "Rendering/RenderContext.h"
 #include "DvdScreensaver.h"
 
 namespace
@@ -179,7 +180,7 @@ DvdScreensaver::DvdScreensaver()
     };
 }
 
-void DvdScreensaver::runScreensaver(const Window_Properties &windowProps, uint32_t currTime, float deltaSeconds)
+void DvdScreensaver::update(const Window_Properties &windowProps, uint32_t currTime, float deltaSeconds)
 {
 
     if (mSuccess)
@@ -461,4 +462,53 @@ Vec2 DvdScreensaver::getRandomGridPos(uint32_t cellX, uint32_t cellY, uint32_t c
     const float maxY = std::max(0.0f, static_cast<float>(screenHeight) - spriteHeight);
 
     return {std::clamp(rawX, 0.0f, maxX), std::clamp(rawY, 0.0f, maxY)};
+}
+
+void DvdScreensaver::reset()
+{
+    mInitialized = false;
+    mSuccess = false;
+    mSuccessAnimation = SuccessAnimation{};
+    mLogo = Logo{};
+    for (auto &group : mEffects)
+    {
+        group.instances.clear();
+    }
+}
+
+void DvdScreensaver::render(RenderContext &renderContext, uint32_t frameTime) const
+{
+    renderContext.clear({22, 22, 22, 255});
+
+    const Logo &logo = getLogo();
+    renderContext.loadTextureByName(logo.x, logo.y, logo.w, logo.h, ScreensaverAssets::Logo);
+
+    if (isSuccess())
+    {
+        const SuccessAnimation &success = getSuccessAnimation();
+        renderContext.loadTextureByName(success.currentX, success.currentY, success.w, success.h, ScreensaverAssets::Success);
+
+        if (!success.active)
+        {
+            for (const auto &group : getEffects())
+            {
+                for (const auto &e : group.instances)
+                {
+                    if (frameTime < e.startTime || frameTime >= e.startTime + e.duration)
+                        continue;
+
+                    const uint32_t elapsed = frameTime - e.startTime;
+                    const std::string_view assetName = e.instanceAssetName.empty() ? group.def.assetName : e.instanceAssetName;
+                    const float jitter = group.def.jitterAmplitude;
+                    const float renderX = jitter > 0.0f ? e.x + Random::get_float(-jitter, jitter) : e.x;
+                    const float renderY = jitter > 0.0f ? e.y + Random::get_float(-jitter, jitter) : e.y;
+
+                    if (group.def.isAnimation)
+                        renderContext.loadAnimationByName(renderX, renderY, e.w, e.h, assetName, elapsed, AnimationPlaybackMode::HideAfterEnd, e.rotation);
+                    else
+                        renderContext.loadTextureByName(renderX, renderY, e.w, e.h, assetName, e.rotation);
+                }
+            }
+        }
+    }
 }

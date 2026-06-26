@@ -1,6 +1,7 @@
 #include "Application.h"
 #include "SDLRenderBackend.h"
 #include "ScreensaverAssets.h"
+#include "Screensaver/DvdScreensaver.h"
 #include "StartupParser.h"
 #include "logger.h"
 #include "util.h"
@@ -58,59 +59,63 @@ void Application::preloadStaticTextures()
     mRenderer->preloadTextureByName(ScreensaverAssets::Logo);
     mRenderer->preloadTextureByName(ScreensaverAssets::Success);
 
-    for (const auto &group : mScreensaver.getDvdScreensaver().getEffects())
+    auto dvdScreensaver = mScreensaver.getDvdScreensaver();
+    if (dvdScreensaver != nullptr)
     {
-        const auto &def = group.def;
-        if (def.isAnimation)
+        for (const auto &group : dvdScreensaver->getEffects())
         {
-            mRenderer->registerAnimationAsset(std::string(def.assetName), def.assetPath);
-            mRenderer->preloadAnimationByName(def.assetName);
-        }
-        else
-        {
-            mRenderer->registerTextureAsset(std::string(def.assetName), def.assetPath);
-            mRenderer->preloadTextureByName(def.assetName);
-        }
-
-        // Register and preload each asset variant (used for grouped multi-asset effects)
-        for (size_t i = 0; i < def.assetVariants.size(); ++i)
-        {
-            const std::string variantName(def.assetVariants[i]);
-            const std::string variantPath(def.assetVariantPaths[i]);
+            const auto &def = group.def;
             if (def.isAnimation)
             {
-                mRenderer->registerAnimationAsset(variantName, variantPath);
-                mRenderer->preloadAnimationByName(variantName);
+                mRenderer->registerAnimationAsset(std::string(def.assetName), def.assetPath);
+                mRenderer->preloadAnimationByName(def.assetName);
             }
             else
             {
-                mRenderer->registerTextureAsset(variantName, variantPath);
-                mRenderer->preloadTextureByName(variantName);
+                mRenderer->registerTextureAsset(std::string(def.assetName), def.assetPath);
+                mRenderer->preloadTextureByName(def.assetName);
+            }
+
+            // Register and preload each asset variant (used for grouped multi-asset effects)
+            for (size_t i = 0; i < def.assetVariants.size(); ++i)
+            {
+                const std::string variantName(def.assetVariants[i]);
+                const std::string variantPath(def.assetVariantPaths[i]);
+                if (def.isAnimation)
+                {
+                    mRenderer->registerAnimationAsset(variantName, variantPath);
+                    mRenderer->preloadAnimationByName(variantName);
+                }
+                else
+                {
+                    mRenderer->registerTextureAsset(variantName, variantPath);
+                    mRenderer->preloadTextureByName(variantName);
+                }
             }
         }
-    }
 
-    for (const auto &group : mScreensaver.getDvdScreensaver().getEffects())
-    {
-        const auto &def = group.def;
-        if (def.isAnimation && (def.duration == 0 || def.w == 0.0f || def.h == 0.0f))
+        for (const auto &group : dvdScreensaver->getEffects())
         {
-            const uint32_t dur = mRenderer->getAnimationDurationByName(def.assetName);
-            const auto [w, h] = mRenderer->getAnimationDimensionsByName(def.assetName);
-            mScreensaver.getDvdScreensaver().resolveEffectDef(def.assetName, dur, static_cast<float>(w), static_cast<float>(h));
-        }
-
-        if (def.isAnimation)
-        {
-            for (const auto &variantName : def.assetVariants)
+            const auto &def = group.def;
+            if (def.isAnimation && (def.duration == 0 || def.w == 0.0f || def.h == 0.0f))
             {
-                const uint32_t variantDur = mRenderer->getAnimationDurationByName(variantName);
-                const auto [variantW, variantH] = mRenderer->getAnimationDimensionsByName(variantName);
-                mScreensaver.getDvdScreensaver().resolveEffectVariantDef(variantName,
-                                                     variantDur,
-                                                     static_cast<float>(variantW),
-                                                     static_cast<float>(variantH),
-                                                     def.dimensionScale);
+                const uint32_t dur = mRenderer->getAnimationDurationByName(def.assetName);
+                const auto [w, h] = mRenderer->getAnimationDimensionsByName(def.assetName);
+                dvdScreensaver->resolveEffectDef(def.assetName, dur, static_cast<float>(w), static_cast<float>(h));
+            }
+
+            if (def.isAnimation)
+            {
+                for (const auto &variantName : def.assetVariants)
+                {
+                    const uint32_t variantDur = mRenderer->getAnimationDurationByName(variantName);
+                    const auto [variantW, variantH] = mRenderer->getAnimationDimensionsByName(variantName);
+                    dvdScreensaver->resolveEffectVariantDef(variantName,
+                                                         variantDur,
+                                                         static_cast<float>(variantW),
+                                                         static_cast<float>(variantH),
+                                                         def.dimensionScale);
+                }
             }
         }
     }
@@ -201,9 +206,13 @@ void Application::handleEvent(const SDL_Event &event)
 
 void Application::handleGlobalKeyDown(const SDL_KeyboardEvent &keyEvent)
 {
-    mScreensaver.resetTimer();
     const SDL_Keycode key = keyEvent.key;
     const SDL_Keymod mod = keyEvent.mod;
+
+    if (key != SDLK_F5)
+    {
+        mScreensaver.resetTimer();
+    }
 
     switch (key)
     {

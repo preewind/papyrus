@@ -7,9 +7,4 @@ class ScreensaverView
 {
 public:
     void render(RenderContext &renderContext, const Screensaver &screensaver);
-    void renderDvdScreensaver(RenderContext &renderContext, const DvdScreensaver &dvdScreensaver, uint32_t frameTime);
-
-private:
-    void renderLogo(RenderContext &renderContext, const DvdScreensaver &dvdScreensaver);
-    void renderSuccess(RenderContext &renderContext, const DvdScreensaver &dvdScreensaver, uint32_t frameTime);
 };

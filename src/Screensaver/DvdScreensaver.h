@@ -8,7 +8,10 @@
 #include <SDL3/SDL_events.h>
 #include <optional>
 
+#include "IScreensaverLogic.h"
+
 struct Window_Properties;
+class RenderContext;
 
 struct Vec2
 {
@@ -72,11 +75,13 @@ struct EffectGroup
     std::vector<SuccessEffect> instances;
 };
 
-class DvdScreensaver
+class DvdScreensaver : public IScreensaverLogic
 {
 public:
     DvdScreensaver();
-    void runScreensaver(const Window_Properties &windowProps, uint32_t currTime, float deltaSeconds);
+    void update(const Window_Properties &windowProps, uint32_t currTime, float deltaSeconds) override;
+    void reset() override;
+    void render(RenderContext &renderContext, uint32_t frameTime) const override;
     void resolveEffectDef(std::string_view assetName, uint32_t duration, float w, float h);
     void resolveEffectVariantDef(std::string_view assetName, uint32_t duration, float w, float h, float dimensionScale = 1.0f);
     bool isSuccess() const;
