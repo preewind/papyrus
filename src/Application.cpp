@@ -58,7 +58,7 @@ void Application::preloadStaticTextures()
     mRenderer->preloadTextureByName(ScreensaverAssets::Logo);
     mRenderer->preloadTextureByName(ScreensaverAssets::Success);
 
-    for (const auto &group : mScreensaver.getEffects())
+    for (const auto &group : mScreensaver.getDvdScreensaver().getEffects())
     {
         const auto &def = group.def;
         if (def.isAnimation)
@@ -90,14 +90,14 @@ void Application::preloadStaticTextures()
         }
     }
 
-    for (const auto &group : mScreensaver.getEffects())
+    for (const auto &group : mScreensaver.getDvdScreensaver().getEffects())
     {
         const auto &def = group.def;
         if (def.isAnimation && (def.duration == 0 || def.w == 0.0f || def.h == 0.0f))
         {
             const uint32_t dur = mRenderer->getAnimationDurationByName(def.assetName);
             const auto [w, h] = mRenderer->getAnimationDimensionsByName(def.assetName);
-            mScreensaver.resolveEffectDef(def.assetName, dur, static_cast<float>(w), static_cast<float>(h));
+            mScreensaver.getDvdScreensaver().resolveEffectDef(def.assetName, dur, static_cast<float>(w), static_cast<float>(h));
         }
 
         if (def.isAnimation)
@@ -106,7 +106,7 @@ void Application::preloadStaticTextures()
             {
                 const uint32_t variantDur = mRenderer->getAnimationDurationByName(variantName);
                 const auto [variantW, variantH] = mRenderer->getAnimationDimensionsByName(variantName);
-                mScreensaver.resolveEffectVariantDef(variantName,
+                mScreensaver.getDvdScreensaver().resolveEffectVariantDef(variantName,
                                                      variantDur,
                                                      static_cast<float>(variantW),
                                                      static_cast<float>(variantH),

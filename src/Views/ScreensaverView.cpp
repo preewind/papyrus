@@ -6,30 +6,35 @@ void ScreensaverView::render(RenderContext &renderContext, const Screensaver &sc
 {
     if (screensaver.isInactive())
     {
-        renderContext.clear({22, 22, 22, 255});
-        renderLogo(renderContext, screensaver);
-        if (screensaver.isSuccess())
-        {
-            renderSuccess(renderContext, screensaver);
-        }
+        renderDvdScreensaver(renderContext, screensaver.getDvdScreensaverConst(), screensaver.getFrameTimeMs());
     }
 }
 
-void ScreensaverView::renderLogo(RenderContext &renderContext, const Screensaver &screensaver)
+void ScreensaverView::renderDvdScreensaver(RenderContext &renderContext, const DvdScreensaver &dvdScreensaver, uint32_t frameTime)
 {
-    const Logo &logo = screensaver.getLogo();
+
+    renderContext.clear({22, 22, 22, 255});
+    renderLogo(renderContext, dvdScreensaver);
+    if (dvdScreensaver.isSuccess())
+    {
+        renderSuccess(renderContext, dvdScreensaver, frameTime);
+    }
+}
+
+void ScreensaverView::renderLogo(RenderContext &renderContext, const DvdScreensaver &dvdScreensaver)
+{
+    const Logo &logo = dvdScreensaver.getLogo();
     renderContext.loadTextureByName(logo.x, logo.y, logo.w, logo.h, ScreensaverAssets::Logo);
 }
 
-void ScreensaverView::renderSuccess(RenderContext &renderContext, const Screensaver &screensaver)
+void ScreensaverView::renderSuccess(RenderContext &renderContext, const DvdScreensaver &dvdScreensaver, uint32_t frameTime)
 {
-    const SuccessAnimation &success = screensaver.getSuccessAnimation();
+    const SuccessAnimation &success = dvdScreensaver.getSuccessAnimation();
     renderContext.loadTextureByName(success.currentX, success.currentY, success.w, success.h, ScreensaverAssets::Success);
 
     if (!success.active)
     {
-        const uint32_t frameTime = screensaver.getFrameTimeMs();
-        for (const auto &group : screensaver.getEffects())
+        for (const auto &group : dvdScreensaver.getEffects())
         {
             for (const auto &e : group.instances)
             {
