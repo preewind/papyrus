@@ -36,11 +36,14 @@ public:
     void reset() override;
     void render(RenderContext &renderContext, uint32_t frameTime) const override;
     void renderWin(RenderContext &renderContext) const;
-    void handleKey(const SDL_Keycode &key);
+    void handleKey(const SDL_Event &event);
     bool isPlaying() const override;
 
 private:
     void initializePlayers(const Window_Properties &windowProps);
+    void updatePlayerMovement(const Window_Properties &windowProps);
+    void handlePaddleCollision(const Paddle &paddle, bool isPlayer1);
+    
     Paddle mPlayer1;
     Paddle mPlayer2;
     Score mScoreP1;
@@ -51,4 +54,10 @@ private:
     bool mPlaying = false;
     RectF mLine;
     bool mInitialized = false;
+    
+    // Key state tracking for immediate response
+    bool mKeyW = false;
+    bool mKeyS = false;
+    bool mKeyUp = false;
+    bool mKeyDown = false;
 };

@@ -1,5 +1,6 @@
 #include "PongScreensaver.h"
 #include "Rendering/RenderContext.h"
+#include <cmath>
 
 PongScreensaver::PongScreensaver()
 {
@@ -16,6 +17,8 @@ void PongScreensaver::update(const Window_Properties &windowProps, uint32_t nowM
     }
     (void)nowMs;
     (void)deltaSeconds;
+
+    updatePlayerMovement(windowProps);
 
     if (mScoreP1.score >= 10)
     {
@@ -57,33 +60,15 @@ void PongScreensaver::update(const Window_Properties &windowProps, uint32_t nowM
         mBall.dy *= -1;
     }
 
-    // clamp paddle positions
-    if (mPlayer2.y > windowProps.totalWindowHeight - mPlayer2.height)
-    {
-        mPlayer2.y = windowProps.totalWindowHeight - mPlayer2.height;
-    }
-    else if (mPlayer2.y < 0)
-    {
-        mPlayer2.y = 0;
-    }
-    if (mPlayer1.y > windowProps.totalWindowHeight - mPlayer1.height)
-    {
-        mPlayer1.y = windowProps.totalWindowHeight - mPlayer1.height;
-    }
-    else if (mPlayer1.y < 0)
-    {
-        mPlayer1.y = 0;
-    }
-
     // paddle collisions
     if (mBall.x  >= mPlayer1.x && mBall.x <= mPlayer1.x + mPlayer1.width && mBall.y >= mPlayer1.y && mBall.y <= mPlayer1.y + mPlayer1.height)
     {
-        mBall.dx *= -1;
+        handlePaddleCollision(mPlayer1, true);
     }
 
     if (mBall.x + mBall.width >= mPlayer2.x && mBall.x + mBall.width <= mPlayer2.x + mPlayer2.width && mBall.y >= mPlayer2.y && mBall.y <= mPlayer2.y + mPlayer2.height)
     {
-        mBall.dx *= -1;
+        handlePaddleCollision(mPlayer2, false);
     }
 }
 
@@ -129,23 +114,67 @@ void PongScreensaver::renderWin(RenderContext &renderContext) const
     }
 }
 
-void PongScreensaver::handleKey(const SDL_Keycode &key)
+void PongScreensaver::handleKey(const SDL_Event &event)
 {
-    switch (key)
+    bool isKeyDown = (event.type == SDL_EVENT_KEY_DOWN);
+    
+    switch (event.key.key)
     {
     case SDLK_UP:
-        mPlayer2.y -= mPlayer2.velocity;
+        mKeyUp = isKeyDown;
         break;
     case SDLK_DOWN:
-        mPlayer2.y += mPlayer2.velocity;
+        mKeyDown = isKeyDown;
         break;
     case SDLK_W:
-        mPlayer1.y -= mPlayer1.velocity;
+        mKeyW = isKeyDown;
         break;
     case SDLK_S:
-        mPlayer1.y += mPlayer1.velocity;
+        mKeyS = isKeyDown;
+        break;
     default:
         break;
+    }
+}
+
+void PongScreensaver::updatePlayerMovement(const Window_Properties &windowProps)
+{
+    // Player 1 (W/S keys)
+    if (mKeyW)
+    {
+        mPlayer1.y -= mPlayer1.velocity;
+    }
+    if (mKeyS)
+    {
+        mPlayer1.y += mPlayer1.velocity;
+    }
+
+    // Player 2 (Up/Down keys)
+    if (mKeyUp)
+    {
+        mPlayer2.y -= mPlayer2.velocity;
+    }
+    if (mKeyDown)
+    {
+        mPlayer2.y += mPlayer2.velocity;
+    }
+
+    // Clamp paddle positions
+    if (mPlayer2.y > windowProps.totalWindowHeight - mPlayer2.height)
+    {
+        mPlayer2.y = windowProps.totalWindowHeight - mPlayer2.height;
+    }
+    else if (mPlayer2.y < 0)
+    {
+        mPlayer2.y = 0;
+    }
+    if (mPlayer1.y > windowProps.totalWindowHeight - mPlayer1.height)
+    {
+        mPlayer1.y = windowProps.totalWindowHeight - mPlayer1.height;
+    }
+    else if (mPlayer1.y < 0)
+    {
+        mPlayer1.y = 0;
     }
 }
 
@@ -191,4 +220,31 @@ void PongScreensaver::initializePlayers(const Window_Properties &windowProps)
 
     mScoreP2.x = windowProps.totalWindowWidth - windowProps.totalWindowWidth / 4;
     mScoreP2.y = 50;
+}
+
+void PongScreensaver::handlePaddleCollision(const Paddle &paddle, bool isPlayer1)
+{
+    float ballCenterY = mBall.y + mBall.height / 2.0f;
+    float paddleCenterY = paddle.y + paddle.height / 2.0f;
+    float relativeIntersectY = (paddleCenterY - ballCenterY) / (paddle.height / 2.0f);
+    
+    // Clamp to -1 to 1 range to avoid extreme angles
+    if (relativeIntersectY > 1.0f) relativeIntersectY = 1.0f;
+    if (relativeIntersectY < -1.0f) relativeIntersectY = -1.0f;
+    
+    float maxAngleRadians = 75.0f * 3.14159265f / 180.0f;
+    float exitAngle = -relativeIntersectY * maxAngleRadians;
+    float ballSpeed = std::sqrt(mBall.dx * mBall.dx + mBall.dy * mBall.dy);
+    ballSpeed *= 1.1;
+    
+    if (isPlayer1)
+    {
+        mBall.dx = ballSpeed * std::cos(exitAngle);
+    }
+    else
+    {
+        mBall.dx = -ballSpeed * std::cos(exitAngle);
+    }
+    
+    mBall.dy = ballSpeed * std::sin(exitAngle);
 }

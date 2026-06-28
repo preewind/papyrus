@@ -122,12 +122,18 @@ void Screensaver::handleKey(const SDL_Event &event)
         }
         else if(mActiveSceneIndex == 1){
             auto *pong = dynamic_cast<PongScreensaver *>(mScenes[mActiveSceneIndex].get());
-            pong->handleKey(event.key.key);
+            pong->handleKey(event);
         }
         else
         {
             resetTimer();
         }
+    }
+    else if (event.type == SDL_EVENT_KEY_UP && mActiveSceneIndex == 1)
+    {
+        // Handle key release for Pong game (for responsive controls)
+        auto *pong = dynamic_cast<PongScreensaver *>(mScenes[mActiveSceneIndex].get());
+        pong->handleKey(event);
     }
 }
 
