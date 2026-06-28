@@ -54,14 +54,29 @@ void Renderer::drawRainbowText(const std::string &text, int x, int y)
     mBackend->drawRainbowText(text, x, y);
 }
 
-void Renderer::drawRect(int x, int y, int w, int h, RenderColor color)
+void Renderer::drawRect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, RenderColor color)
 {
-    mBackend->fillRect(RenderRect{x, y, w, h}, color);
+    mBackend->fillRect(Rect{x, y, w, h}, color);
 }
 
 void Renderer::drawRect(Rect rect, RenderColor color)
 {
     drawRect(rect.x, rect.y, rect.w, rect.h, color);
+}
+
+void Renderer::drawRect(float x, float y, float w, float h, RenderColor color)
+{
+    mBackend->fillRect(RectF{x, y, w, h}, color);
+}
+
+void Renderer::drawRect(RectF rect, RenderColor color)
+{
+    drawRect(rect.x, rect.y, rect.w, rect.h, color);
+}
+
+void Renderer::drawDottedLine(float x, float y, float length, float lineWidth, float spacing, float rectSize, const RenderColor &color)
+{
+    mBackend->drawDottedLine(x, y, length, lineWidth, spacing, rectSize, color);
 }
 
 void Renderer::loadTexture(float x, float y, float w, float h, const std::filesystem::path &file)
@@ -181,7 +196,7 @@ std::pair<uint32_t, uint32_t> Renderer::getAnimationDimensionsByName(std::string
 
 void Renderer::pushClipRect(const Rect &rect)
 {
-    mBackend->setClipRect(RenderRect{static_cast<int>(rect.x), static_cast<int>(rect.y), static_cast<int>(rect.w), static_cast<int>(rect.h)});
+    mBackend->setClipRect(rect);
 }
 
 void Renderer::clearClipRect()

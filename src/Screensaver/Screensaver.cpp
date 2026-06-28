@@ -67,6 +67,11 @@ const IScreensaverLogic *Screensaver::getActiveScene() const
     return mScenes[mActiveSceneIndex].get();
 }
 
+bool Screensaver::isPlaying() const
+{
+    return mScenes[mActiveSceneIndex]->isPlaying();
+}
+
 void Screensaver::runScreensaver(const Window_Properties &windowProps)
 {
     if (mScenes.empty())
@@ -114,6 +119,10 @@ void Screensaver::handleKey(const SDL_Event &event)
         if (event.key.key == SDLK_F5)
         {
             cycleScene();
+        }
+        else if(mActiveSceneIndex == 1){
+            auto *pong = dynamic_cast<PongScreensaver *>(mScenes[mActiveSceneIndex].get());
+            pong->handleKey(event.key.key);
         }
         else
         {

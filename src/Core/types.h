@@ -205,6 +205,14 @@ struct Rect
     Rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h) : x(x), y(y), w(w), h(h) {}
 };
 
+struct RectF
+{
+    float x = 0;
+    float y = 0;
+    float w = 0;
+    float h = 0;
+};
+
 struct Window_Properties
 {
     uint32_t lineHeight = 0;

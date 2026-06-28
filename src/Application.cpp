@@ -209,7 +209,7 @@ void Application::handleGlobalKeyDown(const SDL_KeyboardEvent &keyEvent)
     const SDL_Keycode key = keyEvent.key;
     const SDL_Keymod mod = keyEvent.mod;
 
-    if (key != SDLK_F5)
+    if (key != SDLK_F5 && !mScreensaver.isPlaying())
     {
         mScreensaver.resetTimer();
     }

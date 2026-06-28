@@ -512,3 +512,8 @@ void DvdScreensaver::render(RenderContext &renderContext, uint32_t frameTime) co
         }
     }
 }
+
+bool DvdScreensaver::isPlaying() const
+{
+    return false;
+}

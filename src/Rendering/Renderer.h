@@ -26,8 +26,11 @@ public:
     void drawText(const std::string &text, int x, int y) override;
     void drawText(const std::string &text, int x, int y, RenderColor color) override;
     void drawRainbowText(const std::string &text, int x, int y) override;
-    void drawRect(int x, int y, int w, int h, RenderColor color) override;
+    void drawRect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, RenderColor color) override;
     void drawRect(Rect rect, RenderColor color) override;
+    void drawRect(float x, float y, float w, float h, RenderColor color) override;
+    void drawRect(RectF rect, RenderColor color) override;
+    void drawDottedLine(float x, float y, float length, float lineWidth, float spacing, float rectSize, const RenderColor &color);
     void loadTexture(float x, float y, float w, float h, const std::filesystem::path &file) override;
     void loadTextureByName(float x, float y, float w, float h, std::string_view assetName, float rotation = 0.0f) override;
     void loadAnimationByName(float x, float y, float w, float h, std::string_view assetName, uint32_t elapsedMs, AnimationPlaybackMode playbackMode, float rotation = 0.0f) override;

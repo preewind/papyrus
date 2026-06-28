@@ -18,6 +18,7 @@ public:
     DvdScreensaver *getDvdScreensaver();
     const DvdScreensaver *getDvdScreensaverConst() const;
     const IScreensaverLogic *getActiveScene() const;
+    bool isPlaying() const;
     void runScreensaver(const Window_Properties &windowProps);
     uint32_t getFrameTimeMs() const;
     bool isInactive() const;
@@ -29,7 +30,7 @@ private:
     void cycleScene();
 
     uint64_t mInactivityTimer = 0;
-    uint64_t mInactivityInterval = 60;
+    uint64_t mInactivityInterval = 3;
     bool mInactive = false;
     uint32_t mLastFrameTimeMs = 0;
     uint32_t mFrameTimeMs = 0;

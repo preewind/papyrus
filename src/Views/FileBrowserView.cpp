@@ -59,10 +59,10 @@ void FileBrowserView::renderFileBrowserSelection(RenderContext &renderContext, F
         return;
     }
 
-    int x = static_cast<int>(layout.listViewport.x);
-    int y = screenY(browser.getSelectedIndex(), browser.getScrollOffset(), layout.listViewport.y, layout.lineHeight);
-    int w = static_cast<int>(layout.listViewport.w);
-    int h = static_cast<int>(layout.lineHeight);
+    uint32_t x = layout.listViewport.x;
+    uint32_t y = screenY(browser.getSelectedIndex(), browser.getScrollOffset(), layout.listViewport.y, layout.lineHeight);
+    uint32_t w = layout.listViewport.w;
+    uint32_t h = layout.lineHeight;
     renderContext.drawRect(x, y, w, h, theme.selection);
 }
 
@@ -73,14 +73,14 @@ void FileBrowserView::renderFileBrowser(RenderContext &renderContext, FileBrowse
     renderContext.drawText(currentPathStr, layout.pathTextX, layout.pathTextY);
 
     const std::string legendLabel = "unsupported";
-    const int legendSpacing = 8;
-    const int markerSize = static_cast<int>(layout.legendMarkerSize);
-    const int legendWidth = markerSize + legendSpacing + textLayout.width(legendLabel);
-    int legendX = static_cast<int>(layout.legendAnchorRightX) - legendWidth;
-    legendX = std::max(static_cast<int>(layout.pathTextX), legendX);
-    const int legendY = static_cast<int>(layout.legendY);
+    const uint32_t legendSpacing = 8;
+    const uint32_t markerSize = layout.legendMarkerSize;
+    const uint32_t legendWidth = markerSize + legendSpacing + textLayout.width(legendLabel);
+    uint32_t legendX = layout.legendAnchorRightX - legendWidth;
+    legendX = std::max(layout.pathTextX, legendX);
+    const uint32_t legendY = layout.legendY;
 
-    renderContext.drawRect(legendX, legendY + (static_cast<int>(layout.lineHeight) - markerSize) / 2, markerSize, markerSize, theme.fileBrowserUnsupported);
+    renderContext.drawRect(legendX, legendY + (layout.lineHeight - markerSize) / 2, markerSize, markerSize, theme.fileBrowserUnsupported);
     renderContext.drawText(legendLabel, legendX + markerSize + legendSpacing, legendY, theme.text);
 
     const std::string &status = browser.getStatusMessage();

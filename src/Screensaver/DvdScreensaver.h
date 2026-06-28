@@ -82,6 +82,7 @@ public:
     void update(const Window_Properties &windowProps, uint32_t currTime, float deltaSeconds) override;
     void reset() override;
     void render(RenderContext &renderContext, uint32_t frameTime) const override;
+    bool isPlaying() const override;
     void resolveEffectDef(std::string_view assetName, uint32_t duration, float w, float h);
     void resolveEffectVariantDef(std::string_view assetName, uint32_t duration, float w, float h, float dimensionScale = 1.0f);
     bool isSuccess() const;
