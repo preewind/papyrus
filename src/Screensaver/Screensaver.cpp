@@ -102,6 +102,10 @@ void Screensaver::resetTimer()
 {
     mInactivityTimer = SDL_GetTicks();
     mInactive = false;
+    if (!mScenes.empty())
+    {
+        mScenes[mActiveSceneIndex]->setUserControlActive(false);
+    }
 }
 
 void Screensaver::setIntervalSeconds(uint64_t interval)
@@ -120,20 +124,18 @@ void Screensaver::handleKey(const SDL_Event &event)
         {
             cycleScene();
         }
-        else if(mActiveSceneIndex == 1){
-            auto *pong = dynamic_cast<PongScreensaver *>(mScenes[mActiveSceneIndex].get());
-            pong->handleKey(event);
-        }
         else
         {
-            resetTimer();
+            mScenes[mActiveSceneIndex]->handleKey(event);
+            if (!mScenes[mActiveSceneIndex]->isPlaying())
+            {
+                resetTimer();
+            }
         }
     }
-    else if (event.type == SDL_EVENT_KEY_UP && mActiveSceneIndex == 1)
+    else if (event.type == SDL_EVENT_KEY_UP)
     {
-        // Handle key release for Pong game (for responsive controls)
-        auto *pong = dynamic_cast<PongScreensaver *>(mScenes[mActiveSceneIndex].get());
-        pong->handleKey(event);
+        mScenes[mActiveSceneIndex]->handleKey(event);
     }
 }
 
@@ -145,4 +147,6 @@ void Screensaver::cycleScene()
     }
 
     mActiveSceneIndex = (mActiveSceneIndex + 1) % mScenes.size();
+    mScenes[mActiveSceneIndex]->reset();
+    mScenes[mActiveSceneIndex]->setUserControlActive(true);
 }

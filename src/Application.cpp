@@ -208,10 +208,16 @@ void Application::handleGlobalKeyDown(const SDL_KeyboardEvent &keyEvent)
 {
     const SDL_Keycode key = keyEvent.key;
     const SDL_Keymod mod = keyEvent.mod;
+    const bool interactiveScreensaver = mCurrentScreen == Screen::Screensaver && mScreensaver.isPlaying();
 
-    if (key != SDLK_F5 && !mScreensaver.isPlaying())
+    if (key != SDLK_F5 && !interactiveScreensaver)
     {
         mScreensaver.resetTimer();
+    }
+
+    if (interactiveScreensaver && key != SDLK_F5)
+    {
+        return;
     }
 
     switch (key)
@@ -396,7 +402,7 @@ void Application::updateScreenSaverScreen()
 {
     mScreensaver.runScreensaver(mRenderer->getWindowProperties());
     mRenderer->clear();
-    mScreensaverView.render(*mRenderer, mScreensaver);
+    mScreensaverView.render(*mRenderer, mTextLayout, mScreensaver);
     mRenderer->present();
 }
 

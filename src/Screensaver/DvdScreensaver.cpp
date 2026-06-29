@@ -476,8 +476,9 @@ void DvdScreensaver::reset()
     }
 }
 
-void DvdScreensaver::render(RenderContext &renderContext, uint32_t frameTime) const
+void DvdScreensaver::render(RenderContext &renderContext, const TextLayout &textLayout, uint32_t frameTime) const
 {
+    (void)textLayout;
     renderContext.clear({22, 22, 22, 255});
 
     const Logo &logo = getLogo();

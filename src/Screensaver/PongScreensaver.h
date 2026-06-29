@@ -1,6 +1,10 @@
 #pragma once
 
 #include <SDL3/SDL_events.h>
+
+#include <cstddef>
+#include <cstdint>
+#include <string>
 #include <vector>
 
 #include "IScreensaverLogic.h"
@@ -8,110 +12,181 @@
 
 struct Window_Properties;
 class RenderContext;
+class TextLayout;
 
 struct Paddle
 {
-    float x, y;
-    float width, height;
-    float velocity;
+    float x = 0.0f;
+    float y = 0.0f;
+    float width = 0.0f;
+    float height = 0.0f;
+    float velocity = 0.0f;
 };
 
 struct Ball
 {
-    float x, y;
-    float width, height;
-    float dx;
-    float dy;
+    float x = 0.0f;
+    float y = 0.0f;
+    float width = 0.0f;
+    float height = 0.0f;
+    float dx = 0.0f;
+    float dy = 0.0f;
 };
 
-struct Score{
-    float x,y;
+struct Score
+{
+    float x = 0.0f;
+    float y = 0.0f;
     uint8_t score = 0;
 };
 
-enum class PongMode{
+enum class PongMode
+{
     PVP,
     PVE,
     EVE
 };
 
-namespace PongModeUtils{
-    inline std::string toString(PongMode mode) {
-        switch (mode) {
-            case PongMode::PVP:
-                return "Player vs Player";
-            case PongMode::PVE:
-                return "Player vs CPU";
-            case PongMode::EVE:
-                return "CPU vs CPU";
-            default:
-                return "Unknown";
+namespace PongModeUtils
+{
+    inline std::string toString(PongMode mode)
+    {
+        switch (mode)
+        {
+        case PongMode::PVP:
+            return "Player vs Player";
+        case PongMode::PVE:
+            return "Player vs CPU";
+        case PongMode::EVE:
+            return "CPU vs CPU";
+        default:
+            return "Unknown";
         }
     }
 }
 
-struct Level{
-    float paddleSpeedMul;
-    float ballSpeedMul;
-    float paddleSizeMul;
+struct Level
+{
+    float paddleSpeedMul = 1.0f;
+    float ballSpeedMul = 1.0f;
+    float paddleSizeMul = 1.0f;
 };
 
-struct MenuLayout {
-    float levelTextX;
-    float levelTextY;
-    float gameModeTextX;
-    float gameModeTextY;
-
+enum class PongSceneState : uint8_t
+{
+    Demo,
+    Menu,
+    Match,
+    Pause,
+    Win
 };
 
-struct GameOverMenu {
+enum class PongMenuRow : uint8_t
+{
+    Level,
+    GameMode
+};
 
+enum class PongPauseAction : uint8_t
+{
+    Resume,
+    RestartMatch,
+    MainMenu
+};
+
+enum class PongWinAction : uint8_t
+{
+    RestartMatch,
+    NextLevel,
+    MainMenu
+};
+
+struct PongSettings
+{
+    PongMode mode = PongMode::PVP;
+    size_t levelIndex = 0;
+};
+
+struct PongMatchState
+{
+    Paddle player1;
+    Paddle player2;
+    Score scoreP1;
+    Score scoreP2;
+    Ball ball;
+    RectF centerLine;
+    bool player1Won = false;
 };
 
 class PongScreensaver : public IScreensaverLogic
 {
 public:
     PongScreensaver();
+
     void update(const Window_Properties &windowProps, uint32_t nowMs, float deltaSeconds) override;
     void reset() override;
-    void render(RenderContext &renderContext, uint32_t frameTime) const override;
-    void renderWin(RenderContext &renderContext) const;
-    void renderMenu(RenderContext &renderContext) const;
-    void handleKey(const SDL_Event &event);
+    void render(RenderContext &renderContext, const TextLayout &textLayout, uint32_t frameTime) const override;
+    void handleKey(const SDL_Event &event) override;
     bool isPlaying() const override;
-    
+    void setUserControlActive(bool active) override;
 
 private:
-    void initializePlayers(const Window_Properties &windowProps);
-    void updatePlayerMovement(const Window_Properties &windowProps);
-    void handlePaddleCollision(const Paddle &paddle, bool isPlayer1);
-    void initializeLayout(const Window_Properties &windowProps);
+    void enterDemo();
+    void enterMenu();
+    void startMatch();
+    void pauseMatch();
+    void resumeMatch();
+    void finishMatch(bool player1Won);
+    void restartMatchWithCurrentSettings();
+    void startNextLevel();
+    void returnToMenu();
+
+    void resetMatchState();
+    void clearInputState();
+    void ensureArenaInitialized(const Window_Properties &windowProps);
+    void initializeArena(const Window_Properties &windowProps);
+    void resetRound(const Window_Properties &windowProps, bool serveTowardsPlayer2);
+
+    void updateMatchControllers(const Window_Properties &windowProps);
+    void updatePaddle(Paddle &paddle, bool moveUp, bool moveDown, const Window_Properties &windowProps);
+    void updateCpuPaddle(Paddle &paddle, const Window_Properties &windowProps) const;
+    void clampPaddle(Paddle &paddle, const Window_Properties &windowProps) const;
+    void updateBall(const Window_Properties &windowProps, bool demoMode);
+    void handlePointScored(const Window_Properties &windowProps, bool player1Scored, bool demoMode);
+    void handlePaddleCollision(Paddle &paddle, bool isPlayer1);
+    bool player1UsesCpu() const;
+    bool player2UsesCpu() const;
+
+    void handleDemoInput(const SDL_Event &event);
     void handleMenuInput(const SDL_Event &event);
-    void handleGameplayInput(const SDL_Event &event);
+    void handleMatchInput(const SDL_Event &event);
+    void handlePauseInput(const SDL_Event &event);
+    void handleWinInput(const SDL_Event &event);
     void handleLeft();
     void handleRight();
     void handleUp();
     void handleDown();
-    
-    Paddle mPlayer1;
-    Paddle mPlayer2;
-    Score mScoreP1;
-    Score mScoreP2;
-    bool mPlayer1Wins = false;
-    bool mWin = false;
-    Ball mBall;
-    bool mPlaying = false;
-    RectF mLine;
-    bool mMenuInitialized = false;
-    bool mInitialized = false;
-    bool mMenuActive = true;
-    uint8_t mMenuIndex = 0;
-    
-    // levels
-    PongMode mCurrentMode = PongMode::PVP;
+    void cyclePauseSelection(int delta);
+    void cycleWinSelection(int delta);
+    void executePauseAction();
+    void executeWinAction();
+
+    void renderArena(RenderContext &renderContext) const;
+    void renderDemo(RenderContext &renderContext, const TextLayout &textLayout, uint32_t frameTime) const;
+    void renderMenu(RenderContext &renderContext, const TextLayout &textLayout) const;
+    void renderPause(RenderContext &renderContext, const TextLayout &textLayout) const;
+    void renderWin(RenderContext &renderContext, const TextLayout &textLayout) const;
+
+    PongSceneState mState = PongSceneState::Demo;
+    PongMenuRow mMenuSelection = PongMenuRow::Level;
+    PongPauseAction mPauseSelection = PongPauseAction::Resume;
+    PongWinAction mWinSelection = PongWinAction::RestartMatch;
+    PongSettings mSettings;
+    PongMatchState mMatch;
     std::vector<Level> mLevels;
-    uint8_t mCurrentLvl = 0;
-    MenuLayout mMenu;
+    bool mArenaInitialized = false;
+    bool mServeTowardsPlayer2 = true;
+    bool mInteractiveFocus = false;
 
     bool mKeyW = false;
     bool mKeyS = false;

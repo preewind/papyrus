@@ -88,3 +88,9 @@ add_simple_test(FileBrowserViewTests
     ../src/Views/TextLayout.cpp
     ../src/FileBrowser/FileBrowser.cpp
 )
+
+add_simple_test(PongScreensaverTests
+    PongScreensaverTests.cpp
+    ../src/Screensaver/PongScreensaver.cpp
+    ../src/Views/TextLayout.cpp
+)
