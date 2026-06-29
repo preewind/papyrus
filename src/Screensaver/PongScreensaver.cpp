@@ -6,10 +6,22 @@ PongScreensaver::PongScreensaver()
 {
     reset();
     mPlaying = true; // TODO: activate only when player actively wants to play and not when seeing the demo game
+
+    mLevels.push_back({1.0f, 1.0f, 1.0f});
+    mLevels.push_back({1.0f, 1.1f, 1.0f});
 }
 
 void PongScreensaver::update(const Window_Properties &windowProps, uint32_t nowMs, float deltaSeconds)
 {
+    if (!mMenuInitialized)
+    {
+        initializeLayout(windowProps);
+        mMenuInitialized = true;
+    }
+    if (mMenuActive)
+    {
+        return;
+    }
     if (!mInitialized)
     {
         initializePlayers(windowProps);
@@ -20,13 +32,15 @@ void PongScreensaver::update(const Window_Properties &windowProps, uint32_t nowM
 
     updatePlayerMovement(windowProps);
 
-    if (mScoreP1.score >= 10)
+    uint8_t scoreToWin = 3;
+
+    if (mScoreP1.score >= scoreToWin)
     {
         mPlayer1Wins = true;
         mWin = true;
         return;
     }
-    else if (mScoreP2.score >= 10)
+    else if (mScoreP2.score >= scoreToWin)
     {
         mPlayer1Wins = false;
         mWin = true;
@@ -61,7 +75,7 @@ void PongScreensaver::update(const Window_Properties &windowProps, uint32_t nowM
     }
 
     // paddle collisions
-    if (mBall.x  >= mPlayer1.x && mBall.x <= mPlayer1.x + mPlayer1.width && mBall.y >= mPlayer1.y && mBall.y <= mPlayer1.y + mPlayer1.height)
+    if (mBall.x >= mPlayer1.x && mBall.x <= mPlayer1.x + mPlayer1.width && mBall.y >= mPlayer1.y && mBall.y <= mPlayer1.y + mPlayer1.height)
     {
         handlePaddleCollision(mPlayer1, true);
     }
@@ -80,9 +94,16 @@ void PongScreensaver::reset()
 void PongScreensaver::render(RenderContext &renderContext, uint32_t frameTime) const
 {
 
+    if (mMenuActive)
+    {
+        renderMenu(renderContext);
+        return;
+    }
+
     if (mWin)
     {
         renderWin(renderContext);
+        // TODO: render like a player x won message -> next difficulty button, restart game, change mode, like  a menu screen, also add that at the beginning when changing into playable mode
         return;
     }
 
@@ -114,10 +135,56 @@ void PongScreensaver::renderWin(RenderContext &renderContext) const
     }
 }
 
+void PongScreensaver::renderMenu(RenderContext &renderContext) const
+{
+    renderContext.drawText(std::string("Level: " + std::to_string(mCurrentLvl + 1)), mMenu.levelTextX, mMenu.levelTextY);
+}
+
 void PongScreensaver::handleKey(const SDL_Event &event)
 {
+    if (mMenuActive)
+    {
+        handleMenuInput(event);
+        return;
+    }
+
+    handleGameplayInput(event);
+}
+
+void PongScreensaver::handleMenuInput(const SDL_Event &event)
+{
+    // Menu navigation should be edge-triggered: one action per press.
+    if (event.type != SDL_EVENT_KEY_DOWN)
+    {
+        return;
+    }
+    if (event.key.repeat)
+    {
+        return;
+    }
+
+    switch (event.key.key)
+    {
+    case SDLK_RIGHT:
+        handleRight();
+        break;
+    case SDLK_LEFT:
+        handleLeft();
+        break;
+    default:
+        break;
+    }
+}
+
+void PongScreensaver::handleGameplayInput(const SDL_Event &event)
+{
+    if (event.type != SDL_EVENT_KEY_DOWN && event.type != SDL_EVENT_KEY_UP)
+    {
+        return;
+    }
+
     bool isKeyDown = (event.type == SDL_EVENT_KEY_DOWN);
-    
+
     switch (event.key.key)
     {
     case SDLK_UP:
@@ -139,7 +206,6 @@ void PongScreensaver::handleKey(const SDL_Event &event)
 
 void PongScreensaver::updatePlayerMovement(const Window_Properties &windowProps)
 {
-    // Player 1 (W/S keys)
     if (mKeyW)
     {
         mPlayer1.y -= mPlayer1.velocity;
@@ -149,7 +215,6 @@ void PongScreensaver::updatePlayerMovement(const Window_Properties &windowProps)
         mPlayer1.y += mPlayer1.velocity;
     }
 
-    // Player 2 (Up/Down keys)
     if (mKeyUp)
     {
         mPlayer2.y -= mPlayer2.velocity;
@@ -185,9 +250,11 @@ bool PongScreensaver::isPlaying() const
 
 void PongScreensaver::initializePlayers(const Window_Properties &windowProps)
 {
+    const Level &lvl = mLevels[mCurrentLvl];
+
     float width = 20.0f;
-    float height = 120.0f;
-    float velocity = 10.0f;
+    float height = 120.0f * lvl.paddleSizeMul;
+    float velocity = 10.0f * lvl.paddleSpeedMul;
     float y = (windowProps.totalWindowHeight - height) / 2.0f;
     mPlayer1.x = 20.0f;
     mPlayer1.y = y;
@@ -212,8 +279,8 @@ void PongScreensaver::initializePlayers(const Window_Properties &windowProps)
     mBall.y = (windowProps.totalWindowHeight - ballWidth) / 2.0f;
     mBall.width = ballWidth;
     mBall.height = ballWidth;
-    mBall.dx = 5;
-    mBall.dy = 5;
+    mBall.dx = 5 * lvl.ballSpeedMul;
+    mBall.dy = 5 * lvl.ballSpeedMul;
 
     mScoreP1.x = windowProps.totalWindowWidth / 4;
     mScoreP1.y = 50;
@@ -227,16 +294,18 @@ void PongScreensaver::handlePaddleCollision(const Paddle &paddle, bool isPlayer1
     float ballCenterY = mBall.y + mBall.height / 2.0f;
     float paddleCenterY = paddle.y + paddle.height / 2.0f;
     float relativeIntersectY = (paddleCenterY - ballCenterY) / (paddle.height / 2.0f);
-    
+
     // Clamp to -1 to 1 range to avoid extreme angles
-    if (relativeIntersectY > 1.0f) relativeIntersectY = 1.0f;
-    if (relativeIntersectY < -1.0f) relativeIntersectY = -1.0f;
-    
+    if (relativeIntersectY > 1.0f)
+        relativeIntersectY = 1.0f;
+    if (relativeIntersectY < -1.0f)
+        relativeIntersectY = -1.0f;
+
     float maxAngleRadians = 75.0f * 3.14159265f / 180.0f;
     float exitAngle = -relativeIntersectY * maxAngleRadians;
     float ballSpeed = std::sqrt(mBall.dx * mBall.dx + mBall.dy * mBall.dy);
-    ballSpeed *= 1.1;
-    
+    ballSpeed *= 1.05;
+
     if (isPlayer1)
     {
         mBall.dx = ballSpeed * std::cos(exitAngle);
@@ -245,6 +314,28 @@ void PongScreensaver::handlePaddleCollision(const Paddle &paddle, bool isPlayer1
     {
         mBall.dx = -ballSpeed * std::cos(exitAngle);
     }
-    
+
     mBall.dy = ballSpeed * std::sin(exitAngle);
+}
+
+void PongScreensaver::initializeLayout(const Window_Properties &windowProps)
+{
+    mMenu.levelTextX = windowProps.totalWindowWidth / 2 - 50;
+    mMenu.levelTextY = windowProps.totalWindowHeight / 3;
+    mMenu.gameModeTextX = windowProps.totalWindowWidth / 2;
+    mMenu.gameModeTextY = windowProps.totalWindowHeight / 3 + 30;
+}
+
+void PongScreensaver::handleLeft()
+{
+    if(mMenuIndex == 0){
+        mCurrentLvl = (mCurrentLvl + mLevels.size() - 1) % mLevels.size();
+    }
+}
+
+void PongScreensaver::handleRight()
+{
+    if(mMenuIndex == 0){
+        mCurrentLvl = (mCurrentLvl +1) %mLevels.size();
+    }
 }
