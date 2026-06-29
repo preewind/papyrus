@@ -30,7 +30,7 @@ private:
     void cycleScene();
 
     uint64_t mInactivityTimer = 0;
-    uint64_t mInactivityInterval = 3;
+    uint64_t mInactivityInterval = 120;
     bool mInactive = false;
     uint32_t mLastFrameTimeMs = 0;
     uint32_t mFrameTimeMs = 0;
