@@ -137,7 +137,13 @@ void PongScreensaver::renderWin(RenderContext &renderContext) const
 
 void PongScreensaver::renderMenu(RenderContext &renderContext) const
 {
-    renderContext.drawText(std::string("Level: " + std::to_string(mCurrentLvl + 1)), mMenu.levelTextX, mMenu.levelTextY);
+    std::string menuText = "Pong";
+    renderContext.drawText(menuText, mMenu.gameModeTextX, mMenu.gameModeTextY - 80);
+    std::string lvlString = mMenuIndex == 0 ? "Level: <" + std::to_string(mCurrentLvl + 1) + ">" : "Level: " + std::to_string(mCurrentLvl + 1);
+    renderContext.drawText(lvlString, mMenu.levelTextX, mMenu.levelTextY);
+    std::string modeString = mMenuIndex == 1 ? "Mode: <" + PongModeUtils::toString(mCurrentMode) + ">" : "Mode: " + PongModeUtils::toString(mCurrentMode);
+    renderContext.drawText(modeString, mMenu.gameModeTextX, mMenu.gameModeTextY);
+    renderContext.drawText("Press Enter to start", mMenu.gameModeTextX, mMenu.gameModeTextY + 40);
 }
 
 void PongScreensaver::handleKey(const SDL_Event &event)
@@ -170,6 +176,12 @@ void PongScreensaver::handleMenuInput(const SDL_Event &event)
         break;
     case SDLK_LEFT:
         handleLeft();
+        break;
+    case SDLK_UP:
+        handleUp();
+        break;
+    case SDLK_DOWN:
+        handleDown();
         break;
     default:
         break;
@@ -331,6 +343,9 @@ void PongScreensaver::handleLeft()
     if(mMenuIndex == 0){
         mCurrentLvl = (mCurrentLvl + mLevels.size() - 1) % mLevels.size();
     }
+    else if(mMenuIndex == 1){
+        mCurrentMode = static_cast<PongMode>((static_cast<int>(mCurrentMode) + 2) % 3);
+    }
 }
 
 void PongScreensaver::handleRight()
@@ -338,4 +353,17 @@ void PongScreensaver::handleRight()
     if(mMenuIndex == 0){
         mCurrentLvl = (mCurrentLvl +1) %mLevels.size();
     }
+    else if(mMenuIndex == 1){
+        mCurrentMode = static_cast<PongMode>((static_cast<int>(mCurrentMode) + 1) % 3);
+    }
+}
+
+void PongScreensaver::handleUp()
+{
+    mMenuIndex = (mMenuIndex - 1 + 2) % 2;
+}
+
+void PongScreensaver::handleDown()
+{
+    mMenuIndex = (mMenuIndex + 1) % 2;
 }
