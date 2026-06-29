@@ -67,9 +67,22 @@ namespace PongModeUtils
 
 struct Level
 {
-    float paddleSpeedMul = 1.0f;
-    float ballSpeedMul = 1.0f;
+    std::string name;
     float paddleSizeMul = 1.0f;
+    float ballSpeedMul = 1.0f;
+    float playerSpeedMul = 1.0f;
+    float cpuSpeedMul = 1.0f;
+    float cpuReactionSeconds = 0.1f;
+    float cpuAimErrorPixels = 20.0f;
+    float cpuDeadZonePixels = 10.0f;
+    float cpuAccelerationMul = 1.0f;
+};
+
+struct CpuControllerState
+{
+    float targetY = 0.0f;
+    float currentVelocity = 0.0f;
+    float reactionTimer = 0.0f;
 };
 
 enum class PongSceneState : uint8_t
@@ -103,7 +116,7 @@ enum class PongWinAction : uint8_t
 
 struct PongSettings
 {
-    PongMode mode = PongMode::PVP;
+    PongMode mode = PongMode::PVE;
     size_t levelIndex = 0;
 };
 
@@ -147,15 +160,16 @@ private:
     void initializeArena(const Window_Properties &windowProps);
     void resetRound(const Window_Properties &windowProps, bool serveTowardsPlayer2);
 
-    void updateMatchControllers(const Window_Properties &windowProps);
-    void updatePaddle(Paddle &paddle, bool moveUp, bool moveDown, const Window_Properties &windowProps);
-    void updateCpuPaddle(Paddle &paddle, const Window_Properties &windowProps) const;
+    void updateMatchControllers(const Window_Properties &windowProps, float deltaSeconds);
+    void updatePaddle(Paddle &paddle, bool moveUp, bool moveDown, const Window_Properties &windowProps, float deltaSeconds, float speedMul);
+    void updateCpuPaddle(Paddle &paddle, CpuControllerState &cpuState, const Window_Properties &windowProps, float deltaSeconds) const;
     void clampPaddle(Paddle &paddle, const Window_Properties &windowProps) const;
-    void updateBall(const Window_Properties &windowProps, bool demoMode);
+    void updateBall(const Window_Properties &windowProps, bool demoMode, float deltaSeconds);
     void handlePointScored(const Window_Properties &windowProps, bool player1Scored, bool demoMode);
     void handlePaddleCollision(Paddle &paddle, bool isPlayer1);
     bool player1UsesCpu() const;
     bool player2UsesCpu() const;
+    const Level &currentLevel() const;
 
     void handleDemoInput(const SDL_Event &event);
     void handleMenuInput(const SDL_Event &event);
@@ -171,7 +185,7 @@ private:
     void executePauseAction();
     void executeWinAction();
 
-    void renderArena(RenderContext &renderContext) const;
+    void renderArena(RenderContext &renderContext, const TextLayout &textLayout) const;
     void renderDemo(RenderContext &renderContext, const TextLayout &textLayout, uint32_t frameTime) const;
     void renderMenu(RenderContext &renderContext, const TextLayout &textLayout) const;
     void renderPause(RenderContext &renderContext, const TextLayout &textLayout) const;
@@ -184,6 +198,9 @@ private:
     PongSettings mSettings;
     PongMatchState mMatch;
     std::vector<Level> mLevels;
+    // CPU state is mutable so const render/update functions can modify internal AI state
+    mutable CpuControllerState mCpuPlayer1;
+    mutable CpuControllerState mCpuPlayer2;
     bool mArenaInitialized = false;
     bool mServeTowardsPlayer2 = true;
     bool mInteractiveFocus = false;

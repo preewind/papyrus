@@ -9,22 +9,46 @@
 
 #include "Rendering/RenderContext.h"
 #include "TextLayout.h"
+#include "random.h"
 
 namespace
 {
 const RenderColor kWhite{255, 255, 255, 255};
 const RenderColor kBackground{0, 0, 0, 255};
-constexpr float kPaddleWidth = 20.0f;
-constexpr float kBallSize = 20.0f;
-constexpr float kArenaPadding = 20.0f;
-constexpr float kCenterLineWidth = 5.0f;
-constexpr float kBaseBallSpeed = 5.0f;
-constexpr float kBasePaddleHeight = 120.0f;
-constexpr float kBasePaddleVelocity = 10.0f;
-constexpr float kCpuDeadZone = 12.0f;
-constexpr uint8_t kScoreToWin = 3;
-constexpr uint32_t kHintFlashIntervalMs = 450;
-constexpr float kPi = 3.14159265f;
+const RenderColor kOverlay{0, 0, 0, 210};
+
+// Arena dimensions and layout
+const float kPaddleWidth = 20.0f;
+const float kBallSize = 20.0f;
+const float kArenaPadding = 20.0f;
+const float kCenterLineWidth = 5.0f;
+
+// Physics constants
+const float kBaseBallSpeed = 340.0f;
+const float kBasePaddleSpeed = 520.0f;
+const float kBasePaddleHeight = 120.0f;
+const float kBallSpeedMultiplierOnPaddleHit = 1.04f;
+const float kMaxPaddleAngleDegrees = 75.0f;
+
+// Game rules
+const uint8_t kScoreToWin = 3;
+const uint32_t kHintFlashIntervalMs = 450;
+
+// Frame timing and clamping
+const float kPi = 3.14159265f;
+const float kMinDt = 1.0f / 240.0f;  // 240 FPS max frame time
+const float kMaxDt = 1.0f / 30.0f;   // 30 FPS min (handles pauses/lag)
+
+// CPU AI parameters - randomization and tuning
+const float kCpuSpeedVariationMin = 0.85f;   // Minimum ball speed variation
+const float kCpuSpeedVariationMax = 1.15f;   // Maximum ball speed variation
+const float kCpuAngleVariationMin = -0.35f;  // Min angle variation multiplier
+const float kCpuAngleVariationMax = 0.35f;   // Max angle variation multiplier
+const float kBallStartYMin = 0.2f;      
+const float kBallStartYMax = 0.8f;
+const float kCpuDesiredVelocityMultiplier = 5.0f;   // Error -> velocity conversion
+const float kCpuAccelerationMultiplierBase = 7.0f;  // Base acceleration scaling
+const float kCpuReactionTimeVariance = 0.35f;       // Add randomness to reaction timing
 
 struct LabeledValueRow
 {
@@ -107,10 +131,74 @@ std::string wrapSelection(const std::string &text, bool selected)
     }
     return "<" + text + ">";
 }
+
+std::string cpuTierLabel(const Level &level)
+{
+    if (level.cpuReactionSeconds >= 0.16f)
+    {
+        return "Sleepy";
+    }
+    if (level.cpuReactionSeconds >= 0.11f)
+    {
+        return "Casual";
+    }
+    if (level.cpuReactionSeconds >= 0.08f)
+    {
+        return "Focused";
+    }
+    if (level.cpuReactionSeconds >= 0.06f)
+    {
+        return "Sharp";
+    }
+    return "Insane";
+}
+
+float predictBallCenterYAtX(const Ball &ball, float targetX, float windowHeight)
+{
+    const float ballCenterX = ball.x + ball.width / 2.0f;
+    const float ballCenterY = ball.y + ball.height / 2.0f;
+    const float absDx = std::fabs(ball.dx);
+    if (absDx <= 0.001f)
+    {
+        return ballCenterY;
+    }
+
+    const float travelSeconds = std::fabs(targetX - ballCenterX) / absDx;
+    const float rawCenterY = ballCenterY + ball.dy * travelSeconds;
+
+    const float minCenterY = ball.height / 2.0f;
+    const float maxCenterY = windowHeight - ball.height / 2.0f;
+    const float range = maxCenterY - minCenterY;
+    if (range <= 0.0f)
+    {
+        return ballCenterY;
+    }
+
+    const float period = 2.0f * range;
+    float shifted = std::fmod(rawCenterY - minCenterY, period);
+    if (shifted < 0.0f)
+    {
+        shifted += period;
+    }
+
+    const float reflected = shifted <= range ? shifted : (period - shifted);
+    return minCenterY + reflected;
+}
+
+float clampDt(float dt)
+{
+    return std::clamp(dt, kMinDt, kMaxDt);
+}
 }
 
 PongScreensaver::PongScreensaver()
-    : mLevels{{1.0f, 1.0f, 1.0f}, {1.0f, 1.1f, 1.0f}, {1.15f, 1.2f, 0.85f}}
+    : mLevels{
+          {"Rookie", 1.25f, 0.92f, 1.0f, 0.68f, 0.20f, 72.0f, 28.0f, 0.75f},
+          {"Easy", 1.12f, 1.00f, 1.0f, 0.80f, 0.14f, 44.0f, 20.0f, 0.86f},
+          {"Balanced", 1.00f, 1.08f, 1.0f, 0.95f, 0.10f, 26.0f, 14.0f, 1.00f},
+          {"Hard", 0.94f, 1.16f, 1.0f, 1.08f, 0.090f, 12.0f, 8.0f, 1.18f},
+          {"Unbeatable", 0.88f, 1.24f, 1.0f, 1.58f, 0.015f, 0.5f, 1.0f, 2.15f},
+      }
 {
     reset();
 }
@@ -118,7 +206,6 @@ PongScreensaver::PongScreensaver()
 void PongScreensaver::update(const Window_Properties &windowProps, uint32_t nowMs, float deltaSeconds)
 {
     (void)nowMs;
-    (void)deltaSeconds;
 
     if (mState == PongSceneState::Menu)
     {
@@ -126,13 +213,14 @@ void PongScreensaver::update(const Window_Properties &windowProps, uint32_t nowM
     }
 
     ensureArenaInitialized(windowProps);
+    const float dt = clampDt(deltaSeconds);
 
     switch (mState)
     {
     case PongSceneState::Demo:
     case PongSceneState::Match:
-        updateMatchControllers(windowProps);
-        updateBall(windowProps, mState == PongSceneState::Demo);
+        updateMatchControllers(windowProps, dt);
+        updateBall(windowProps, mState == PongSceneState::Demo, dt);
         break;
     case PongSceneState::Pause:
     case PongSceneState::Win:
@@ -166,7 +254,7 @@ void PongScreensaver::render(RenderContext &renderContext, const TextLayout &tex
         renderMenu(renderContext, textLayout);
         break;
     case PongSceneState::Match:
-        renderArena(renderContext);
+        renderArena(renderContext, textLayout);
         break;
     case PongSceneState::Pause:
         renderPause(renderContext, textLayout);
@@ -212,6 +300,8 @@ void PongScreensaver::setUserControlActive(bool active)
 void PongScreensaver::enterDemo()
 {
     mState = PongSceneState::Demo;
+    mSettings.levelIndex = 4;
+    mSettings.mode = PongMode::EVE;
     resetMatchState();
 }
 
@@ -277,6 +367,8 @@ void PongScreensaver::resetMatchState()
     mMatch = {};
     mArenaInitialized = false;
     mServeTowardsPlayer2 = true;
+    mCpuPlayer1 = {};
+    mCpuPlayer2 = {};
     clearInputState();
 }
 
@@ -298,13 +390,12 @@ void PongScreensaver::ensureArenaInitialized(const Window_Properties &windowProp
 
 void PongScreensaver::initializeArena(const Window_Properties &windowProps)
 {
-    const Level &level = mLevels[mSettings.levelIndex];
+    const Level &level = currentLevel();
     const float paddleHeight = kBasePaddleHeight * level.paddleSizeMul;
-    const float paddleVelocity = kBasePaddleVelocity * level.paddleSpeedMul;
     const float centeredPaddleY = (static_cast<float>(windowProps.totalWindowHeight) - paddleHeight) / 2.0f;
 
-    mMatch.player1 = {kArenaPadding, centeredPaddleY, kPaddleWidth, paddleHeight, paddleVelocity};
-    mMatch.player2 = {static_cast<float>(windowProps.totalWindowWidth) - kPaddleWidth - kArenaPadding, centeredPaddleY, kPaddleWidth, paddleHeight, paddleVelocity};
+    mMatch.player1 = {kArenaPadding, centeredPaddleY, kPaddleWidth, paddleHeight, kBasePaddleSpeed};
+    mMatch.player2 = {static_cast<float>(windowProps.totalWindowWidth) - kPaddleWidth - kArenaPadding, centeredPaddleY, kPaddleWidth, paddleHeight, kBasePaddleSpeed};
     mMatch.centerLine = {
         (static_cast<float>(windowProps.totalWindowWidth) - kCenterLineWidth) / 2.0f,
         kArenaPadding,
@@ -323,67 +414,113 @@ void PongScreensaver::initializeArena(const Window_Properties &windowProps)
 
 void PongScreensaver::resetRound(const Window_Properties &windowProps, bool serveTowardsPlayer2)
 {
-    const Level &level = mLevels[mSettings.levelIndex];
+    const Level &level = currentLevel();
     const float centeredPaddleY = (static_cast<float>(windowProps.totalWindowHeight) - mMatch.player1.height) / 2.0f;
     mMatch.player1.y = centeredPaddleY;
     mMatch.player2.y = centeredPaddleY;
+
+    const float ballSpeedX = kBaseBallSpeed * level.ballSpeedMul;
+    const float ballSpeedY = kBaseBallSpeed * 0.24f * level.ballSpeedMul;
+    const float randomSpeedVariation = Random::get_float(kCpuSpeedVariationMin, kCpuSpeedVariationMax);
+    const float randomYDirectionVariation = Random::get_float(kCpuAngleVariationMin, kCpuAngleVariationMax);
+    const float randomStartY = Random::get_float(kBallStartYMin * windowProps.totalWindowHeight, kBallStartYMax * windowProps.totalWindowHeight);
+
     mMatch.ball = {
         (static_cast<float>(windowProps.totalWindowWidth) - kBallSize) / 2.0f,
-        (static_cast<float>(windowProps.totalWindowHeight) - kBallSize) / 2.0f,
+        randomStartY - kBallSize / 2.0f,
         kBallSize,
         kBallSize,
-        serveTowardsPlayer2 ? kBaseBallSpeed * level.ballSpeedMul : -kBaseBallSpeed * level.ballSpeedMul,
-        kBaseBallSpeed * 0.35f * level.ballSpeedMul,
+        (serveTowardsPlayer2 ? ballSpeedX : -ballSpeedX) * randomSpeedVariation,
+        ballSpeedY * randomYDirectionVariation,
     };
+
+    mCpuPlayer1.targetY = mMatch.player1.y;
+    mCpuPlayer2.targetY = mMatch.player2.y;
+    mCpuPlayer1.currentVelocity = 0.0f;
+    mCpuPlayer2.currentVelocity = 0.0f;
+    mCpuPlayer1.reactionTimer = 0.0f;
+    mCpuPlayer2.reactionTimer = 0.0f;
 }
 
-void PongScreensaver::updateMatchControllers(const Window_Properties &windowProps)
+void PongScreensaver::updateMatchControllers(const Window_Properties &windowProps, float deltaSeconds)
 {
+    const Level &level = currentLevel();
+
     if (player1UsesCpu())
     {
-        updateCpuPaddle(mMatch.player1, windowProps);
+        updateCpuPaddle(mMatch.player1, mCpuPlayer1, windowProps, deltaSeconds);
     }
     else
     {
-        updatePaddle(mMatch.player1, mKeyW, mKeyS, windowProps);
+        updatePaddle(mMatch.player1, mKeyW, mKeyS, windowProps, deltaSeconds, level.playerSpeedMul);
     }
 
     if (player2UsesCpu())
     {
-        updateCpuPaddle(mMatch.player2, windowProps);
+        updateCpuPaddle(mMatch.player2, mCpuPlayer2, windowProps, deltaSeconds);
     }
     else
     {
-        updatePaddle(mMatch.player2, mKeyUp, mKeyDown, windowProps);
+        updatePaddle(mMatch.player2, mKeyUp, mKeyDown, windowProps, deltaSeconds, level.playerSpeedMul);
     }
 }
 
-void PongScreensaver::updatePaddle(Paddle &paddle, bool moveUp, bool moveDown, const Window_Properties &windowProps)
+void PongScreensaver::updatePaddle(Paddle &paddle, bool moveUp, bool moveDown, const Window_Properties &windowProps, float deltaSeconds, float speedMul)
 {
+    float deltaY = 0.0f;
     if (moveUp)
     {
-        paddle.y -= paddle.velocity;
+        deltaY -= paddle.velocity * speedMul * deltaSeconds;
     }
     if (moveDown)
     {
-        paddle.y += paddle.velocity;
+        deltaY += paddle.velocity * speedMul * deltaSeconds;
     }
+    paddle.y += deltaY;
     clampPaddle(paddle, windowProps);
 }
 
-void PongScreensaver::updateCpuPaddle(Paddle &paddle, const Window_Properties &windowProps) const
+void PongScreensaver::updateCpuPaddle(Paddle &paddle, CpuControllerState &cpuState, const Window_Properties &windowProps, float deltaSeconds) const
 {
-    const float ballCenter = mMatch.ball.y + mMatch.ball.height / 2.0f;
-    const float paddleCenter = paddle.y + paddle.height / 2.0f;
-    if (ballCenter < paddleCenter - kCpuDeadZone)
+    const Level &level = currentLevel();
+    const float paddleCenterX = paddle.x + paddle.width / 2.0f;
+    const bool isLeftPaddle = paddleCenterX < static_cast<float>(windowProps.totalWindowWidth) / 2.0f;
+    const bool ballHeadingToPaddle = isLeftPaddle ? (mMatch.ball.dx < 0.0f) : (mMatch.ball.dx > 0.0f);
+
+    float aimCenterY = mMatch.ball.y + mMatch.ball.height / 2.0f;
+    if (ballHeadingToPaddle)
     {
-        paddle.y -= paddle.velocity;
+        aimCenterY = predictBallCenterYAtX(mMatch.ball, paddleCenterX, static_cast<float>(windowProps.totalWindowHeight));
     }
-    else if (ballCenter > paddleCenter + kCpuDeadZone)
+
+    cpuState.reactionTimer -= deltaSeconds;
+    if (cpuState.reactionTimer <= 0.0f)
     {
-        paddle.y += paddle.velocity;
+        const float randomError = Random::get_float(-level.cpuAimErrorPixels, level.cpuAimErrorPixels);
+        cpuState.targetY = aimCenterY - paddle.height / 2.0f + randomError;
+        cpuState.reactionTimer = level.cpuReactionSeconds + Random::get_float(0.0f, level.cpuReactionSeconds * kCpuReactionTimeVariance);
     }
+
+    const float error = cpuState.targetY - paddle.y;
+    float desiredVelocity = 0.0f;
+    const float maxSpeed = paddle.velocity * level.cpuSpeedMul;
+    if (std::fabs(error) > level.cpuDeadZonePixels)
+    {
+        desiredVelocity = std::clamp(error * kCpuDesiredVelocityMultiplier, -maxSpeed, maxSpeed);
+    }
+
+    const float maxAccel = paddle.velocity * level.cpuAccelerationMul * kCpuAccelerationMultiplierBase;
+    const float maxDeltaV = maxAccel * deltaSeconds;
+    const float velocityDelta = std::clamp(desiredVelocity - cpuState.currentVelocity, -maxDeltaV, maxDeltaV);
+    cpuState.currentVelocity += velocityDelta;
+
+    paddle.y += cpuState.currentVelocity * deltaSeconds;
     clampPaddle(paddle, windowProps);
+
+    if (paddle.y <= 0.0f || paddle.y >= static_cast<float>(windowProps.totalWindowHeight) - paddle.height)
+    {
+        cpuState.currentVelocity = 0.0f;
+    }
 }
 
 void PongScreensaver::clampPaddle(Paddle &paddle, const Window_Properties &windowProps) const
@@ -392,10 +529,10 @@ void PongScreensaver::clampPaddle(Paddle &paddle, const Window_Properties &windo
     paddle.y = std::clamp(paddle.y, 0.0f, maxY);
 }
 
-void PongScreensaver::updateBall(const Window_Properties &windowProps, bool demoMode)
+void PongScreensaver::updateBall(const Window_Properties &windowProps, bool demoMode, float deltaSeconds)
 {
-    mMatch.ball.x += mMatch.ball.dx;
-    mMatch.ball.y += mMatch.ball.dy;
+    mMatch.ball.x += mMatch.ball.dx * deltaSeconds;
+    mMatch.ball.y += mMatch.ball.dy * deltaSeconds;
 
     const float maxY = static_cast<float>(windowProps.totalWindowHeight) - mMatch.ball.height;
     if (mMatch.ball.y >= maxY)
@@ -473,10 +610,10 @@ void PongScreensaver::handlePaddleCollision(Paddle &paddle, bool isPlayer1)
     float relativeIntersectY = (paddleCenterY - ballCenterY) / (paddle.height / 2.0f);
     relativeIntersectY = std::clamp(relativeIntersectY, -1.0f, 1.0f);
 
-    const float maxAngleRadians = 75.0f * kPi / 180.0f;
+    const float maxAngleRadians = kMaxPaddleAngleDegrees * kPi / 180.0f;
     const float exitAngle = -relativeIntersectY * maxAngleRadians;
     float ballSpeed = std::sqrt(mMatch.ball.dx * mMatch.ball.dx + mMatch.ball.dy * mMatch.ball.dy);
-    ballSpeed *= 1.05f;
+    ballSpeed *= kBallSpeedMultiplierOnPaddleHit;
 
     if (isPlayer1)
     {
@@ -499,6 +636,12 @@ bool PongScreensaver::player1UsesCpu() const
 bool PongScreensaver::player2UsesCpu() const
 {
     return mState == PongSceneState::Demo || mSettings.mode == PongMode::PVE || mSettings.mode == PongMode::EVE;
+}
+
+const Level &PongScreensaver::currentLevel() const
+{
+    const size_t idx = std::min(mSettings.levelIndex, mLevels.size() - 1);
+    return mLevels[idx];
 }
 
 void PongScreensaver::handleDemoInput(const SDL_Event &event)
@@ -715,49 +858,69 @@ void PongScreensaver::executeWinAction()
     }
 }
 
-void PongScreensaver::renderArena(RenderContext &renderContext) const
+void PongScreensaver::renderArena(RenderContext &renderContext, const TextLayout &textLayout) const
 {
+    const Window_Properties &windowProps = renderContext.getWindowProperties();
+    const Level &level = currentLevel();
+
     renderContext.drawRect(mMatch.player1.x, mMatch.player1.y, mMatch.player1.width, mMatch.player1.height, kWhite);
     renderContext.drawRect(mMatch.player2.x, mMatch.player2.y, mMatch.player2.width, mMatch.player2.height, kWhite);
     renderContext.drawDottedLine(mMatch.centerLine.x, mMatch.centerLine.y, mMatch.centerLine.h, mMatch.centerLine.w, 20.0f, 50.0f, kWhite);
     renderContext.drawRect(mMatch.ball.x, mMatch.ball.y, mMatch.ball.width, mMatch.ball.height, kWhite);
     renderContext.drawText(std::to_string(mMatch.scoreP1.score), static_cast<int>(mMatch.scoreP1.x), static_cast<int>(mMatch.scoreP1.y), kWhite);
     renderContext.drawText(std::to_string(mMatch.scoreP2.score), static_cast<int>(mMatch.scoreP2.x), static_cast<int>(mMatch.scoreP2.y), kWhite);
+
+    const std::string hud = "Lv " + std::to_string(mSettings.levelIndex + 1) + " " + level.name +
+                            " | " + PongModeUtils::toString(mSettings.mode) +
+                            " | First to " + std::to_string(kScoreToWin) +
+                            " | Esc pause";
+    drawCenteredText(renderContext, textLayout, windowProps, hud, 10);
 }
 
 void PongScreensaver::renderDemo(RenderContext &renderContext, const TextLayout &textLayout, uint32_t frameTime) const
 {
-    renderArena(renderContext);
+    renderArena(renderContext, textLayout);
 
     const Window_Properties &windowProps = renderContext.getWindowProperties();
-    const int topY = std::max(16, static_cast<int>(windowProps.lineHeight));
-    const int bottomY = std::max(16, static_cast<int>(windowProps.totalWindowHeight) - static_cast<int>(windowProps.lineHeight) * 3);
+    const Level &level = currentLevel();
+    const int topY = std::max(16, static_cast<int>(windowProps.lineHeight) + 18);
+    const int bottomY = std::max(16, static_cast<int>(windowProps.totalWindowHeight) - static_cast<int>(windowProps.lineHeight) * 4);
 
-    drawCenteredText(renderContext, textLayout, windowProps, "Demo mode", topY);
+    drawCenteredText(renderContext, textLayout, windowProps, "Demo: CPU vs CPU", topY);
+    drawCenteredText(renderContext, textLayout, windowProps, "CPU profile: " + cpuTierLabel(level), topY + 28);
+
     if (((frameTime / kHintFlashIntervalMs) % 2u) == 0u)
     {
-        drawCenteredText(renderContext, textLayout, windowProps, "Press Ctrl+Return to play", bottomY);
+        drawCenteredText(renderContext, textLayout, windowProps, "Press Ctrl+Return to open setup", bottomY);
     }
+    drawCenteredText(renderContext, textLayout, windowProps, "Press F5 to switch screensaver", bottomY + 28);
 }
 
 void PongScreensaver::renderMenu(RenderContext &renderContext, const TextLayout &textLayout) const
 {
     const Window_Properties &windowProps = renderContext.getWindowProperties();
+    const Level &level = currentLevel();
     const int lineHeight = std::max(20, static_cast<int>(windowProps.lineHeight));
     const int rowSpacing = lineHeight + 10;
-    const int titleY = std::max(30, static_cast<int>(windowProps.totalWindowHeight) / 4 - lineHeight);
+    const int titleY = std::max(30, static_cast<int>(windowProps.totalWindowHeight) / 5);
     const int rowsY = static_cast<int>(windowProps.totalWindowHeight) / 2 - rowSpacing;
-    const int footerY = rowsY + rowSpacing * 3;
+    const int footerY = rowsY + rowSpacing * 4;
 
     const std::vector<LabeledValueRow> rows{
-        {"Level", wrapSelection(std::to_string(mSettings.levelIndex + 1), mMenuSelection == PongMenuRow::Level)},
+        {"Level", wrapSelection(std::to_string(mSettings.levelIndex + 1) + " - " + level.name, mMenuSelection == PongMenuRow::Level)},
         {"Gamemode", wrapSelection(PongModeUtils::toString(mSettings.mode), mMenuSelection == PongMenuRow::GameMode)},
     };
 
-    drawCenteredText(renderContext, textLayout, windowProps, "Pong", titleY);
+    drawCenteredText(renderContext, textLayout, windowProps, "Pong Setup", titleY);
     drawLabeledRows(renderContext, textLayout, windowProps, rowsY, rowSpacing, rows);
-    drawCenteredText(renderContext, textLayout, windowProps, "Press Enter to start", footerY);
-    drawCenteredText(renderContext, textLayout, windowProps, "Press Escape to return to demo", footerY + rowSpacing);
+
+    const int cpuPercent = static_cast<int>(std::round(level.cpuSpeedMul * 100.0f));
+    drawCenteredText(renderContext, textLayout, windowProps,
+                     "CPU: " + cpuTierLabel(level) + " | speed " + std::to_string(cpuPercent) + "% | reaction " + std::to_string(static_cast<int>(level.cpuReactionSeconds * 1000.0f)) + "ms",
+                     rowsY + rowSpacing * 3);
+
+    drawCenteredText(renderContext, textLayout, windowProps, "Arrows: navigate/change, Enter: start", footerY);
+    drawCenteredText(renderContext, textLayout, windowProps, "Escape: back to demo", footerY + rowSpacing);
 }
 
 void PongScreensaver::renderPause(RenderContext &renderContext, const TextLayout &textLayout) const
@@ -769,7 +932,10 @@ void PongScreensaver::renderPause(RenderContext &renderContext, const TextLayout
     const int infoY = titleY + rowSpacing * 2;
     const int optionsY = infoY + rowSpacing * 2;
 
-    drawCenteredText(renderContext, textLayout, windowProps, "Pause", titleY);
+    renderArena(renderContext, textLayout);
+    renderContext.drawRect(0, 0, windowProps.totalWindowWidth, windowProps.totalWindowHeight, kOverlay);
+
+    drawCenteredText(renderContext, textLayout, windowProps, "Paused", titleY);
     drawCenteredText(renderContext, textLayout, windowProps,
                      "Score: " + std::to_string(mMatch.scoreP1.score) + " - " + std::to_string(mMatch.scoreP2.score), infoY);
     drawCenteredOptions(renderContext, textLayout, windowProps, optionsY, rowSpacing,
@@ -778,7 +944,7 @@ void PongScreensaver::renderPause(RenderContext &renderContext, const TextLayout
                             wrapSelection("Restart Match", mPauseSelection == PongPauseAction::RestartMatch),
                             wrapSelection("Main Menu", mPauseSelection == PongPauseAction::MainMenu),
                         });
-    drawCenteredText(renderContext, textLayout, windowProps, "Press Escape to continue", optionsY + rowSpacing * 4);
+    drawCenteredText(renderContext, textLayout, windowProps, "Esc resumes instantly", optionsY + rowSpacing * 4);
 }
 
 void PongScreensaver::renderWin(RenderContext &renderContext, const TextLayout &textLayout) const
@@ -790,9 +956,12 @@ void PongScreensaver::renderWin(RenderContext &renderContext, const TextLayout &
     const int infoY = titleY + rowSpacing * 2;
     const int optionsY = infoY + rowSpacing * 2;
 
+    renderArena(renderContext, textLayout);
+    renderContext.drawRect(0, 0, windowProps.totalWindowWidth, windowProps.totalWindowHeight, kOverlay);
+
     drawCenteredText(renderContext, textLayout, windowProps, mMatch.player1Won ? "Player 1 wins" : "Player 2 wins", titleY);
     drawCenteredText(renderContext, textLayout, windowProps,
-                     "Score: " + std::to_string(mMatch.scoreP1.score) + " - " + std::to_string(mMatch.scoreP2.score), infoY);
+                     "Final score: " + std::to_string(mMatch.scoreP1.score) + " - " + std::to_string(mMatch.scoreP2.score), infoY);
     drawCenteredOptions(renderContext, textLayout, windowProps, optionsY, rowSpacing,
                         {
                             wrapSelection("Restart Match", mWinSelection == PongWinAction::RestartMatch),
