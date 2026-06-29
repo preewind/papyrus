@@ -42,10 +42,19 @@ struct FakeRenderContext : public RenderContext
 
     struct RectCall
     {
-        int x = 0;
-        int y = 0;
-        int w = 0;
-        int h = 0;
+        uint32_t x = 0;
+        uint32_t y = 0;
+        uint32_t w = 0;
+        uint32_t h = 0;
+        RenderColor color{};
+    };
+
+    struct RectCallF
+    {
+        float x = 0;
+        float y = 0;
+        float w = 0;
+        float h = 0;
         RenderColor color{};
     };
 
@@ -64,6 +73,7 @@ struct FakeRenderContext : public RenderContext
     Theme theme{};
     std::vector<TextCall> textCalls;
     std::vector<RectCall> rectCalls;
+    std::vector<RectCallF> rectFCalls;
     std::vector<AnimationCall> animationCalls;
     std::vector<Rect> clipRects;
     uint32_t clearClipCount = 0;
@@ -98,14 +108,33 @@ struct FakeRenderContext : public RenderContext
         textCalls.push_back(TextCall{text, x, y, true, false, color});
     }
 
-    void drawRect(int x, int y, int w, int h, RenderColor color) override
+    void drawRect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, RenderColor color) override
     {
         rectCalls.push_back(RectCall{x, y, w, h, color});
     }
 
     void drawRect(Rect rect, RenderColor color) override
     {
-        drawRect(static_cast<int>(rect.x), static_cast<int>(rect.y), static_cast<int>(rect.w), static_cast<int>(rect.h), color);
+        drawRect(rect.x, rect.y, rect.w, rect.h, color);
+    }
+    void drawRect(float x, float y, float w, float h, RenderColor color) override
+    {
+        rectFCalls.push_back(RectCallF{x, y, w, h, color});
+    }
+    void drawRect(RectF rect, RenderColor color) override
+    {
+        drawRect(rect.x, rect.y, rect.w, rect.h, color);
+    }
+
+    void drawDottedLine(float x, float y, float length, float lineWidth, float spacing, float rectSize, const RenderColor &color) override
+    {
+        (void)x;
+        (void)y;
+        (void)length;
+        (void)lineWidth;
+        (void)spacing;
+        (void)rectSize;
+        (void)color;
     }
 
     void loadTexture(float x, float y, float w, float h, const std::filesystem::path &file) override
@@ -138,12 +167,13 @@ struct FakeRenderContext : public RenderContext
     }
     uint32_t getAnimationDurationByName(std::string_view assetName) const override
     {
-        (void) assetName;
+        (void)assetName;
         return 0;
     }
-    std::pair<uint32_t, uint32_t> getAnimationDimensionsByName(std::string_view assetName) const override{
-        (void) assetName;
-        return {0,0};
+    std::pair<uint32_t, uint32_t> getAnimationDimensionsByName(std::string_view assetName) const override
+    {
+        (void)assetName;
+        return {0, 0};
     }
 
     void pushClipRect(const Rect &rect) override

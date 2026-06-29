@@ -59,7 +59,7 @@ void SDLRenderBackend::present()
     CSF(SDL_RenderPresent(mRenderer));
 }
 
-void SDLRenderBackend::fillRect(const RenderRect &rect, const RenderColor &color)
+void SDLRenderBackend::fillRect(const Rect &rect, const RenderColor &color)
 {
     SDL_FRect sdlRect;
     sdlRect.x = static_cast<float>(rect.x);
@@ -71,7 +71,35 @@ void SDLRenderBackend::fillRect(const RenderRect &rect, const RenderColor &color
     CSF(SDL_RenderFillRect(mRenderer, &sdlRect));
 }
 
-void SDLRenderBackend::setClipRect(const RenderRect &rect)
+void SDLRenderBackend::fillRect(const RectF &rect, const RenderColor &color)
+{
+    SDL_FRect sdlRect;
+    sdlRect.x = rect.x;
+    sdlRect.y = rect.y;
+    sdlRect.w = rect.w;
+    sdlRect.h = rect.h;
+
+    CSF(SDL_SetRenderDrawColor(mRenderer, color.r, color.g, color.b, color.a));
+    CSF(SDL_RenderFillRect(mRenderer, &sdlRect));
+}
+
+void SDLRenderBackend::drawDottedLine(float x, float y, float length, float lineWidth, float spacing, float rectSize, const RenderColor &color)
+{
+    uint32_t numRects = length / (rectSize+spacing);
+
+    RectF line;
+    line.x = x;
+    line.w = lineWidth;
+    line.h = rectSize;
+    for (uint32_t i = 0; i < numRects; ++i)
+    {
+        line.y = y + i*(rectSize+spacing);
+        fillRect(line, color);
+    }
+    
+}
+
+void SDLRenderBackend::setClipRect(const Rect &rect)
 {
     SDL_Rect sdlRect;
     sdlRect.x = rect.x;

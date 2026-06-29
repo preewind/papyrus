@@ -3,12 +3,10 @@
 #include "Screensaver.h"
 #include "RenderContext.h"
 
+class TextLayout;
+
 class ScreensaverView
 {
 public:
-    void render(RenderContext &renderContext, const Screensaver &screensaver);
-
-private:
-    void renderLogo(RenderContext &renderContext, const Screensaver &screensaver);
-    void renderSuccess(RenderContext &renderContext, const Screensaver &screensaver);
+    void render(RenderContext &renderContext, const TextLayout &textLayout, const Screensaver &screensaver);
 };

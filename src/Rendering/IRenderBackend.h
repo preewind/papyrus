@@ -7,6 +7,7 @@
 #include "AnimationPlaybackMode.h"
 #include "RenderTypes.h"
 #include "ITextMeasurer.h"
+#include "types.h"
 
 class IRenderBackend : public ITextMeasurer
 {
@@ -17,8 +18,10 @@ public:
     virtual void clear(const RenderColor &color) = 0;
     virtual void present() = 0;
 
-    virtual void fillRect(const RenderRect &rect, const RenderColor &color) = 0;
-    virtual void setClipRect(const RenderRect &rect) = 0;
+    virtual void fillRect(const Rect &rect, const RenderColor &color) = 0;
+    virtual void fillRect(const RectF &rect, const RenderColor &color) = 0;
+    virtual void drawDottedLine(float x, float y, float length, float lineWidth, float spacing, float rectSize, const RenderColor &color) = 0;
+    virtual void setClipRect(const Rect &rect) = 0;
     virtual void clearClipRect() = 0;
 
     virtual void drawText(const std::string &text, int x, int y, const RenderColor &color) = 0;

@@ -10,6 +10,7 @@
 #include <SDL3_ttf/SDL_ttf.h>
 
 #include "IRenderBackend.h"
+#include "types.h"
 
 struct RainbowTextConfig
 {
@@ -34,8 +35,10 @@ public:
     void clear(const RenderColor &color) override;
     void present() override;
 
-    void fillRect(const RenderRect &rect, const RenderColor &color) override;
-    void setClipRect(const RenderRect &rect) override;
+    void fillRect(const Rect &rect, const RenderColor &color) override;
+    void fillRect(const RectF &rect, const RenderColor &color) override;
+    void drawDottedLine(float x, float y, float length, float lineWidth, float spacing, float rectSize, const RenderColor &color) override;
+    void setClipRect(const Rect &rect) override;
     void clearClipRect() override;
     void rainbowText();
     void drawText(const std::string &text, int x, int y, const RenderColor &color) override;
